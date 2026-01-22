@@ -66,23 +66,23 @@ class OracleClient:
         prenom_pattern = f"{prenom_value}%" if prenom_value else None
 
         order_field = {
-            "nir": "as_NNI",
-            "nom": "as_nompat",
-            "prenom": "as_prenoms",
-        }.get(order_by, "as_NNI")
+            "nir": "ass.as_NNI",
+            "nom": "ass.as_nompat",
+            "prenom": "ass.as_prenoms",
+        }.get(order_by, "ass.as_NNI")
 
         sql = """
             SELECT
-                as_NNI,
-                as_nompat,
-                as_prenoms,
-                as_dtnais,
+                ass.as_NNI,
+                ass.as_nompat,
+                ass.as_prenoms,
+                ass.as_dtnais,
                 cv.cv_lib
-            FROM AT_AS#ASSURE
+            FROM AT_AS#ASSURE ass
             LEFT JOIN AT_CV#civilite cv ON ass.ascv_id = cv.cv_id
-            WHERE ( :nir_pattern IS NULL OR UPPER(as_NNI) LIKE UPPER(:nir_pattern) )
-              AND ( :nom_pattern IS NULL OR UPPER(as_nompat) LIKE UPPER(:nom_pattern) )
-              AND ( :prenom_pattern IS NULL OR UPPER(as_prenoms) LIKE UPPER(:prenom_pattern) )
+            WHERE ( :nir_pattern IS NULL OR UPPER(ass.as_NNI) LIKE UPPER(:nir_pattern) )
+              AND ( :nom_pattern IS NULL OR UPPER(ass.as_nompat) LIKE UPPER(:nom_pattern) )
+              AND ( :prenom_pattern IS NULL OR UPPER(ass.as_prenoms) LIKE UPPER(:prenom_pattern) )
         """
 
         sql = f"{sql} ORDER BY {order_field}"
