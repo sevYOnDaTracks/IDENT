@@ -23,7 +23,8 @@ python app.py
 Une fenêtre « IDENT - SIED V1.0 » s'ouvre (pywebview) avec l'IHM HTML/CSS embarquée. Fermez la fenêtre pour quitter.
 
 ## Structure
-- `app.py` : point d'entrée Python qui ouvre la fenêtre pywebview.
+- `app.py` : point d'entrée Python (pywebview) + API JS.
+- `services/oracle_client.py` : client Oracle (requêtes, export Excel).
 - `templates/index.html` : page HTML de l'interface.
 - `static/style.css` : styles modernes.
 - `requirements.txt` : dépendances Python.
