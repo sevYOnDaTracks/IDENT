@@ -130,6 +130,19 @@ body {
   flex-wrap: wrap;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  flex: 1 1 200px;
+}
+
+.select-field select,
+.action-field button {
+  width: 100%;
+}
+
 input[type="text"] {
   flex: 1 1 260px;
   min-width: 220px;

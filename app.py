@@ -49,16 +49,16 @@ class Api:
         self._cached_password = password
         return {"ok": "true", "message": "Connexion reussie."}
 
-    def fetch_assure(self, username: str, password: str, nir: str):
+    def fetch_assure(self, username: str, password: str, nir: str, nom: str = "", prenom: str = "", tri: str = "nir"):
         nir_value = (nir or "").strip()
-        if not nir_value:
-            return {"ok": "false", "message": "NIR manquant.", "data": []}
+        nom_value = (nom or "").strip()
+        prenom_value = (prenom or "").strip()
 
         user, pwd = self._resolve_credentials(username, password)
         if not user or not pwd:
             return {"ok": "false", "message": "Identifiants manquants.", "data": []}
 
-        result = self.client.query_assures(user, pwd, nir_value)
+        result = self.client.query_assures(user, pwd, nir_value, nom_value, prenom_value, order_by=tri or "nir")
         if result["error"]:
             return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
 

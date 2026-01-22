@@ -46,14 +46,30 @@ class OracleClient:
         except Exception as exc:  # noqa: BLE001
             return str(exc)
 
-    def query_assures(self, username: str, password: str, nir_value: str) -> Dict[str, object]:
-        """Exécute la requête assurés par préfixe de NIR (insensible à la casse)."""
+    def query_assures(
+        self,
+        username: str,
+        password: str,
+        nir_value: Optional[str],
+        nom_value: Optional[str],
+        prenom_value: Optional[str],
+        order_by: str = "nir",
+    ) -> Dict[str, object]:
+        """Exécute la requête assurés par filtres (préfixe), insensible à la casse."""
         try:
             import oracledb
         except Exception as exc:
             return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
 
-        nir_pattern = f"{nir_value}%"
+        nir_pattern = f"{nir_value}%" if nir_value else None
+        nom_pattern = f"{nom_value}%" if nom_value else None
+        prenom_pattern = f"{prenom_value}%" if prenom_value else None
+
+        order_field = {
+            "nir": "nir",
+            "nom": "ind.nom_usage",
+            "prenom": "ind.prenom_usage",
+        }.get(order_by, "nir")
         sql = """
             SELECT
                 ind.nom_usage,
@@ -82,13 +98,22 @@ class OracleClient:
                 ON ct.tconind_id = tconind.tconind_id
             LEFT JOIN association_cultuelle ac
                 ON ct.ac_id = ac.ac_id
-            WHERE UPPER(COALESCE(mi.nir, mi.nir_provisoire_vision)) LIKE UPPER(:nir_pattern)
+            WHERE ( :nir_pattern IS NULL OR UPPER(COALESCE(mi.nir, mi.nir_provisoire_vision)) LIKE UPPER(:nir_pattern) )
+              AND ( :nom_pattern IS NULL OR UPPER(ind.nom_usage) LIKE UPPER(:nom_pattern) )
+              AND ( :prenom_pattern IS NULL OR UPPER(ind.prenom_usage) LIKE UPPER(:prenom_pattern) )
         """
 
+        sql = f"{sql} ORDER BY {order_field}"
+
         try:
+            params = {
+                "nir_pattern": nir_pattern,
+                "nom_pattern": nom_pattern,
+                "prenom_pattern": prenom_pattern,
+            }
             with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql, nir_pattern=nir_pattern)
+                    cursor.execute(sql, params)
                     rows = cursor.fetchall()
         except Exception as exc:  # noqa: BLE001
             return {"data": [], "error": str(exc)}
