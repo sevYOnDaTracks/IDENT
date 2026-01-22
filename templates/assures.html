@@ -242,6 +242,10 @@
               <span class="value">${item.prenom_usage || "-"}</span>
             </div>
             <div class="result-row">
+              <span class="label">Civilité</span>
+              <span class="value">${item.civilite || "-"}</span>
+            </div>
+            <div class="result-row">
               <span class="label">Date de naissance</span>
               <span class="value">${item.date_naissance || "-"}</span>
             </div>
@@ -368,6 +372,7 @@
         { label: "Nom usage", value: selectedAssure.nom_usage },
         { label: "Prénom usage", value: selectedAssure.prenom_usage },
         { label: "Date de naissance", value: selectedAssure.date_naissance },
+        { label: "Civilité", value: selectedAssure.civilite },
       ].filter(Boolean);
 
       items.forEach((item) => {

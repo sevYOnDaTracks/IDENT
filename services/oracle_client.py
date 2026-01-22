@@ -76,8 +76,10 @@ class OracleClient:
                 as_NNI,
                 as_nompat,
                 as_prenoms,
-                as_dtnais
+                as_dtnais,
+                cv.cv_lib
             FROM AT_AS#ASSURE
+            LEFT JOIN AT_CV#civilite cv ON ass.ascv_id = cv.cv_id
             WHERE ( :nir_pattern IS NULL OR UPPER(as_NNI) LIKE UPPER(:nir_pattern) )
               AND ( :nom_pattern IS NULL OR UPPER(as_nompat) LIKE UPPER(:nom_pattern) )
               AND ( :prenom_pattern IS NULL OR UPPER(as_prenoms) LIKE UPPER(:prenom_pattern) )
@@ -106,6 +108,7 @@ class OracleClient:
                     "nom_usage": row[1],
                     "prenom_usage": row[2],
                     "date_naissance": _format_date(row[3]),
+                    "civilite": row[4],
                     "sexe": None,
                     "email": None,
                     "pays_nationalite": None,
