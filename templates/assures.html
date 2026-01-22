@@ -149,8 +149,8 @@
       const nom = (nomInput?.value || "").trim();
       const prenom = (prenomInput?.value || "").trim();
       const tri = (document.querySelector('input[name="tri"]:checked')?.value || "nir").trim();
-      nirResult.textContent = "Recherche en cours...";
-      nirResult.classList.remove("success");
+        nirResult.textContent = "Recherche en cours...";
+        nirResult.classList.remove("success");
 
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_assure) {
         nirResult.textContent = "API pywebview non disponible.";
@@ -177,8 +177,9 @@
           toggleDetails(false);
           toggleSearchArea(false);
         } else {
-          nirResult.textContent = response?.message || "Aucun résultat.";
+          nirResult.textContent = "";
           nirResult.classList.remove("success");
+          showError(response?.message || "Aucun résultat.");
           assureData = [];
           selectedAssure = null;
           lastNirValue = "";
@@ -189,7 +190,7 @@
           toggleSearchArea(false);
         }
       } catch (error) {
-        nirResult.textContent = "Erreur pendant la recherche : " + error;
+        nirResult.textContent = "";
         nirResult.classList.remove("success");
         showError("Erreur pendant la recherche : " + error);
         assureData = [];
@@ -220,11 +221,11 @@
           connStatus && (connStatus.textContent = response.message || "Connexion réussie.");
           connStatus && connStatus.classList.add("success");
         } else {
-          connStatus && (connStatus.textContent = response?.message || "Échec de connexion.");
+        connStatus && (connStatus.textContent = "");
           showError(response?.message || "Échec de connexion.");
-        }
-      } catch (error) {
-        connStatus && (connStatus.textContent = "Erreur pendant le test : " + error);
+      }
+    } catch (error) {
+        connStatus && (connStatus.textContent = "");
         showError("Erreur pendant le test de connexion : " + error);
       }
     }
@@ -332,7 +333,7 @@
         return;
       }
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.export_assure) {
-        nirResult.textContent = "API pywebview non disponible pour l'export.";
+        nirResult.textContent = "";
         showError("API pywebview non disponible pour l'export.");
         return;
       }
@@ -347,12 +348,12 @@
           nirResult.textContent = response.message || "Export réussi.";
           nirResult.classList.add("success");
         } else {
-          nirResult.textContent = response?.message || "Échec export.";
+          nirResult.textContent = "";
           nirResult.classList.remove("success");
           showError(response?.message || "Échec export.");
         }
       } catch (error) {
-        nirResult.textContent = "Erreur export : " + error;
+        nirResult.textContent = "";
         nirResult.classList.remove("success");
         showError("Erreur export : " + error);
       }
