@@ -111,7 +111,7 @@ class Api:
 def main() -> None:
     """Launch a native window that renders the local HTML/CSS UI."""
     root = Path(__file__).parent
-    html_path = root / "templates" / "index.html"
+    html_path = root / "templates" / "home.html"
     if not html_path.exists():
         raise FileNotFoundError(f"HTML file not found: {html_path}")
 
