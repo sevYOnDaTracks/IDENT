@@ -115,7 +115,7 @@ def main() -> None:
     if not html_path.exists():
         raise FileNotFoundError(f"HTML file not found: {html_path}")
 
-    dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=visicaredev)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=VISIP)))"
+    dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
     instant_client_dir = Path(r"C:\Program Files\Oracle\instantclient_23_8")
     client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir if instant_client_dir.exists() else None)
     api = Api(client=client)
