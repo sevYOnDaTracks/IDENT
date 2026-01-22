@@ -49,6 +49,12 @@ class Api:
         self._cached_password = password
         return {"ok": "true", "message": "Connexion reussie."}
 
+    def reset_credentials(self):
+        """Réinitialise le cache d'identifiants côté backend."""
+        self._cached_user = None
+        self._cached_password = None
+        return {"ok": "true"}
+
     def fetch_assure(self, username: str, password: str, nir: str, nom: str = "", prenom: str = "", tri: str = "nir"):
         nir_value = (nir or "").strip()
         nom_value = (nom or "").strip()

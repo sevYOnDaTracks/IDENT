@@ -21,7 +21,7 @@
   <div class="grid">
     <div class="card">
       <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
-        <a class="button ghost" href="home.html">Accueil</a>
+        <a class="button ghost" href="home.html" id="btn-home">Accueil</a>
         <div class="connection">
           <button id="btn-test-conn" class="button outline">Tester connexion Oracle</button>
           <div id="conn-status" class="result" aria-live="polite"></div>
@@ -110,6 +110,7 @@
     const resultsContainer = document.getElementById("assure-results");
     const loadMoreContainer = document.getElementById("load-more");
     const loadMoreButton = document.getElementById("btn-load-more");
+    const homeButton = document.getElementById("btn-home");
     const detailsSection = document.getElementById("assure-details");
     const hideDetailsButton = document.getElementById("btn-hide-details");
     const exportButton = document.getElementById("btn-export");
@@ -399,6 +400,21 @@
       cachedPassword = pwd;
       return user;
     }
+
+    homeButton?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        if (window.pywebview?.api?.reset_credentials) {
+          await window.pywebview.api.reset_credentials();
+        }
+      } catch (_) {
+        /* ignore */
+      } finally {
+        cachedUser = null;
+        cachedPassword = null;
+        window.location.href = "home.html";
+      }
+    });
 
     function toggleSearchArea(hide) {
       [nirForm, nirResult, resultsContainer, loadMoreContainer].forEach((el) => {
