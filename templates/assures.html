@@ -131,6 +131,18 @@
     let cachedUser = null;
     let cachedPassword = null;
 
+    const showError = (message) => {
+      try {
+        window.alert(message);
+      } catch (_) {
+        // ignore if alert fails
+      }
+    };
+
+    window.addEventListener("unhandledrejection", (event) => {
+      showError("Erreur inattendue : " + (event.reason || ""));
+    });
+
     nirForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const value = (nirInput?.value || "").trim();
@@ -179,6 +191,7 @@
       } catch (error) {
         nirResult.textContent = "Erreur pendant la recherche : " + error;
         nirResult.classList.remove("success");
+        showError("Erreur pendant la recherche : " + error);
         assureData = [];
         selectedAssure = null;
         lastNirValue = "";
@@ -193,6 +206,7 @@
     async function testConnection() {
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.test_connection) {
         connStatus && (connStatus.textContent = "API pywebview non disponible.");
+        showError("API pywebview non disponible pour le test de connexion.");
         return;
       }
       const username = await ensureCredentials(true);
@@ -207,9 +221,11 @@
           connStatus && connStatus.classList.add("success");
         } else {
           connStatus && (connStatus.textContent = response?.message || "Échec de connexion.");
+          showError(response?.message || "Échec de connexion.");
         }
       } catch (error) {
         connStatus && (connStatus.textContent = "Erreur pendant le test : " + error);
+        showError("Erreur pendant le test de connexion : " + error);
       }
     }
 
@@ -317,6 +333,7 @@
       }
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.export_assure) {
         nirResult.textContent = "API pywebview non disponible pour l'export.";
+        showError("API pywebview non disponible pour l'export.");
         return;
       }
       const user = await ensureCredentials();
@@ -332,10 +349,12 @@
         } else {
           nirResult.textContent = response?.message || "Échec export.";
           nirResult.classList.remove("success");
+          showError(response?.message || "Échec export.");
         }
       } catch (error) {
         nirResult.textContent = "Erreur export : " + error;
         nirResult.classList.remove("success");
+        showError("Erreur export : " + error);
       }
     });
 
