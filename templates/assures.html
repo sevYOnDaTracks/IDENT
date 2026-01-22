@@ -22,7 +22,10 @@
     <div class="card">
       <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
         <a class="button ghost" href="home.html">Accueil</a>
-        <button id="btn-test-conn" class="button outline">Tester connexion Oracle</button>
+        <div class="connection">
+          <button id="btn-test-conn" class="button outline">Tester connexion Oracle</button>
+          <div id="conn-status" class="result" aria-live="polite"></div>
+        </div>
       </div>
 
       <h1 class="title">Assurés</h1>
@@ -188,24 +191,24 @@
 
     async function testConnection() {
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.test_connection) {
-        connStatus.textContent = "API pywebview non disponible.";
+        connStatus && (connStatus.textContent = "API pywebview non disponible.");
         return;
       }
       const username = await ensureCredentials(true);
       const password = cachedPassword;
       if (!username || !password) return;
-      connStatus.textContent = "Test de connexion en cours...";
-      connStatus.classList.remove("success");
+      connStatus && (connStatus.textContent = "Test de connexion en cours...");
+      connStatus && connStatus.classList.remove("success");
       try {
         const response = await window.pywebview.api.test_connection(username, password);
         if (response?.ok === "true") {
-          connStatus.textContent = response.message || "Connexion réussie.";
-          connStatus.classList.add("success");
+          connStatus && (connStatus.textContent = response.message || "Connexion réussie.");
+          connStatus && connStatus.classList.add("success");
         } else {
-          connStatus.textContent = response?.message || "Échec de connexion.";
+          connStatus && (connStatus.textContent = response?.message || "Échec de connexion.");
         }
       } catch (error) {
-        connStatus.textContent = "Erreur pendant le test : " + error;
+        connStatus && (connStatus.textContent = "Erreur pendant le test : " + error);
       }
     }
 
