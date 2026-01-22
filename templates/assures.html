@@ -86,31 +86,15 @@
             <button class="button ghost" id="btn-hide-details">Retour aux résultats</button>
           </div>
         </div>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="infos">Infos personnels</button>
-          <button class="tab" data-tab="csg">CSG</button>
-          <button class="tab" data-tab="rds">RDS</button>
-          <button class="tab" data-tab="assurance">Assurance maladie</button>
-          <button class="tab" data-tab="retraite">Retraite</button>
-        </div>
-        <div class="tab-panels">
-          <div class="tab-panel active" data-tab="infos">
-            <div id="info-list" class="info-grid"></div>
-          </div>
-          <div class="tab-panel" data-tab="csg">
-            <p class="panel-text">CSG : données à venir.</p>
-          </div>
-          <div class="tab-panel" data-tab="rds">
-            <p class="panel-text">RDS : données à venir.</p>
-          </div>
-          <div class="tab-panel" data-tab="assurance">
-            <p class="panel-text">Assurance maladie : données à venir.</p>
-          </div>
-          <div class="tab-panel" data-tab="retraite">
-            <p class="panel-text">Retraite : données à venir.</p>
-          </div>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="infos">Infos personnels</button>
+      </div>
+      <div class="tab-panels">
+        <div class="tab-panel active" data-tab="infos">
+          <div id="info-list" class="info-grid"></div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -261,10 +245,6 @@
               <span class="label">Date de naissance</span>
               <span class="value">${item.date_naissance || "-"}</span>
             </div>
-            <div class="result-row">
-              <span class="label">Sexe</span>
-              <span class="value">${item.sexe || "-"}</span>
-            </div>
             <div class="card-actions">
               <button class="button ghost card-more" data-index="${i}">Voir plus</button>
             </div>
@@ -388,15 +368,6 @@
         { label: "Nom usage", value: selectedAssure.nom_usage },
         { label: "Prénom usage", value: selectedAssure.prenom_usage },
         { label: "Date de naissance", value: selectedAssure.date_naissance },
-        { label: "Sexe", value: selectedAssure.sexe },
-        { label: "Email", value: selectedAssure.email },
-        { label: "Pays de nationalité", value: selectedAssure.pays_nationalite },
-        selectedAssure.date_deces ? { label: "Date de décès", value: selectedAssure.date_deces } : null,
-        { label: "Type de contrat individu", value: selectedAssure.type_contrat_individu },
-        { label: "Numéro adhérent AC", value: selectedAssure.numero_adherent },
-        { label: "Association cultuelle", value: selectedAssure.raison_sociale },
-        { label: "Date effet contrat", value: selectedAssure.date_effet_contrat },
-        { label: "Date conditions contrat", value: selectedAssure.date_conditions_contrat },
       ].filter(Boolean);
 
       items.forEach((item) => {

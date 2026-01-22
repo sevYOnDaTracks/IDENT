@@ -66,41 +66,21 @@ class OracleClient:
         prenom_pattern = f"{prenom_value}%" if prenom_value else None
 
         order_field = {
-            "nir": "nir",
-            "nom": "ind.nom_usage",
-            "prenom": "ind.prenom_usage",
-        }.get(order_by, "nir")
+            "nir": "as_NNI",
+            "nom": "as_nompat",
+            "prenom": "as_prenoms",
+        }.get(order_by, "as_NNI")
+
         sql = """
             SELECT
-                ind.nom_usage,
-                ind.prenom_usage,
-                ind.date_naissance,
-                ind.sexe,
-                COALESCE(mi.nir, mi.nir_provisoire_vision) AS nir,
-                ind.email,
-                p.libelle AS pays_nationalite,
-                ind.date_deces,
-                tconind.libelle AS type_contrat_individu,
-                ac.numero_adherent,
-                ac.raison_sociale,
-                ct.date_effet AS date_effet_contrat,
-                ct.date_conditions AS date_conditions_contrat
-            FROM individu ind
-            LEFT JOIN matricule_individu mi
-                ON ind.ind_id = mi.ind_id
-               AND mi.si_actif = 1
-            LEFT JOIN pays p
-                ON ind.pay_id_nat_principale = p.pay_id
-            LEFT JOIN contrat ct
-                ON ind.ind_id = ct.ind_id
-               AND ct.si_actif = 1
-            LEFT JOIN type_contrat_individu tconind
-                ON ct.tconind_id = tconind.tconind_id
-            LEFT JOIN association_cultuelle ac
-                ON ct.ac_id = ac.ac_id
-            WHERE ( :nir_pattern IS NULL OR UPPER(COALESCE(mi.nir, mi.nir_provisoire_vision)) LIKE UPPER(:nir_pattern) )
-              AND ( :nom_pattern IS NULL OR UPPER(ind.nom_usage) LIKE UPPER(:nom_pattern) )
-              AND ( :prenom_pattern IS NULL OR UPPER(ind.prenom_usage) LIKE UPPER(:prenom_pattern) )
+                as_NNI,
+                as_nompat,
+                as_prenoms,
+                as_dtnais
+            FROM AT_AS#ASSURE
+            WHERE ( :nir_pattern IS NULL OR UPPER(as_NNI) LIKE UPPER(:nir_pattern) )
+              AND ( :nom_pattern IS NULL OR UPPER(as_nompat) LIKE UPPER(:nom_pattern) )
+              AND ( :prenom_pattern IS NULL OR UPPER(as_prenoms) LIKE UPPER(:prenom_pattern) )
         """
 
         sql = f"{sql} ORDER BY {order_field}"
@@ -122,19 +102,19 @@ class OracleClient:
         for row in rows:
             data.append(
                 {
-                    "nom_usage": row[0],
-                    "prenom_usage": row[1],
-                    "date_naissance": _format_date(row[2]),
-                    "sexe": "Homme" if row[3] == "1MA" else "Femme",
-                    "nir": row[4],
-                    "email": row[5],
-                    "pays_nationalite": row[6],
-                    "date_deces": _format_date(row[7]),
-                    "type_contrat_individu": row[8],
-                    "numero_adherent": row[9],
-                    "raison_sociale": row[10],
-                    "date_effet_contrat": _format_date(row[11]),
-                    "date_conditions_contrat": _format_date(row[12]),
+                    "nir": row[0],
+                    "nom_usage": row[1],
+                    "prenom_usage": row[2],
+                    "date_naissance": _format_date(row[3]),
+                    "sexe": None,
+                    "email": None,
+                    "pays_nationalite": None,
+                    "date_deces": None,
+                    "type_contrat_individu": None,
+                    "numero_adherent": None,
+                    "raison_sociale": None,
+                    "date_effet_contrat": None,
+                    "date_conditions_contrat": None,
                 }
             )
         return {"data": data, "error": None}
