@@ -39,35 +39,43 @@
       <div class="view view-assures" data-view="assures">
         <h1 class="title">Assurés</h1>
         <p class="subtitle">Veuillez entrer le NIR de l'utilisateur recherché (recherche par préfixe, insensible à la casse).</p>
-        <form id="nir-form" class="form">
-          <label class="form-label" for="nir-input">NIR</label>
-          <div class="form-row">
-            <input id="nir-input" name="nir" type="text" placeholder="Ex : 1234567890123" autocomplete="off">
+        <form id="nir-form" class="form search-panel">
+          <div class="panel panel-search">
+            <div class="panel-title">Critères de recherche</div>
+            <div class="panel-body">
+              <div class="form-row compact">
+                <label class="form-label" for="nir-input">NIR (actuel ou ancien)</label>
+                <input id="nir-input" name="nir" type="text" placeholder="Ex : 1234567890123" autocomplete="off">
+              </div>
+              <div class="form-row compact">
+                <label class="form-label" for="nom-input">Nom patronymique</label>
+                <input id="nom-input" name="nom" type="text" placeholder="Ex : DUPONT" autocomplete="off">
+              </div>
+              <div class="form-row compact">
+                <label class="form-label" for="prenom-input">Prénoms</label>
+                <input id="prenom-input" name="prenom" type="text" placeholder="Ex : Jean" autocomplete="off">
+              </div>
+            </div>
           </div>
-          <div class="form-row">
-            <div class="field">
-              <label class="form-label" for="nom-input">Nom patronymique</label>
-              <input id="nom-input" name="nom" type="text" placeholder="Ex : DUPONT" autocomplete="off">
+
+          <div class="panel panel-tri">
+            <div class="panel-title">Critères de tri</div>
+            <div class="panel-body radios">
+              <label class="radio-line">
+                <input type="radio" name="tri" value="nom" checked>
+                <span>Nom - Prénoms</span>
+              </label>
+              <label class="radio-line">
+                <input type="radio" name="tri" value="nir">
+                <span>NIR</span>
+              </label>
             </div>
-            <div class="field">
-              <label class="form-label" for="prenom-input">Prénoms</label>
-              <input id="prenom-input" name="prenom" type="text" placeholder="Ex : Jean" autocomplete="off">
-            </div>
-            <div class="field select-field">
-              <label class="form-label" for="tri-select">Trier par</label>
-              <select id="tri-select" name="tri">
-                <option value="nir" selected>NIR</option>
-                <option value="nom">Nom patronymique</option>
-                <option value="prenom">Prénoms</option>
-              </select>
-            </div>
-            <div class="field action-field">
-              <label class="form-label">&nbsp;</label>
+            <div class="panel-actions">
               <button class="button primary" type="submit">Rechercher</button>
             </div>
           </div>
         </form>
-        <p class="hint">Un ou plusieurs filtres suffisent (recherche par préfixe), tri selon votre choix.</p>
+        <p class="hint">Un ou plusieurs filtres suffisent (recherche par préfixe).</p>
         <div id="nir-result" class="result" aria-live="polite"></div>
         <div id="assure-results" class="result-list"></div>
         <div id="load-more" class="more" hidden>
@@ -149,7 +157,7 @@
     const nirInput = document.getElementById("nir-input");
     const nomInput = document.getElementById("nom-input");
     const prenomInput = document.getElementById("prenom-input");
-    const triSelect = document.getElementById("tri-select");
+    const triRadios = document.querySelectorAll('input[name="tri"]');
     const nirResult = document.getElementById("nir-result");
     const resultsContainer = document.getElementById("assure-results");
     const loadMoreContainer = document.getElementById("load-more");
@@ -197,7 +205,7 @@
       const value = (nirInput?.value || "").trim();
       const nom = (nomInput?.value || "").trim();
       const prenom = (prenomInput?.value || "").trim();
-      const tri = (triSelect?.value || "nir").trim();
+      const tri = (document.querySelector('input[name="tri"]:checked')?.value || "nir").trim();
       nirResult.textContent = "Recherche en cours...";
       nirResult.classList.remove("success");
 
