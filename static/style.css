@@ -389,20 +389,20 @@ input[type="text"]:focus {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 8px 0 12px;
-  font-size: 14px;
+  margin: 12px 0 16px;
+  font-size: 15px;
 }
 
 .data-table th,
 .data-table td {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 8px 10px;
+  padding: 10px 12px;
   text-align: left;
   color: var(--text);
 }
 
 .data-table th {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   font-weight: 700;
 }
 
@@ -411,9 +411,15 @@ input[type="text"]:focus {
 }
 
 .table-title {
-  margin: 6px 0 4px;
+  margin: 10px 0 6px;
   font-weight: 700;
   color: var(--text);
+}
+
+.maladie-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .logo-top-left {
