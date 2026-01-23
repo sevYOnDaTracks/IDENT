@@ -389,14 +389,14 @@ input[type="text"]:focus {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 12px 0 16px;
-  font-size: 15px;
+  margin: 10px 0 12px;
+  font-size: 13px;
 }
 
 .data-table th,
 .data-table td {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: left;
   color: var(--text);
 }
@@ -411,7 +411,7 @@ input[type="text"]:focus {
 }
 
 .table-title {
-  margin: 10px 0 6px;
+  margin: 8px 0 4px;
   font-weight: 700;
   color: var(--text);
 }
@@ -420,6 +420,11 @@ input[type="text"]:focus {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.tab-panel[data-tab="maladie"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .logo-top-left {
