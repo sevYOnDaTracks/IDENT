@@ -361,6 +361,14 @@ input[type="text"]:focus {
   font-weight: 600;
 }
 
+.info-section {
+  grid-column: 1 / -1;
+  padding: 6px 0 2px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .logo-top-left {
   position: fixed;
   top: 16px;

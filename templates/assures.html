@@ -392,21 +392,49 @@
       infoList.innerHTML = "";
       if (!selectedAssure) return;
       const items = [
+        { section: "Informations générales" },
         { label: "NIR", value: selectedAssure.nir },
         { label: "Nom usage", value: selectedAssure.nom_usage },
         { label: "Prénom usage", value: selectedAssure.prenom_usage },
         { label: "Date de naissance", value: selectedAssure.date_naissance },
         { label: "Civilité", value: selectedAssure.civilite },
+        { section: "Identification" },
+        { label: "Nom usuel", value: selectedAssure.nom_usuel },
+        { label: "Date certification RNIAM", value: selectedAssure.date_certif_rniam },
+        { section: "Collectivités" },
+        { label: "Collectivité maladie", value: selectedAssure.collectivite_maladie },
+        { label: "Collectivité vieillesse", value: selectedAssure.collectivite_vieillesse },
+        { label: "Communauté", value: selectedAssure.communaute },
+        { section: "Lieu de naissance" },
+        { label: "Code postal", value: selectedAssure.code_postal },
+        { label: "Commune", value: selectedAssure.commune },
+        { label: "Pays", value: selectedAssure.pays_naissance },
+        { section: "Nationalité" },
+        { label: "Type nationalité", value: selectedAssure.type_nationalite },
+        { label: "Date naturalisation", value: selectedAssure.date_naturalisation },
+        { label: "Pays 1", value: selectedAssure.pays1 },
+        { section: "Vie religieuse" },
+        { label: "Entrée en vie religieuse", value: selectedAssure.date_entree_vie_religieuse },
+        { label: "Cessation de vie religieuse", value: selectedAssure.date_cessation_vie_religieuse },
+        { label: "Date fin visa VLS/TS", value: selectedAssure.date_fin_visa },
+        { label: "Date MAJ", value: selectedAssure.date_maj },
       ].filter(Boolean);
 
       items.forEach((item) => {
-        const row = document.createElement("div");
-        row.className = "info-row";
-        row.innerHTML = `
-          <div class="info-label">${item.label}</div>
-          <div class="info-value">${item.value || "-"}</div>
-        `;
-        infoList.appendChild(row);
+        if (item.section) {
+          const section = document.createElement("div");
+          section.className = "info-section";
+          section.textContent = item.section;
+          infoList.appendChild(section);
+        } else {
+          const row = document.createElement("div");
+          row.className = "info-row";
+          row.innerHTML = `
+            <div class="info-label">${item.label}</div>
+            <div class="info-value">${item.value || "-"}</div>
+          `;
+          infoList.appendChild(row);
+        }
       });
     }
 
