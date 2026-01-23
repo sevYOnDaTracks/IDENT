@@ -386,6 +386,36 @@ input[type="text"]:focus {
   letter-spacing: 0.01em;
 }
 
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 12px;
+  font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 10px;
+  text-align: left;
+  color: var(--text);
+}
+
+.data-table th {
+  background: rgba(255, 255, 255, 0.07);
+  font-weight: 700;
+}
+
+.data-table td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.table-title {
+  margin: 6px 0 4px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .logo-top-left {
   position: fixed;
   top: 16px;

@@ -92,6 +92,7 @@
       <div class="tabs" role="tablist">
         <button class="tab active" data-tab="infos">Infos personnels</button>
         <button class="tab" data-tab="situations">Situations</button>
+        <button class="tab" data-tab="maladie">Maladie</button>
       </div>
       <div class="tab-panels">
         <div class="tab-panel active" data-tab="infos">
@@ -99,6 +100,48 @@
         </div>
         <div class="tab-panel" data-tab="situations">
           <div id="situation-grid" class="info-grid two-col"></div>
+        </div>
+        <div class="tab-panel" data-tab="maladie">
+          <div class="table-title">Historique des situations maladie</div>
+          <table class="data-table" id="table-sit-maladie">
+            <thead>
+              <tr>
+                <th>Code situation</th>
+                <th>Code nature 1</th>
+                <th>Code nature 2</th>
+                <th>Date nature 2</th>
+                <th>Date des conditions</th>
+                <th>Date de déclaration</th>
+                <th>Date d'effet</th>
+                <th>Cristallisation</th>
+                <th>Date MAJ situation</th>
+                <th>Date MAJ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="table-title">Renouvellement Régime Particulier</div>
+          <table class="data-table" id="table-renouv-maladie">
+            <tbody>
+              <tr><th>Date d'effet du dernier renouvellement</th><td>-</td></tr>
+              <tr><th>Date Envoi Renouvellement</th><td>-</td></tr>
+              <tr><th>Date Retour Renouvellement</th><td>-</td></tr>
+            </tbody>
+          </table>
+
+          <div class="table-title">Historique des collectivités maladie</div>
+          <table class="data-table" id="table-collect-malie">
+            <thead>
+              <tr>
+                <th>N° collectivité</th>
+                <th>Date effet</th>
+                <th>Date MAJ</th>
+                <th>État actuel</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -122,6 +165,9 @@
     const assureMeta = document.getElementById("assure-meta");
     const infoList = document.getElementById("info-list");
     const situationGrid = document.getElementById("situation-grid");
+    const tableSitMaladie = document.querySelector("#table-sit-maladie tbody");
+    const tableRenouvMaladie = document.querySelector("#table-renouv-maladie tbody");
+    const tableCollectMalie = document.querySelector("#table-collect-malie tbody");
     const tabs = document.querySelectorAll("#assure-details .tab");
     const panels = document.querySelectorAll("#assure-details .tab-panel");
     const testConnButton = document.getElementById("btn-test-conn");
@@ -299,6 +345,7 @@
           updateAssureHeader();
           renderInfoDetails();
           renderSituationDetails();
+          renderMaladieDetails();
           toggleDetails(true);
           toggleSearchArea(true);
           nirInput.value = "";
@@ -375,6 +422,7 @@
         assureMeta.textContent = "-";
         renderInfoDetails();
         renderSituationDetails();
+        renderMaladieDetails();
         return;
       }
       const parts = [selectedAssure.nom_usage, selectedAssure.prenom_usage].filter(Boolean).join(" ");
@@ -499,6 +547,64 @@
 
       situationGrid.appendChild(buildCard("Maladie", maladie));
       situationGrid.appendChild(buildCard("Vieillesse", vieillesse));
+    }
+
+    function renderMaladieDetails() {
+      if (tableSitMaladie) {
+        tableSitMaladie.innerHTML = "";
+        const rows = selectedAssure?.situations_maladie || [];
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td colspan="10">-</td>';
+          tableSitMaladie.appendChild(tr);
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.code_situation || "-"}</td>
+              <td>${r.code_nature1 || "-"}</td>
+              <td>${r.code_nature2 || "-"}</td>
+              <td>${r.date_nature2 || "-"}</td>
+              <td>${r.date_conditions || "-"}</td>
+              <td>${r.date_declaration || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.cristallisation || "-"}</td>
+              <td>${r.date_maj_situation || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSitMaladie.appendChild(tr);
+          });
+        }
+      }
+
+      if (tableRenouvMaladie) {
+        tableRenouvMaladie.innerHTML = `
+          <tr><th>Date d'effet du dernier renouvellement</th><td>${selectedAssure?.date_effet_dernier_renouvellement || "-"}</td></tr>
+          <tr><th>Date Envoi Renouvellement</th><td>${selectedAssure?.date_envoi_renouvellement || "-"}</td></tr>
+          <tr><th>Date Retour Renouvellement</th><td>${selectedAssure?.date_retour_renouvellement || "-"}</td></tr>
+        `;
+      }
+
+      if (tableCollectMalie) {
+        tableCollectMalie.innerHTML = "";
+        const rows = selectedAssure?.collectivites_maladie || [];
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td colspan="4">-</td>';
+          tableCollectMalie.appendChild(tr);
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.collectivite || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+              <td>${r.etat_actuel || "-"}</td>
+            `;
+            tableCollectMalie.appendChild(tr);
+          });
+        }
+      }
     }
 
     async function ensureCredentials(force = false) {
