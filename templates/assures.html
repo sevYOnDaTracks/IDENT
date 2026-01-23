@@ -555,60 +555,75 @@
     }
 
     function renderMaladieDetails() {
+      const sampleSit = [
+        {
+          code_situation: "21",
+          code_nature1: "23",
+          code_nature2: "",
+          date_nature2: "00/00/0000",
+          date_conditions: "01/06/1980",
+          date_declaration: "00/00/0000",
+          date_effet: "01/06/1980",
+          cristallisation: "Non",
+          date_maj_situation: "20/01/1993",
+          date_maj: "20/01/1993",
+        },
+      ];
+
+      const sampleRenouv = {
+        date_effet_dernier_renouvellement: "00/00/0000",
+        date_envoi_renouvellement: "00/00/0000",
+        date_retour_renouvellement: "00/00/0000",
+      };
+
+      const sampleCollect = [
+        { collectivite: "8299", date_effet: "01/01/1993", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
+        { collectivite: "2271", date_effet: "01/01/1920", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
+      ];
+
       if (tableSitMaladie) {
         tableSitMaladie.innerHTML = "";
-        const rows = selectedAssure?.situations_maladie || [];
-        if (!rows.length) {
+        const rows = selectedAssure?.situations_maladie || sampleSit;
+        rows.forEach((r) => {
           const tr = document.createElement("tr");
-          tr.innerHTML = '<td colspan="10">-</td>';
+          tr.innerHTML = `
+            <td>${r.code_situation || "-"}</td>
+            <td>${r.code_nature1 || "-"}</td>
+            <td>${r.code_nature2 || "-"}</td>
+            <td>${r.date_nature2 || "-"}</td>
+            <td>${r.date_conditions || "-"}</td>
+            <td>${r.date_declaration || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.cristallisation || "-"}</td>
+            <td>${r.date_maj_situation || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+          `;
           tableSitMaladie.appendChild(tr);
-        } else {
-          rows.forEach((r) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${r.code_situation || "-"}</td>
-              <td>${r.code_nature1 || "-"}</td>
-              <td>${r.code_nature2 || "-"}</td>
-              <td>${r.date_nature2 || "-"}</td>
-              <td>${r.date_conditions || "-"}</td>
-              <td>${r.date_declaration || "-"}</td>
-              <td>${r.date_effet || "-"}</td>
-              <td>${r.cristallisation || "-"}</td>
-              <td>${r.date_maj_situation || "-"}</td>
-              <td>${r.date_maj || "-"}</td>
-            `;
-            tableSitMaladie.appendChild(tr);
-          });
-        }
+        });
       }
 
       if (tableRenouvMaladie) {
+        const r = selectedAssure || {};
         tableRenouvMaladie.innerHTML = `
-          <tr><th>Date d'effet du dernier renouvellement</th><td>${selectedAssure?.date_effet_dernier_renouvellement || "-"}</td></tr>
-          <tr><th>Date Envoi Renouvellement</th><td>${selectedAssure?.date_envoi_renouvellement || "-"}</td></tr>
-          <tr><th>Date Retour Renouvellement</th><td>${selectedAssure?.date_retour_renouvellement || "-"}</td></tr>
+          <tr><th>Date d'effet du dernier renouvellement</th><td>${r.date_effet_dernier_renouvellement || sampleRenouv.date_effet_dernier_renouvellement}</td></tr>
+          <tr><th>Date Envoi Renouvellement</th><td>${r.date_envoi_renouvellement || sampleRenouv.date_envoi_renouvellement}</td></tr>
+          <tr><th>Date Retour Renouvellement</th><td>${r.date_retour_renouvellement || sampleRenouv.date_retour_renouvellement}</td></tr>
         `;
       }
 
       if (tableCollectMalie) {
         tableCollectMalie.innerHTML = "";
-        const rows = selectedAssure?.collectivites_maladie || [];
-        if (!rows.length) {
+        const rows = selectedAssure?.collectivites_maladie || sampleCollect;
+        rows.forEach((r) => {
           const tr = document.createElement("tr");
-          tr.innerHTML = '<td colspan="4">-</td>';
+          tr.innerHTML = `
+            <td>${r.collectivite || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+            <td>${r.etat_actuel || "-"}</td>
+          `;
           tableCollectMalie.appendChild(tr);
-        } else {
-          rows.forEach((r) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${r.collectivite || "-"}</td>
-              <td>${r.date_effet || "-"}</td>
-              <td>${r.date_maj || "-"}</td>
-              <td>${r.etat_actuel || "-"}</td>
-            `;
-            tableCollectMalie.appendChild(tr);
-          });
-        }
+        });
       }
     }
 
