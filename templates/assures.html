@@ -91,10 +91,14 @@
         </div>
       <div class="tabs" role="tablist">
         <button class="tab active" data-tab="infos">Infos personnels</button>
+        <button class="tab" data-tab="situations">Situations</button>
       </div>
       <div class="tab-panels">
         <div class="tab-panel active" data-tab="infos">
           <div id="info-list" class="info-grid"></div>
+        </div>
+        <div class="tab-panel" data-tab="situations">
+          <div id="situation-grid" class="info-grid two-col"></div>
         </div>
       </div>
     </div>
@@ -117,6 +121,7 @@
     const assureFullname = document.getElementById("assure-fullname");
     const assureMeta = document.getElementById("assure-meta");
     const infoList = document.getElementById("info-list");
+    const situationGrid = document.getElementById("situation-grid");
     const tabs = document.querySelectorAll("#assure-details .tab");
     const panels = document.querySelectorAll("#assure-details .tab-panel");
     const testConnButton = document.getElementById("btn-test-conn");
@@ -293,6 +298,7 @@
           selectedAssure = assureData[idx];
           updateAssureHeader();
           renderInfoDetails();
+          renderSituationDetails();
           toggleDetails(true);
           toggleSearchArea(true);
           nirInput.value = "";
@@ -368,6 +374,7 @@
         assureFullname.textContent = "-";
         assureMeta.textContent = "-";
         renderInfoDetails();
+        renderSituationDetails();
         return;
       }
       const parts = [selectedAssure.nom_usage, selectedAssure.prenom_usage].filter(Boolean).join(" ");
@@ -436,6 +443,62 @@
           infoList.appendChild(row);
         }
       });
+    }
+
+    function renderSituationDetails() {
+      if (!situationGrid) return;
+      situationGrid.innerHTML = "";
+      if (!selectedAssure) return;
+
+      const maladie = [
+        { label: "Situation", value: selectedAssure.sit_maladie },
+        { label: "Nature situation 1", value: selectedAssure.nature1_maladie },
+        { label: "Date condition", value: selectedAssure.date_condition_maladie },
+        { label: "Date déclaration", value: selectedAssure.date_declaration_maladie },
+        { label: "Cristallisation", value: selectedAssure.cristallisation_maladie },
+        { label: "Date effet", value: selectedAssure.date_effet_maladie },
+        { label: "Nature situation 2", value: selectedAssure.nature2_maladie },
+        { label: "Date nature situation 2", value: selectedAssure.date_nature2_maladie },
+        { label: "Date MAJ situation", value: selectedAssure.date_maj_situation_maladie },
+        { label: "Date édition notification", value: selectedAssure.date_edition_notification_maladie },
+        { label: "Date MAJ", value: selectedAssure.date_maj_maladie },
+      ];
+
+      const vieillesse = [
+        { label: "Situation", value: selectedAssure.sit_vieillesse },
+        { label: "Nature situation 1", value: selectedAssure.nature1_vieillesse },
+        { label: "Date condition", value: selectedAssure.date_condition_vieillesse },
+        { label: "Date déclaration", value: selectedAssure.date_declaration_vieillesse },
+        { label: "Cristallisation", value: selectedAssure.cristallisation_vieillesse },
+        { label: "Date effet", value: selectedAssure.date_effet_vieillesse },
+        { label: "Nature situation 2", value: selectedAssure.nature2_vieillesse },
+        { label: "Date nature situation 2", value: selectedAssure.date_nature2_vieillesse },
+        { label: "Date MAJ situation", value: selectedAssure.date_maj_situation_vieillesse },
+        { label: "Date édition notification", value: selectedAssure.date_edition_notification_vieillesse },
+        { label: "Date MAJ", value: selectedAssure.date_maj_vieillesse },
+      ];
+
+      const buildCard = (title, rows) => {
+        const card = document.createElement("div");
+        card.className = "situation-card";
+        const h = document.createElement("h4");
+        h.className = "situation-title";
+        h.textContent = title;
+        card.appendChild(h);
+        rows.forEach((row) => {
+          const el = document.createElement("div");
+          el.className = "info-row";
+          el.innerHTML = `
+            <div class="info-label">${row.label}</div>
+            <div class="info-value">${row.value || "-"}</div>
+          `;
+          card.appendChild(el);
+        });
+        return card;
+      };
+
+      situationGrid.appendChild(buildCard("Maladie", maladie));
+      situationGrid.appendChild(buildCard("Vieillesse", vieillesse));
     }
 
     async function ensureCredentials(force = false) {
