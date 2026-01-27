@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 def _format_date(value):
@@ -747,5 +747,218 @@ def build_assure_workbook(data: List[Dict[str, object]]):
         ws = wb.create_sheet(title)
         ws.append([title])
         ws.append(["Données à venir"])
+
+    return wb
+
+
+def build_collectivite_workbook(
+    collect_id: str,
+    identification: Optional[Dict[str, object]],
+    adresse: Optional[Dict[str, object]],
+    responsable_maladie: Optional[Dict[str, object]],
+    responsable_vieillesse: Optional[Dict[str, object]],
+    assures: List[Dict[str, object]],
+    communautes: List[Dict[str, object]],
+    referent: Optional[Dict[str, object]],
+    situations: List[Dict[str, object]],
+    fusions: List[Dict[str, object]],
+):
+    """Construit un classeur Excel pour une collectivité."""
+    from openpyxl import Workbook
+
+    def _safe(value: object) -> str:
+        if value is None or value == "":
+            return "-"
+        return str(value)
+
+    def _append_section(ws, title: str, rows: List[Tuple[str, object]]) -> None:
+        ws.append([title])
+        ws.append(["Champ", "Valeur"])
+        for label, val in rows:
+            ws.append([label, _safe(val)])
+        ws.append([])
+
+    wb = Workbook()
+
+    ws_ident = wb.active
+    ws_ident.title = "Identification"
+    _append_section(
+        ws_ident,
+        "Identification",
+        [
+            ("Numéro", collect_id),
+            ("Dénomination 1", (identification or {}).get("denom1")),
+            ("Dénomination 2", (identification or {}).get("denom2")),
+            ("Culte", (identification or {}).get("culte")),
+            ("Mode de vie", (identification or {}).get("mode_vie")),
+            ("1ère adhésion", (identification or {}).get("date_adhesion")),
+            ("Création journal officiel", (identification or {}).get("date_journal")),
+            ("Reconnaissance cultuelle", (identification or {}).get("recult")),
+            ("Date MAJ", (identification or {}).get("date_maj")),
+            ("Nb lettres d'informations", (identification or {}).get("nb_lettres")),
+        ],
+    )
+
+    ws_ident.append(["Historique des situations"])
+    ws_ident.append(["Date effet", "Libellé situation", "N° coll. accueil", "Date MAJ"])
+    for item in situations or []:
+        ws_ident.append(
+            [
+                _safe(item.get("date_effet")),
+                _safe(item.get("libelle")),
+                _safe(item.get("coll_accueil")),
+                _safe(item.get("date_maj")),
+            ]
+        )
+    ws_ident.append([])
+    ws_ident.append(["Collectivités reprises suite à fusion"])
+    ws_ident.append(["Date effet", "N° coll. transférée", "Date MAJ"])
+    for item in fusions or []:
+        ws_ident.append(
+            [
+                _safe(item.get("date_effet")),
+                _safe(item.get("coll_transf")),
+                _safe(item.get("date_maj")),
+            ]
+        )
+
+    ws_addr = wb.create_sheet("Adresse")
+    _append_section(
+        ws_addr,
+        "Adresse",
+        [
+            ("Ligne 1", (adresse or {}).get("adr1")),
+            ("Ligne 2", (adresse or {}).get("adr2")),
+            ("Ligne 3", (adresse or {}).get("adr3")),
+            ("Ligne 4", (adresse or {}).get("adr4")),
+            ("Code postal", (adresse or {}).get("cp")),
+            ("Ville", (adresse or {}).get("ville")),
+            ("Pays", (adresse or {}).get("pays")),
+        ],
+    )
+    _append_section(
+        ws_addr,
+        "Coordonnées",
+        [
+            ("Email", (adresse or {}).get("email")),
+            ("Téléphone", (adresse or {}).get("tel")),
+            ("Télécopie", (adresse or {}).get("fax")),
+            ("NPAI", (adresse or {}).get("npai")),
+            ("Date MAJ adresse", (adresse or {}).get("date_maj")),
+        ],
+    )
+
+    ws_resp = wb.create_sheet("Responsables")
+    _append_section(
+        ws_resp,
+        "Responsable maladie",
+        [
+            ("Nom du responsable", (responsable_maladie or {}).get("nom")),
+            ("Ligne 1", (responsable_maladie or {}).get("adr1")),
+            ("Ligne 2", (responsable_maladie or {}).get("adr2")),
+            ("Ligne 3", (responsable_maladie or {}).get("adr3")),
+            ("Ligne 4", (responsable_maladie or {}).get("adr4")),
+            ("Code postal", (responsable_maladie or {}).get("cp")),
+            ("Ville", (responsable_maladie or {}).get("ville")),
+            ("Pays", (responsable_maladie or {}).get("pays")),
+            ("Email", (responsable_maladie or {}).get("email")),
+            ("Téléphone", (responsable_maladie or {}).get("tel")),
+            ("Télécopie", (responsable_maladie or {}).get("fax")),
+            ("Date MAJ", (responsable_maladie or {}).get("date_maj")),
+        ],
+    )
+    _append_section(
+        ws_resp,
+        "Responsable vieillesse",
+        [
+            ("Nom du responsable", (responsable_vieillesse or {}).get("nom")),
+            ("Ligne 1", (responsable_vieillesse or {}).get("adr1")),
+            ("Ligne 2", (responsable_vieillesse or {}).get("adr2")),
+            ("Ligne 3", (responsable_vieillesse or {}).get("adr3")),
+            ("Ligne 4", (responsable_vieillesse or {}).get("adr4")),
+            ("Code postal", (responsable_vieillesse or {}).get("cp")),
+            ("Ville", (responsable_vieillesse or {}).get("ville")),
+            ("Pays", (responsable_vieillesse or {}).get("pays")),
+            ("Email", (responsable_vieillesse or {}).get("email")),
+            ("Téléphone", (responsable_vieillesse or {}).get("tel")),
+            ("Télécopie", (responsable_vieillesse or {}).get("fax")),
+            ("Date MAJ", (responsable_vieillesse or {}).get("date_maj")),
+        ],
+    )
+
+    ws_assures = wb.create_sheet("Assures")
+    ws_assures.append(
+        [
+            "Nom",
+            "Prénoms",
+            "NNI",
+            "Code sit. mal.",
+            "Date effet sit. mal.",
+            "Date fin sit. mal.",
+            "Num. coll maladie en cours",
+            "Code sit. vieil.",
+            "Date effet sit. vieil.",
+            "Date fin sit. vieil.",
+            "Num. coll vieillesse en cours",
+            "Type adresse",
+        ]
+    )
+    for item in assures or []:
+        ws_assures.append(
+            [
+                _safe(item.get("nom")),
+                _safe(item.get("prenoms")),
+                _safe(item.get("nni")),
+                _safe(item.get("code_maladie")),
+                _safe(item.get("date_effet_maladie")),
+                _safe(item.get("date_fin_maladie")),
+                _safe(item.get("num_coll_maladie")),
+                _safe(item.get("code_vieillesse")),
+                _safe(item.get("date_effet_vieillesse")),
+                _safe(item.get("date_fin_vieillesse")),
+                _safe(item.get("num_coll_vieillesse")),
+                _safe(item.get("type_adresse")),
+            ]
+        )
+
+    ws_commu = wb.create_sheet("Communautes")
+    ws_commu.append(["N° Collectivité", "Rang", "Dénomination 1", "Dénomination 2", "Code postal", "Ville"])
+    for item in communautes or []:
+        ws_commu.append(
+            [
+                _safe(item.get("numero")),
+                _safe(item.get("rang")),
+                _safe(item.get("denom1")),
+                _safe(item.get("denom2")),
+                _safe(item.get("cp")),
+                _safe(item.get("ville")),
+            ]
+        )
+
+    ws_ref = wb.create_sheet("Referent")
+    _append_section(
+        ws_ref,
+        "Référent maladie",
+        [
+            ("Nom", (referent or {}).get("nom")),
+            ("Prénom", (referent or {}).get("prenom")),
+            ("Numéro de voie", (referent or {}).get("num_voie")),
+            ("Libellé de voie", (referent or {}).get("lib_voie")),
+            ("Complément adresse", (referent or {}).get("complement")),
+            ("Code postal", (referent or {}).get("cp")),
+            ("Bureau distributeur", (referent or {}).get("burdis")),
+            ("Pays", (referent or {}).get("pays")),
+        ],
+    )
+    _append_section(
+        ws_ref,
+        "Coordonnées",
+        [
+            ("Email", (referent or {}).get("email")),
+            ("Téléphone", (referent or {}).get("tel")),
+            ("Télécopie", (referent or {}).get("fax")),
+            ("Date MAJ", (referent or {}).get("date_maj")),
+        ],
+    )
 
     return wb

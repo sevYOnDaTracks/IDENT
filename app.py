@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import webview
 
-from services.oracle_client import OracleClient, build_assure_workbook
+from services.oracle_client import OracleClient, build_assure_workbook, build_collectivite_workbook
 
 
 def _bootstrap_site_packages() -> None:
@@ -304,10 +304,77 @@ class Api:
         if not dialog_result:
             return {"ok": "false", "message": "Export annule."}
 
-        path = dialog_result[0]
+        path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
+        path = str(path)
+        if not path.lower().endswith(".xlsx"):
+            path = f"{path}.xlsx"
         wb = build_assure_workbook(data)
         try:
             wb.save(path)
+            if not Path(path).exists():
+                return {"ok": "false", "message": "Export termine mais fichier introuvable."}
+            return {"ok": "true", "message": f"Export reussi : {path}"}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": "false", "message": f"Echec de sauvegarde : {exc}"}
+
+    def export_collectivite(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivité manquant pour l'export."}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants pour l'export."}
+
+        ident_result = self.client.query_collectivite_identification(user, pwd, collect_value)
+        if ident_result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {ident_result['error']}"}
+        identification = ident_result["data"] or {}
+
+        def safe_data(result, empty):
+            if result.get("error"):
+                return empty
+            return result.get("data") or empty
+
+        adresse = safe_data(self.client.query_collectivite_adresse(user, pwd, collect_value), {})
+        resp_mal = safe_data(self.client.query_collectivite_responsable(user, pwd, collect_value, 1), {})
+        resp_vie = safe_data(self.client.query_collectivite_responsable(user, pwd, collect_value, 2), {})
+        assures = safe_data(self.client.query_collectivite_assures(user, pwd, collect_value, "tout", "nom"), [])
+        communautes = safe_data(self.client.query_collectivite_communautes(user, pwd, collect_value), [])
+        referent = safe_data(self.client.query_collectivite_referent_maladie(user, pwd, collect_value), {})
+        situations = safe_data(self.client.query_collectivite_situations(user, pwd, collect_value), [])
+        fusions = safe_data(self.client.query_collectivite_fusions(user, pwd, collect_value), [])
+
+        denom1 = identification.get("denom1") or "Collectivite"
+        base_name = f"{collect_value} - {denom1}".strip()
+        safe_name = "".join(c if c not in '\\/:*?"<>|' else "_" for c in base_name) + ".xlsx"
+
+        if not self.window:
+            return {"ok": "false", "message": "Fenêtre pywebview indisponible pour ouvrir la boîte de dialogue."}
+        dialog_result = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=safe_name)
+        if not dialog_result:
+            return {"ok": "false", "message": "Export annulé."}
+
+        path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
+        path = str(path)
+        if not path.lower().endswith(".xlsx"):
+            path = f"{path}.xlsx"
+        wb = build_collectivite_workbook(
+            collect_value,
+            identification,
+            adresse,
+            resp_mal,
+            resp_vie,
+            assures,
+            communautes,
+            referent,
+            situations,
+            fusions,
+        )
+        try:
+            wb.save(path)
+            if not Path(path).exists():
+                return {"ok": "false", "message": "Export termine mais fichier introuvable."}
             return {"ok": "true", "message": f"Export reussi : {path}"}
         except Exception as exc:  # noqa: BLE001
             return {"ok": "false", "message": f"Echec de sauvegarde : {exc}"}

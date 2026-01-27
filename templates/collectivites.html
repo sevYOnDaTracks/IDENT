@@ -35,6 +35,7 @@
         <div class="toolbar-entity" id="toolbar-collectivite" hidden>
           <span class="toolbar-entity-label">Collectivité</span>
           <span class="toolbar-entity-value" id="toolbar-collectivite-value">-</span>
+          <span class="toolbar-entity-value" id="toolbar-collectivite-culte">-</span>
         </div>
       </div>
       <div class="toolbar-right">
@@ -46,37 +47,29 @@
 
   <div class="grid">
     <div class="details">
-      <h1 class="title" style="padding-left: 10px;">Collectivités</h1>
+      <h1 class="title" id="collect-title" style="padding-left: 10px;">Collectivités</h1>
 
      <!-- <p class="subtitle">Renseignez un ou plusieurs critères puis lancez la recherche (préfixe, insensible à la casse).</p> -->
 
       <form id="collect-form" class="form search-panel">
         <div class="panel panel-search">
-          <div class="panel-title">Critères de recherche</div>
+         <!-- <div class="panel-title">Critères de recherche</div> -->
           <div class="panel-body">
             <div class="form-row compact">
-              <label class="form-label" for="num-input">Numéro</label>
-              <input id="num-input" name="numero" type="text" placeholder="Ex : 1234" autocomplete="off">
-            </div>
-            <div class="form-row compact">
-              <label class="form-label" for="denom1-input">Dénomination</label>
-              <input id="denom1-input" name="denomination1" type="text" placeholder="Ex : PAROISSE" autocomplete="off">
-            </div>
-            <div class="form-row compact">
-              <label class="form-label" for="cp-input">Code postal</label>
-              <input id="cp-input" name="code_postal" type="text" placeholder="Ex : 75000" autocomplete="off">
+              <label class="form-label" for="search-input">Recherche</label>
+              <input id="search-input" name="search" type="text" placeholder="Numéro, dénomination ou code postal de la collectivité" autocomplete="off">
             </div>
           </div>
         </div>
-        <div class="panel panel-actions">
+      <!-- <div class="panel panel-actions">
           <button class="button primary" type="submit">Rechercher</button>
-        </div>
+        </div> -->
       </form>
 
-      <p class="hint" id="collect-hint">Requête à venir : données d'exemple affichées pour prévisualisation.</p>
-      <div id="collect-result" class="result" aria-live="polite"></div>
+     <!-- <p class="hint" id="collect-hint">Requête à venir : données d'exemple affichées pour prévisualisation.</p> -->
+      <div id="collect-result" class="result hidden" aria-live="polite"></div>
 
-      <div class="table-title" id="collect-table-title">Résultat de la recherche</div>
+      <!--<div class="table-title" id="collect-table-title">Résultat de la recherche</div> -->
       <div class="table-wrapper" id="collect-table-wrapper">
         <table class="data-table" id="collect-table">
           <thead>
@@ -99,12 +92,13 @@
        <!-- <button type="button" class="button primary" id="btn-new">Nouveau</button> -->
       </div>
 
-      <div id="collect-details" class="details" hidden>
+      <div id="collect-details" class="details-base" hidden>
         <div class="details-header" style="margin-top: 4px;">
           <div>
-            <div class="label">Collectivité consultée :</div>
+           <!-- <div class="label">Collectivité consultée :</div> -->
             <div class="details-title" id="coll-title">-</div>
             <div class="details-sub" id="coll-sub">-</div>
+            <div class="details-sub" id="coll-culte">Culte : -</div>
           </div>
         </div>
 
@@ -115,11 +109,12 @@
           <button class="tab" data-tab="assures">Assurés</button>
           <button class="tab" data-tab="communautes">Communautés</button>
           <button class="tab" data-tab="referent">Référent</button>
+          <button class="tab" data-tab="export">Export</button>
         </div>
 
         <div class="tab-panels">
           <div class="tab-panel active" data-tab="ident">
-            <div class="info-section">Identification</div>
+            <div class="info-section">1 - Identification</div><br>
             <div class="info-grid two-col two-max">
               <div class="info-row"><div class="info-label">Numéro</div><div class="info-value" id="ident-numero">-</div></div>
               <div class="info-row"><div class="info-label">Dénomination 1</div><div class="info-value" id="ident-denom1">-</div></div>
@@ -133,7 +128,7 @@
               <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="ident-maj">-</div></div>
             </div>
 
-            <div class="info-section" style="margin-top: 16px;">Historique des situations</div>
+            <div class="info-section" style="margin-top: 16px;">2 - Historique des situations</div>
             <div class="table-wrapper">
               <table class="data-table" id="table-situations">
                 <thead>
@@ -148,7 +143,7 @@
               </table>
             </div>
 
-            <div class="info-section" style="margin-top: 12px;">Historiques des collectivités reprises suite à fusion</div>
+            <div class="info-section" style="margin-top: 12px;">3 - Historiques des collectivités reprises suite à fusion</div>
             <div class="table-wrapper">
               <table class="data-table" id="table-fusion">
                 <thead>
@@ -164,8 +159,8 @@
           </div>
 
           <div class="tab-panel" data-tab="adresse">
-            <div class="info-section">Adresse de la collectivité</div>
-            <div id="addr-status" class="result" aria-live="polite" style="margin: 0 0 8px;"></div>
+            <div class="info-section">1 - Adresse de la collectivité</div><br>
+          <!--  <div id="addr-status" class="result" aria-live="polite" style="margin: 0 0 8px;"></div> -->
             <div class="info-grid">
               <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="addr1">-</div></div>
               <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="addr2">-</div></div>
@@ -178,7 +173,7 @@
               <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="addr-pays">-</div></div>
             </div>
 
-            <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
+            <div class="info-section" style="margin-top: 16px;">2 - Coordonnées</div><br>
             <div class="info-grid">
               <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="addr-email">-</div></div>
               <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="addr-tel">-</div></div>
@@ -189,7 +184,7 @@
           </div>
 
           <div class="tab-panel" data-tab="responsables">
-            <div class="info-section">Responsable maladie</div>
+            <div class="info-section">1 - Responsable maladie</div> <br>
             <div class="info-grid">
               <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-maladie-nom">-</div></div>
               <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-maladie-adr1">-</div></div>
@@ -207,7 +202,7 @@
               <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="resp-maladie-maj">-</div></div>
             </div>
 
-            <div class="info-section" style="margin-top: 16px;">Responsable vieillesse</div>
+            <div class="info-section" style="margin-top: 16px;">2 - Responsable vieillesse</div><br>
             <div class="info-grid">
               <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-vie-nom">-</div></div>
               <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-vie-adr1">-</div></div>
@@ -227,44 +222,48 @@
           </div>
 
           <div class="tab-panel" data-tab="assures">
-            <div class="info-section">Assurés</div>
             <form id="assures-collect-form" class="form search-panel" style="margin-bottom: 12px;">
               <div class="panel panel-search">
-                <div class="panel-title">Critères de filtre</div>
-                <div class="panel-body radios">
-                  <label class="radio-line"><input type="radio" name="assure-filter" value="tout" checked><span>Tout</span></label>
-                  <label class="radio-line"><input type="radio" name="assure-filter" value="maladie"><span>Maladie</span></label>
-                  <label class="radio-line"><input type="radio" name="assure-filter" value="vieillesse"><span>Vieillesse</span></label>
-                  <label class="radio-line"><input type="radio" name="assure-filter" value="adresse"><span>Adresse collectivité</span></label>
+                <div class="panel-body">
+                  <div class="field">
+                  <!-- <label class="form-label" for="assure-filter-select">Filtre</label> --> 
+                    <select id="assure-filter-select" name="assure-filter">
+                      <option value="tout">Tout</option>
+                      <option value="maladie">Maladie</option>
+                      <option value="vieillesse">Vieillesse</option>
+                      <option value="adresse">Adresse collectivité</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div class="panel panel-tri">
-                <div class="panel-title">Critères de tri</div>
-                <div class="panel-body radios">
-                  <label class="radio-line"><input type="radio" name="assure-tri" value="nom" checked><span>Nom - Prénoms</span></label>
-                  <label class="radio-line"><input type="radio" name="assure-tri" value="nni"><span>NNI</span></label>
-                </div>
-                <div class="panel-actions">
-                  <button class="button primary" type="submit">Recharger</button>
+                <div class="panel-body">
+                  <div class="field">
+                   <!-- <label class="form-label" for="assure-tri-select">Tri</label> -->
+                    <select id="assure-tri-select" name="assure-tri">
+                      <option value="nom">Nom - Prénoms</option>
+                      <option value="nni">NNI</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </form>
-            <div id="assures-result" class="result" aria-live="polite"></div>
+            <div id="assures-result" class="result hidden" aria-live="polite"></div>
             <div class="table-wrapper">
               <table class="data-table" id="assures-table">
                 <thead>
                   <tr>
-                    <th>Nom patronymique</th>
+                    <th>Nom</th>
                     <th>Prénoms</th>
-                    <th>NNI assuré</th>
+                    <th>NNI</th>
                     <th>Code sit. mal.</th>
-                    <th>Date effet sit. maladie</th>
-                    <th>Date fin sit. maladie</th>
+                    <th>Date effet sit. mal.</th>
+                    <th>Date fin sit. mal.</th>
                     <th>Num. coll maladie en cours</th>
                     <th>Code sit. vieil.</th>
-                    <th>Date effet sit. vieillesse</th>
-                    <th>Date fin sit. vieillesse</th>
-                    <th>Num. coll vieillesse en cours</th>
+                    <th>Date effet sit. vieil.</th>
+                    <th>Date fin sit. vieil.</th>
+                    <th>Num. coll vieil.</th>
                     <th>Type adresse</th>
                   </tr>
                 </thead>
@@ -272,13 +271,13 @@
               </table>
             </div>
             <div class="actions" style="justify-content: flex-start; margin-top: 8px;">
-              <div class="hint">Nombre d'assurés sélectionnés : <span id="assures-count">0</span></div>
+              <div class="hint">Nombre d'assurés : <span id="assures-count">0</span></div>
             </div>
           </div>
 
           <div class="tab-panel" data-tab="communautes">
             <div class="info-section">Liste des communautés</div>
-            <div id="commu-result" class="result" aria-live="polite"></div>
+           <!-- <div id="commu-result" class="result" aria-live="polite"></div> -->
             <div class="table-wrapper">
               <table class="data-table" id="commu-table">
                 <thead>
@@ -297,7 +296,7 @@
           </div>
 
           <div class="tab-panel" data-tab="referent">
-            <div class="info-section">Référent maladie</div>
+            <div class="info-section">1 - Référent maladie</div><br>
             <div class="info-grid">
               <div class="info-row"><div class="info-label">Nom</div><div class="info-value" id="ref-nom">-</div></div>
               <div class="info-row"><div class="info-label">Prénom</div><div class="info-value" id="ref-prenom">-</div></div>
@@ -311,13 +310,21 @@
               <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="ref-pays">-</div></div>
             </div>
 
-            <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
+            <div class="info-section" style="margin-top: 16px;">2 - Coordonnées</div><br>
             <div class="info-grid">
               <div class="info-row"><div class="info-label">Email</div><div class="info-value" id="ref-email">-</div></div>
               <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="ref-tel">-</div></div>
               <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="ref-fax">-</div></div>
               <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="ref-maj">-</div></div>
             </div>
+          </div>
+
+          <div class="tab-panel" data-tab="export">
+          <!--  <p class="panel-text">Exporter toutes les données de la collectivité dans un fichier au format Excel (1 onglet par section).</p> -->
+            <div class="actions" style="margin-top: 8px;">
+              <button class="button primary" type="button" id="btn-export-collect">Exporter les données</button>
+            </div>
+            <div id="export-result" class="result hidden" aria-live="polite"></div>
           </div>
         </div>
       </div>
@@ -326,9 +333,7 @@
 
   <script>
     const form = document.getElementById("collect-form");
-    const numInput = document.getElementById("num-input");
-    const denom1Input = document.getElementById("denom1-input");
-    const cpInput = document.getElementById("cp-input");
+    const searchInput = document.getElementById("search-input");
     const resultBox = document.getElementById("collect-result");
     const tableBody = document.querySelector("#collect-table tbody");
     const btnOk = document.getElementById("btn-ok");
@@ -340,12 +345,15 @@
     const tableTitle = document.getElementById("collect-table-title");
     const tableWrapper = document.getElementById("collect-table-wrapper");
     const actionsPanel = document.getElementById("collect-actions");
+    const collectTitle = document.getElementById("collect-title");
     const tabs = document.querySelectorAll("#collect-details .tab");
     const panels = document.querySelectorAll("#collect-details .tab-panel");
     const collTitle = document.getElementById("coll-title");
     const collSub = document.getElementById("coll-sub");
+    const collCulte = document.getElementById("coll-culte");
     const toolbarCollectivite = document.getElementById("toolbar-collectivite");
     const toolbarCollectiviteValue = document.getElementById("toolbar-collectivite-value");
+    const toolbarCollectiviteCulte = document.getElementById("toolbar-collectivite-culte");
     const identNumero = document.getElementById("ident-numero");
     const identDenom1 = document.getElementById("ident-denom1");
     const identDenom2 = document.getElementById("ident-denom2");
@@ -402,9 +410,13 @@
       maj: document.getElementById("resp-vie-maj"),
     };
     const assuresForm = document.getElementById("assures-collect-form");
+    const assureFilterSelect = document.getElementById("assure-filter-select");
+    const assureTriSelect = document.getElementById("assure-tri-select");
     const assuresResult = document.getElementById("assures-result");
     const assuresTableBody = document.querySelector("#assures-table tbody");
     const assuresCount = document.getElementById("assures-count");
+    const exportResult = document.getElementById("export-result");
+    const exportButton = document.getElementById("btn-export-collect");
     const commuResult = document.getElementById("commu-result");
     const commuTableBody = document.querySelector("#commu-table tbody");
     const referentFields = {
@@ -451,6 +463,7 @@
       const numero = data.numero ?? selectedData?.numero;
       const denom1 = data.denom1 ?? selectedData?.denom1;
       const denom2 = data.denom2 ?? selectedData?.denom2;
+      const culte = data.culte ?? selectedData?.culte;
       setVal(identNumero, numero);
       setVal(identDenom1, denom1);
       setVal(identDenom2, denom2);
@@ -463,9 +476,13 @@
       setVal(identMaj, data.date_maj);
       if (collTitle) collTitle.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
       if (collSub) collSub.textContent = denom2 ?? "";
+      if (collCulte) collCulte.textContent = culte ? `Culte : ${culte}` : "Culte : -";
       if (toolbarCollectivite && toolbarCollectiviteValue) {
         toolbarCollectivite.hidden = false;
         toolbarCollectiviteValue.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
+        if (toolbarCollectiviteCulte) {
+          toolbarCollectiviteCulte.textContent = culte ? `• ${culte}` : "";
+        }
       }
     }
 
@@ -491,10 +508,27 @@
       Object.values(referentFields).forEach((el) => setVal(el, "-"));
     }
 
-    function setAssuresResult(message, success = false) {
+    function setAssuresResult(message, success = false, count = null) {
       if (!assuresResult) return;
-      assuresResult.textContent = message || "";
+      let text = message || "";
+      if (success && typeof count === "number") {
+        if (text) {
+          text = `${text} Nombre : ${count}`;
+        } else {
+          text = ` ${count} Assurés récupérés.`;
+        }
+      }
+      assuresResult.textContent = text;
       assuresResult.classList.toggle("success", !!success);
+      assuresResult.classList.toggle("hidden", text.length === 0);
+    }
+
+    function setExportResult(message, success = false) {
+      if (!exportResult) return;
+      const text = message || "";
+      exportResult.textContent = text;
+      exportResult.classList.toggle("success", !!success);
+      exportResult.classList.toggle("hidden", text.length === 0);
     }
 
     function renderAssures(rows) {
@@ -627,6 +661,7 @@
       [form, hint, resultBox, tableTitle, tableWrapper, actionsPanel].forEach((el) => {
         el?.classList.toggle("hidden", !show);
       });
+      collectTitle?.classList.toggle("hidden", !show);
       if (backResultsButton) backResultsButton.hidden = show;
     }
 
@@ -667,7 +702,7 @@
         btnExport.textContent = "Exporter";
         btnExport.addEventListener("click", (e) => {
           e.stopPropagation();
-          window.alert("Export collectivit? : fonctionnalit? ? venir.");
+          exportCollectivite(r.numero || "");
         });
         actionsTd.appendChild(btnView);
         actionsTd.appendChild(btnExport);
@@ -682,8 +717,23 @@
 
     function setResult(message, success = false) {
       if (!resultBox) return;
-      resultBox.textContent = message || "";
+      const text = message || "";
+      resultBox.textContent = text;
       resultBox.classList.toggle("success", !!success);
+      resultBox.classList.toggle("hidden", text.length === 0);
+    }
+
+    function parseCollectSearch(value) {
+      const raw = (value || "").trim();
+      if (!raw) return { num: "", denom: "", cp: "" };
+      const digitsOnly = /^\d+$/.test(raw);
+      if (digitsOnly) {
+        if (raw.length === 5) {
+          return { num: "", denom: "", cp: raw };
+        }
+        return { num: raw, denom: "", cp: "" };
+      }
+      return { num: "", denom: raw, cp: "" };
     }
 
     async function ensureCredentials(force = false) {
@@ -695,6 +745,32 @@
       cachedUser = user;
       cachedPassword = pwd;
       return user;
+    }
+
+    async function exportCollectivite(collectId) {
+      const numero = (collectId || "").trim();
+      if (!numero) {
+        showError("Numéro de collectivité manquant.");
+        return;
+      }
+      if (!window.pywebview?.api?.export_collectivite) {
+        showError("API pywebview indisponible (export).");
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) return;
+      setExportResult("Préparation de l'export...");
+      try {
+        const resp = await window.pywebview.api.export_collectivite(user, pwd, numero);
+        if (resp?.ok === "true") {
+          setExportResult(resp.message || "Export réussi.", true);
+        } else {
+          setExportResult(resp?.message || "Export échoué.", false);
+        }
+      } catch (err) {
+        setExportResult(`Erreur export : ${err}`, false);
+      }
     }
 
     async function openCollectivite(selected) {
@@ -890,8 +966,8 @@
     }
 
     function getAssureFilters() {
-      const filter = document.querySelector('input[name="assure-filter"]:checked')?.value || "tout";
-      const tri = document.querySelector('input[name="assure-tri"]:checked')?.value || "nom";
+      const filter = document.getElementById("assure-filter-select")?.value || "tout";
+      const tri = document.getElementById("assure-tri-select")?.value || "nom";
       return { filter, tri };
     }
 
@@ -920,7 +996,7 @@
         if (resp?.ok === "true") {
           const rows = resp.data || [];
           renderAssures(rows);
-          setAssuresResult(resp.message || "Assurés récupérés.", true);
+          setAssuresResult("Assurés collectivité récupérés.", true, rows.length);
         } else {
           renderAssures([]);
           setAssuresResult(resp?.message || "Aucun assuré.", false);
@@ -1020,13 +1096,15 @@
       setCommunautesResult("");
       clearReferent();
       selectedRowIndex = null;
-      const num = (numInput?.value || "").trim();
-      const denom = (denom1Input?.value || "").trim();
-      const cp = (cpInput?.value || "").trim();
+      const searchValue = (searchInput?.value || "").trim();
+      const parsed = parseCollectSearch(searchValue);
+      const num = parsed.num;
+      const denom = parsed.denom;
+      const cp = parsed.cp;
 
       if (!num && !denom && !cp) {
         setResult("", false);
-        showError("Renseignez au moins un filtre (Numéro, Dénomination 1 ou Code postal).");
+        showError("Renseignez un terme (numéro, dénomination ou code postal).");
         renderTable([]);
         return;
       }
@@ -1091,10 +1169,9 @@
       if (toolbarCollectivite && toolbarCollectiviteValue) {
         toolbarCollectivite.hidden = true;
         toolbarCollectiviteValue.textContent = "-";
+        if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
       }
-      if (numInput) numInput.value = "";
-      if (denom1Input) denom1Input.value = "";
-      if (cpInput) cpInput.value = "";
+      if (searchInput) searchInput.value = "";
       currentRows = [];
       renderTable(currentRows);
       setResult("", false);
@@ -1114,6 +1191,29 @@
       }
     });
 
+    exportButton?.addEventListener("click", async () => {
+      const numero = selectedData?.numero;
+      if (!numero) {
+        setExportResult("Numéro de collectivité manquant.", false);
+        return;
+      }
+      await exportCollectivite(numero);
+    });
+
+    let assuresReloadTimer;
+    function scheduleAssuresReload() {
+      clearTimeout(assuresReloadTimer);
+      assuresReloadTimer = setTimeout(async () => {
+        const numero = selectedData?.numero;
+        if (numero) {
+          await loadAssures(numero);
+        }
+      }, 150);
+    }
+
+    assureFilterSelect?.addEventListener("change", scheduleAssuresReload);
+    assureTriSelect?.addEventListener("change", scheduleAssuresReload);
+
 
     backResultsButton?.addEventListener("click", () => {
       toggleDetails(false);
@@ -1121,6 +1221,7 @@
       if (toolbarCollectivite && toolbarCollectiviteValue) {
         toolbarCollectivite.hidden = true;
         toolbarCollectiviteValue.textContent = "-";
+        if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
       }
     });
 
@@ -1136,6 +1237,7 @@
           if (toolbarCollectivite && toolbarCollectiviteValue) {
             toolbarCollectivite.hidden = true;
             toolbarCollectiviteValue.textContent = "-";
+            if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
           }
           return;
         }
