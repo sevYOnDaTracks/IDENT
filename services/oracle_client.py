@@ -638,6 +638,68 @@ class OracleClient:
             )
         return {"data": data, "error": None}
 
+    def query_collectivite_referent_maladie(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Recupere le referent maladie pour une collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": None, "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                resp.rmc_nom,
+                resp.rmc_prenom,
+                resp.rmc_numvoie,
+                resp.rmc_libvoie,
+                resp.rmc_comad,
+                resp.rmc_codpos,
+                resp.rmc_burdis,
+                p.py_lib,
+                resp.rmc_email,
+                resp.rmc_tel1,
+                resp.rmc_tec1,
+                resp.rmc_dtmaj
+            FROM AT_RMC#REF_MAL_COLL resp
+            LEFT JOIN at_cl#collectivite cl on resp.rmccl_id = cl.cl_id
+            LEFT JOIN at_py#pays p on resp.rmcpy_id = p.py_id
+            WHERE cl.cl_id = :collect_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "nom": row[0],
+            "prenom": row[1],
+            "num_voie": row[2],
+            "lib_voie": row[3],
+            "complement": row[4],
+            "cp": row[5],
+            "burdis": row[6],
+            "pays": row[7],
+            "email": row[8],
+            "tel": row[9],
+            "fax": row[10],
+            "date_maj": _format_date(row[11]) if hasattr(row[11], "strftime") else row[11],
+        }
+        return {"data": data, "error": None}
+
 
 def build_assure_workbook(data: List[Dict[str, object]]):
     """Construit un classeur Excel pour les assurés."""

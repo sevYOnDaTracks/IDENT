@@ -258,6 +258,23 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": "Communautés collectivité récupérées.", "data": result["data"]}
 
+    def fetch_collectivite_referent_maladie(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_collectivite_referent_maladie(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Référent collectivité récupéré.", "data": result["data"]}
+
     def export_assure(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
         if not nir_value:

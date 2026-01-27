@@ -265,8 +265,27 @@
           </div>
 
           <div class="tab-panel" data-tab="referent">
-            <div class="info-section">Référent (placeholder)</div>
-            <p class="hint">Données à intégrer une fois la requête fournie.</p>
+            <div class="info-section">Référent maladie</div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">Nom</div><div class="info-value" id="ref-nom">-</div></div>
+              <div class="info-row"><div class="info-label">Prénom</div><div class="info-value" id="ref-prenom">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro de voie</div><div class="info-value" id="ref-num-voie">-</div></div>
+              <div class="info-row"><div class="info-label">Libellé de voie</div><div class="info-value" id="ref-lib-voie">-</div></div>
+              <div class="info-row"><div class="info-label">Complément adresse</div><div class="info-value" id="ref-complement">-</div></div>
+              <div class="info-grid two-col">
+                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="ref-cp">-</div></div>
+                <div class="info-row"><div class="info-label">Bureau distributeur</div><div class="info-value" id="ref-burdis">-</div></div>
+              </div>
+              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="ref-pays">-</div></div>
+            </div>
+
+            <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">Email</div><div class="info-value" id="ref-email">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="ref-tel">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="ref-fax">-</div></div>
+              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="ref-maj">-</div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -354,6 +373,20 @@
     const assuresCount = document.getElementById("assures-count");
     const commuResult = document.getElementById("commu-result");
     const commuTableBody = document.querySelector("#commu-table tbody");
+    const referentFields = {
+      nom: document.getElementById("ref-nom"),
+      prenom: document.getElementById("ref-prenom"),
+      numVoie: document.getElementById("ref-num-voie"),
+      libVoie: document.getElementById("ref-lib-voie"),
+      complement: document.getElementById("ref-complement"),
+      cp: document.getElementById("ref-cp"),
+      burdis: document.getElementById("ref-burdis"),
+      pays: document.getElementById("ref-pays"),
+      email: document.getElementById("ref-email"),
+      tel: document.getElementById("ref-tel"),
+      fax: document.getElementById("ref-fax"),
+      maj: document.getElementById("ref-maj"),
+    };
     let selectedRowIndex = null;
     let currentRows = [];
     let selectedData = null;
@@ -414,6 +447,10 @@
 
     function clearResponsable(fields) {
       Object.values(fields).forEach((el) => setVal(el, "-"));
+    }
+
+    function clearReferent() {
+      Object.values(referentFields).forEach((el) => setVal(el, "-"));
     }
 
     function setAssuresResult(message, success = false) {
@@ -847,6 +884,45 @@
       }
     }
 
+    async function loadReferent(numero) {
+      if (!numero) {
+        clearReferent();
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_referent_maladie) {
+        clearReferent();
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        clearReferent();
+        return;
+      }
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_referent_maladie(user, pwd, numero);
+        if (resp?.ok === "true" && resp.data) {
+          const d = resp.data;
+          setVal(referentFields.nom, d.nom);
+          setVal(referentFields.prenom, d.prenom);
+          setVal(referentFields.numVoie, d.num_voie);
+          setVal(referentFields.libVoie, d.lib_voie);
+          setVal(referentFields.complement, d.complement);
+          setVal(referentFields.cp, d.cp);
+          setVal(referentFields.burdis, d.burdis);
+          setVal(referentFields.pays, d.pays);
+          setVal(referentFields.email, d.email);
+          setVal(referentFields.tel, d.tel);
+          setVal(referentFields.fax, d.fax);
+          setVal(referentFields.maj, d.date_maj);
+        } else {
+          clearReferent();
+        }
+      } catch (_) {
+        clearReferent();
+      }
+    }
+
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
       toggleDetails(false);
@@ -860,6 +936,7 @@
       setAssuresResult("");
       renderCommunautes([]);
       setCommunautesResult("");
+      clearReferent();
       selectedRowIndex = null;
       const num = (numInput?.value || "").trim();
       const denom = (denom1Input?.value || "").trim();
@@ -932,6 +1009,7 @@
       await loadResponsable(selected.numero, "vieillesse");
       await loadAssures(selected.numero);
       await loadCommunautes(selected.numero);
+      await loadReferent(selected.numero);
     });
 
     btnCancel?.addEventListener("click", () => {
@@ -945,6 +1023,7 @@
       setAssuresResult("");
       renderCommunautes([]);
       setCommunautesResult("");
+      clearReferent();
       if (numInput) numInput.value = "";
       if (denom1Input) denom1Input.value = "";
       if (cpInput) cpInput.value = "";
