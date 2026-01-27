@@ -27,13 +27,16 @@ body {
 }
 
 .grid {
-  width: min(1120px, 100%);
+  width: 100%;
   display: grid;
-  place-items: center;
+  justify-items: stretch;
+  align-items: start;
 }
 
 .card {
-  width: min(960px, 100%);
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 96px);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 24px;
@@ -345,6 +348,10 @@ input[type="text"]:focus {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.info-grid.two-max {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .situation-card {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
@@ -410,6 +417,11 @@ input[type="text"]:focus {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.data-table tr.row-selected td {
+  background: linear-gradient(90deg, rgba(0, 173, 255, 0.25), rgba(0, 173, 255, 0.1));
+  border-color: rgba(0, 173, 255, 0.35);
+}
+
 .table-title {
   margin: 8px 0 4px;
   font-weight: 700;
@@ -425,6 +437,37 @@ input[type="text"]:focus {
 .tab-panel[data-tab="maladie"] {
   overflow-x: auto;
   padding-bottom: 8px;
+}
+
+.tab-panel[data-tab="vieillesse"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tab-panel[data-tab="rco"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tab-panel[data-tab="csg"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tab-panel[data-tab="adresse"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tab-panel[data-tab="ayantdroit"] {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 8px;
 }
 
 .logo-top-left {
@@ -448,7 +491,7 @@ input[type="text"]:focus {
   position: fixed;
   top: 16px;
   right: 16px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(8px);
@@ -458,7 +501,7 @@ input[type="text"]:focus {
 
 .logo-corner img {
   display: block;
-  max-height: 58px;
+  max-height: 44px;
 }
 
 .logo-bottom {
@@ -582,6 +625,10 @@ input[type="text"]:focus {
 
 @media (max-width: 800px) {
   .search-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid.two-max {
     grid-template-columns: 1fr;
   }
 }

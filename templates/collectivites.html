@@ -3,28 +3,977 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Collectivités - IDENT</title>
+  <title>Collectivites - IDENT</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-  <div class="logo-top-left">
-    <img src="../images/Logo Securité Social.png" alt="Logo Sécurité Sociale">
-  </div>
-  <div class="logo-corner">
-    <img src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
-  </div>
-
   <div class="grid">
     <div class="card">
       <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
         <a class="button ghost" href="home.html">Accueil</a>
+        <button id="btn-back-results" class="button outline" hidden>Retour aux résultats</button>
       </div>
-      <h1 class="title">Collectivités</h1>
-      <p class="subtitle">Section à venir.</p>
+      <h1 class="title">Collectivites</h1>
+      <p class="subtitle">Renseignez un ou plusieurs critères puis lancez la recherche (préfixe, insensible à la casse).</p>
+
+      <form id="collect-form" class="form search-panel">
+        <div class="panel panel-search">
+          <div class="panel-title">Critères de recherche</div>
+          <div class="panel-body">
+            <div class="form-row compact">
+              <label class="form-label" for="num-input">Numéro</label>
+              <input id="num-input" name="numero" type="text" placeholder="Ex : 1234" autocomplete="off">
+            </div>
+            <div class="form-row compact">
+              <label class="form-label" for="denom1-input">Dénomination</label>
+              <input id="denom1-input" name="denomination1" type="text" placeholder="Ex : PAROISSE" autocomplete="off">
+            </div>
+            <div class="form-row compact">
+              <label class="form-label" for="cp-input">Code postal</label>
+              <input id="cp-input" name="code_postal" type="text" placeholder="Ex : 75000" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-actions">
+          <button class="button primary" type="submit">Rechercher</button>
+        </div>
+      </form>
+
+      <p class="hint" id="collect-hint">Requête à venir : données d'exemple affichées pour prévisualisation.</p>
+      <div id="collect-result" class="result" aria-live="polite"></div>
+
+      <div class="table-title" id="collect-table-title">Résultat de la recherche</div>
+      <div class="table-wrapper" id="collect-table-wrapper">
+        <table class="data-table" id="collect-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Dénomination 1</th>
+              <th>Dénomination 2</th>
+              <th>Code postal</th>
+              <th>Ville</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="actions" id="collect-actions" style="justify-content: flex-end; gap: 10px; margin-top: 12px;">
+        <button type="button" class="button ghost" id="btn-ok">Ok</button>
+        <button type="button" class="button outline" id="btn-cancel">Annuler</button>
+        <button type="button" class="button primary" id="btn-new">Nouveau</button>
+      </div>
+
+      <div id="collect-details" class="details" hidden>
+        <div class="details-header" style="margin-top: 16px;">
+          <div>
+            <div class="label">Collectivité consultée</div>
+            <div class="details-title" id="coll-title">-</div>
+            <div class="details-sub" id="coll-sub">-</div>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="ident">Identification</button>
+          <button class="tab" data-tab="adresse">Adresse</button>
+          <button class="tab" data-tab="responsables">Responsables</button>
+          <button class="tab" data-tab="assures">Assurés</button>
+          <button class="tab" data-tab="communautes">Communautés</button>
+          <button class="tab" data-tab="referent">Référent</button>
+        </div>
+
+        <div class="tab-panels">
+          <div class="tab-panel active" data-tab="ident">
+            <div class="info-section">Identification</div>
+            <div class="info-grid two-col two-max">
+              <div class="info-row"><div class="info-label">Numéro</div><div class="info-value" id="ident-numero">-</div></div>
+              <div class="info-row"><div class="info-label">Dénomination 1</div><div class="info-value" id="ident-denom1">-</div></div>
+              <div class="info-row"><div class="info-label">Dénomination 2</div><div class="info-value" id="ident-denom2">-</div></div>
+              <div class="info-row"><div class="info-label">Culte</div><div class="info-value" id="ident-culte">-</div></div>
+              <div class="info-row"><div class="info-label">Mode de vie</div><div class="info-value" id="ident-modevie">-</div></div>
+              <div class="info-row"><div class="info-label">1ère adhésion</div><div class="info-value" id="ident-adhesion">-</div></div>
+              <div class="info-row"><div class="info-label">Reconnaissance cultuelle</div><div class="info-value" id="ident-recult">-</div></div>
+              <div class="info-row"><div class="info-label">Création Journal Officiel</div><div class="info-value" id="ident-journal">-</div></div>
+              <div class="info-row"><div class="info-label">Nb lettres d'informations</div><div class="info-value" id="ident-nblettres">-</div></div>
+              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="ident-maj">-</div></div>
+            </div>
+
+            <div class="info-section" style="margin-top: 16px;">Historique des situations</div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-situations">
+                <thead>
+                  <tr>
+                    <th>Date effet</th>
+                    <th>Libellé situation</th>
+                    <th>N° Coll. accueil</th>
+                    <th>Date MAJ</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="info-section" style="margin-top: 12px;">Historiques des collectivités reprises suite à fusion</div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-fusion">
+                <thead>
+                  <tr>
+                    <th>Date effet</th>
+                    <th>N° coll. transférée</th>
+                    <th>Date MAJ</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab="adresse">
+            <div class="info-section">Adresse de la collectivité</div>
+            <div id="addr-status" class="result" aria-live="polite" style="margin: 0 0 8px;"></div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="addr1">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="addr2">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 3</div><div class="info-value" id="addr3">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 4</div><div class="info-value" id="addr4">-</div></div>
+              <div class="info-grid two-col">
+                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="addr-cp">-</div></div>
+                <div class="info-row"><div class="info-label">Ville</div><div class="info-value" id="addr-ville">-</div></div>
+              </div>
+              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="addr-pays">-</div></div>
+            </div>
+
+            <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="addr-email">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="addr-tel">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="addr-fax">-</div></div>
+              <div class="info-row"><div class="info-label">NPAI</div><div class="info-value" id="addr-npai">-</div></div>
+              <div class="info-row"><div class="info-label">Date MAJ adresse</div><div class="info-value" id="addr-maj">-</div></div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab="responsables">
+            <div class="info-section">Responsable maladie</div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-maladie-nom">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-maladie-adr1">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="resp-maladie-adr2">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 3</div><div class="info-value" id="resp-maladie-adr3">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 4</div><div class="info-value" id="resp-maladie-adr4">-</div></div>
+              <div class="info-grid two-col">
+                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="resp-maladie-cp">-</div></div>
+                <div class="info-row"><div class="info-label">Ville</div><div class="info-value" id="resp-maladie-ville">-</div></div>
+              </div>
+              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="resp-maladie-pays">-</div></div>
+              <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="resp-maladie-email">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="resp-maladie-tel">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="resp-maladie-fax">-</div></div>
+              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="resp-maladie-maj">-</div></div>
+            </div>
+
+            <div class="info-section" style="margin-top: 16px;">Responsable vieillesse</div>
+            <div class="info-grid">
+              <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-vie-nom">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-vie-adr1">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="resp-vie-adr2">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 3</div><div class="info-value" id="resp-vie-adr3">-</div></div>
+              <div class="info-row"><div class="info-label">Ligne 4</div><div class="info-value" id="resp-vie-adr4">-</div></div>
+              <div class="info-grid two-col">
+                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="resp-vie-cp">-</div></div>
+                <div class="info-row"><div class="info-label">Ville</div><div class="info-value" id="resp-vie-ville">-</div></div>
+              </div>
+              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="resp-vie-pays">-</div></div>
+              <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="resp-vie-email">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="resp-vie-tel">-</div></div>
+              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="resp-vie-fax">-</div></div>
+              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="resp-vie-maj">-</div></div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab="assures">
+            <div class="info-section">Assurés</div>
+            <form id="assures-collect-form" class="form search-panel" style="margin-bottom: 12px;">
+              <div class="panel panel-search">
+                <div class="panel-title">Critères de filtre</div>
+                <div class="panel-body radios">
+                  <label class="radio-line"><input type="radio" name="assure-filter" value="tout" checked><span>Tout</span></label>
+                  <label class="radio-line"><input type="radio" name="assure-filter" value="maladie"><span>Maladie</span></label>
+                  <label class="radio-line"><input type="radio" name="assure-filter" value="vieillesse"><span>Vieillesse</span></label>
+                  <label class="radio-line"><input type="radio" name="assure-filter" value="adresse"><span>Adresse collectivité</span></label>
+                </div>
+              </div>
+              <div class="panel panel-tri">
+                <div class="panel-title">Critères de tri</div>
+                <div class="panel-body radios">
+                  <label class="radio-line"><input type="radio" name="assure-tri" value="nom" checked><span>Nom - Prénoms</span></label>
+                  <label class="radio-line"><input type="radio" name="assure-tri" value="nni"><span>NNI</span></label>
+                </div>
+                <div class="panel-actions">
+                  <button class="button primary" type="submit">Recharger</button>
+                </div>
+              </div>
+            </form>
+            <div id="assures-result" class="result" aria-live="polite"></div>
+            <div class="table-wrapper">
+              <table class="data-table" id="assures-table">
+                <thead>
+                  <tr>
+                    <th>Nom patronymique</th>
+                    <th>Prénoms</th>
+                    <th>NNI assuré</th>
+                    <th>Code sit. mal.</th>
+                    <th>Date effet sit. maladie</th>
+                    <th>Date fin sit. maladie</th>
+                    <th>Num. coll maladie en cours</th>
+                    <th>Code sit. vieil.</th>
+                    <th>Date effet sit. vieillesse</th>
+                    <th>Date fin sit. vieillesse</th>
+                    <th>Num. coll vieillesse en cours</th>
+                    <th>Type adresse</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="actions" style="justify-content: flex-start; margin-top: 8px;">
+              <div class="hint">Nombre d'assurés sélectionnés : <span id="assures-count">0</span></div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab="communautes">
+            <div class="info-section">Liste des communautés</div>
+            <div id="commu-result" class="result" aria-live="polite"></div>
+            <div class="table-wrapper">
+              <table class="data-table" id="commu-table">
+                <thead>
+                  <tr>
+                    <th>N° Collectivité</th>
+                    <th>Rang</th>
+                    <th>Dénomination 1</th>
+                    <th>Dénomination 2</th>
+                    <th>Code postal</th>
+                    <th>Ville</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab="referent">
+            <div class="info-section">Référent (placeholder)</div>
+            <p class="hint">Données à intégrer une fois la requête fournie.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <script>
+    const form = document.getElementById("collect-form");
+    const numInput = document.getElementById("num-input");
+    const denom1Input = document.getElementById("denom1-input");
+    const cpInput = document.getElementById("cp-input");
+    const resultBox = document.getElementById("collect-result");
+    const tableBody = document.querySelector("#collect-table tbody");
+    const btnOk = document.getElementById("btn-ok");
+    const btnCancel = document.getElementById("btn-cancel");
+    const btnNew = document.getElementById("btn-new");
+    const backResultsButton = document.getElementById("btn-back-results");
+    const detailsSection = document.getElementById("collect-details");
+    const hint = document.getElementById("collect-hint");
+    const tableTitle = document.getElementById("collect-table-title");
+    const tableWrapper = document.getElementById("collect-table-wrapper");
+    const actionsPanel = document.getElementById("collect-actions");
+    const tabs = document.querySelectorAll("#collect-details .tab");
+    const panels = document.querySelectorAll("#collect-details .tab-panel");
+    const collTitle = document.getElementById("coll-title");
+    const collSub = document.getElementById("coll-sub");
+    const identNumero = document.getElementById("ident-numero");
+    const identDenom1 = document.getElementById("ident-denom1");
+    const identDenom2 = document.getElementById("ident-denom2");
+    const identCulte = document.getElementById("ident-culte");
+    const identModeVie = document.getElementById("ident-modevie");
+    const identAdhesion = document.getElementById("ident-adhesion");
+    const identRecult = document.getElementById("ident-recult");
+    const identJournal = document.getElementById("ident-journal");
+    const identNbLettres = document.getElementById("ident-nblettres");
+    const identMaj = document.getElementById("ident-maj");
+    const tableSituations = document.querySelector("#table-situations tbody");
+    const tableFusion = document.querySelector("#table-fusion tbody");
+    const addrFields = {
+      cp: document.getElementById("addr-cp"),
+      ville: document.getElementById("addr-ville"),
+      pays: document.getElementById("addr-pays"),
+      adr1: document.getElementById("addr1"),
+      adr2: document.getElementById("addr2"),
+      adr3: document.getElementById("addr3"),
+      adr4: document.getElementById("addr4"),
+      email: document.getElementById("addr-email"),
+      tel: document.getElementById("addr-tel"),
+      fax: document.getElementById("addr-fax"),
+      npai: document.getElementById("addr-npai"),
+      maj: document.getElementById("addr-maj"),
+    };
+    const addrStatus = document.getElementById("addr-status");
+    const respMaladieFields = {
+      nom: document.getElementById("resp-maladie-nom"),
+      adr1: document.getElementById("resp-maladie-adr1"),
+      adr2: document.getElementById("resp-maladie-adr2"),
+      adr3: document.getElementById("resp-maladie-adr3"),
+      adr4: document.getElementById("resp-maladie-adr4"),
+      cp: document.getElementById("resp-maladie-cp"),
+      ville: document.getElementById("resp-maladie-ville"),
+      pays: document.getElementById("resp-maladie-pays"),
+      email: document.getElementById("resp-maladie-email"),
+      tel: document.getElementById("resp-maladie-tel"),
+      fax: document.getElementById("resp-maladie-fax"),
+      maj: document.getElementById("resp-maladie-maj"),
+    };
+    const respVieFields = {
+      nom: document.getElementById("resp-vie-nom"),
+      adr1: document.getElementById("resp-vie-adr1"),
+      adr2: document.getElementById("resp-vie-adr2"),
+      adr3: document.getElementById("resp-vie-adr3"),
+      adr4: document.getElementById("resp-vie-adr4"),
+      cp: document.getElementById("resp-vie-cp"),
+      ville: document.getElementById("resp-vie-ville"),
+      pays: document.getElementById("resp-vie-pays"),
+      email: document.getElementById("resp-vie-email"),
+      tel: document.getElementById("resp-vie-tel"),
+      fax: document.getElementById("resp-vie-fax"),
+      maj: document.getElementById("resp-vie-maj"),
+    };
+    const assuresForm = document.getElementById("assures-collect-form");
+    const assuresResult = document.getElementById("assures-result");
+    const assuresTableBody = document.querySelector("#assures-table tbody");
+    const assuresCount = document.getElementById("assures-count");
+    const commuResult = document.getElementById("commu-result");
+    const commuTableBody = document.querySelector("#commu-table tbody");
+    let selectedRowIndex = null;
+    let currentRows = [];
+    let selectedData = null;
+    let cachedUser = null;
+    let cachedPassword = null;
+
+    const showError = (msg) => {
+      try { window.alert(msg); } catch (_) {}
+    };
+
+    let currentSituations = [];
+    let currentFusions = [];
+
+    function setActiveTab(name) {
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
+      panels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tab === name));
+    }
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => setActiveTab(tab.dataset.tab)));
+
+    function setVal(el, value) {
+      if (el) el.textContent = value || "-";
+    }
+
+    function applyIdentification(data) {
+      if (!data) return;
+      selectedData = { ...(selectedData || {}), ...data };
+      const numero = data.numero ?? selectedData?.numero;
+      const denom1 = data.denom1 ?? selectedData?.denom1;
+      const denom2 = data.denom2 ?? selectedData?.denom2;
+      setVal(identNumero, numero);
+      setVal(identDenom1, denom1);
+      setVal(identDenom2, denom2);
+      setVal(identCulte, data.culte);
+      setVal(identModeVie, data.mode_vie);
+      setVal(identAdhesion, data.date_adhesion);
+      setVal(identRecult, data.recult);
+      setVal(identJournal, data.date_journal);
+      setVal(identNbLettres, data.nb_lettres);
+      setVal(identMaj, data.date_maj);
+      if (collTitle) collTitle.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
+      if (collSub) collSub.textContent = denom2 ?? "";
+    }
+
+    function fillFromSelectedFallback() {
+      if (!selectedData) return;
+      setVal(addrFields.cp, selectedData.cp);
+      setVal(addrFields.ville, selectedData.ville);
+      setVal(identDenom1, selectedData.denom1);
+      setVal(identDenom2, selectedData.denom2);
+    }
+
+    function setAddrStatus(message, success = false) {
+      if (!addrStatus) return;
+      addrStatus.textContent = message || "";
+      addrStatus.classList.toggle("success", !!success);
+    }
+
+    function clearResponsable(fields) {
+      Object.values(fields).forEach((el) => setVal(el, "-"));
+    }
+
+    function setAssuresResult(message, success = false) {
+      if (!assuresResult) return;
+      assuresResult.textContent = message || "";
+      assuresResult.classList.toggle("success", !!success);
+    }
+
+    function renderAssures(rows) {
+      if (!assuresTableBody) return;
+      assuresTableBody.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="12" style="text-align:center;">-</td>`;
+        assuresTableBody.appendChild(tr);
+      } else {
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.dataset.nni = r.nni || "";
+          tr.innerHTML = `
+            <td>${r.nom || "-"}</td>
+            <td>${r.prenoms || "-"}</td>
+            <td>${r.nni || "-"}</td>
+            <td>${r.code_maladie || "-"}</td>
+            <td>${r.date_effet_maladie || "-"}</td>
+            <td>${r.date_fin_maladie || "-"}</td>
+            <td>${r.num_coll_maladie || "-"}</td>
+            <td>${r.code_vieillesse || "-"}</td>
+            <td>${r.date_effet_vieillesse || "-"}</td>
+            <td>${r.date_fin_vieillesse || "-"}</td>
+            <td>${r.num_coll_vieillesse || "-"}</td>
+            <td>${r.type_adresse || "-"}</td>
+          `;
+          tr.addEventListener("dblclick", async () => {
+            if (!r.nni) {
+              window.alert("NNI manquant pour ouvrir l'assuré.");
+              return;
+            }
+            const rawNni = String(r.nni);
+            const normalized = rawNni.replace(/\D/g, "");
+            const nniForSearch = normalized || rawNni;
+            const nir = encodeURIComponent(nniForSearch);
+            try {
+              window.name = JSON.stringify({ assureNni: nniForSearch });
+            } catch (_) {
+              /* ignore window.name errors */
+            }
+            if (window.pywebview?.api?.set_selected_assure_nni) {
+              try {
+                await window.pywebview.api.set_selected_assure_nni(nniForSearch);
+              } catch (_) {
+                /* ignore api errors */
+              }
+            }
+            window.location.href = `assures.html?nir=${nir}`;
+          });
+          assuresTableBody.appendChild(tr);
+        });
+      }
+      if (assuresCount) assuresCount.textContent = String(rows.length || 0);
+    }
+
+    function setCommunautesResult(message, success = false) {
+      if (!commuResult) return;
+      commuResult.textContent = message || "";
+      commuResult.classList.toggle("success", !!success);
+    }
+
+    function renderCommunautes(rows) {
+      if (!commuTableBody) return;
+      commuTableBody.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6" style="text-align:center;">-</td>`;
+        commuTableBody.appendChild(tr);
+      } else {
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.numero || "-"}</td>
+            <td>${r.rang || "-"}</td>
+            <td>${r.denom1 || "-"}</td>
+            <td>${r.denom2 || "-"}</td>
+            <td>${r.cp || "-"}</td>
+            <td>${r.ville || "-"}</td>
+          `;
+          commuTableBody.appendChild(tr);
+        });
+      }
+    }
+
+    function renderTables() {
+      if (tableSituations) {
+        tableSituations.innerHTML = "";
+        const rows = currentSituations;
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
+          tableSituations.appendChild(tr);
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.libelle || "-"}</td>
+              <td>${r.coll_accueil || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSituations.appendChild(tr);
+          });
+        }
+      }
+
+      if (tableFusion) {
+        tableFusion.innerHTML = "";
+        const rows = currentFusions;
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="3" style="text-align:center;">-</td>`;
+          tableFusion.appendChild(tr);
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.coll_transf || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableFusion.appendChild(tr);
+          });
+        }
+      }
+    }
+
+    function toggleList(show) {
+      [form, hint, resultBox, tableTitle, tableWrapper, actionsPanel].forEach((el) => {
+        el?.classList.toggle("hidden", !show);
+      });
+      if (backResultsButton) backResultsButton.hidden = show;
+    }
+
+    function toggleDetails(show) {
+      if (detailsSection) detailsSection.hidden = !show;
+      if (!show) {
+        setActiveTab("ident");
+      }
+    }
+
+    function renderTable(rows) {
+      if (!tableBody) return;
+      tableBody.innerHTML = "";
+      rows.forEach((r, idx) => {
+        const tr = document.createElement("tr");
+        if (selectedRowIndex === idx) tr.classList.add("row-selected");
+        tr.innerHTML = `
+          <td>${r.numero || "-"}</td>
+          <td>${r.denom1 || "-"}</td>
+          <td>${r.denom2 || "-"}</td>
+          <td>${r.cp || "-"}</td>
+          <td>${r.ville || "-"}</td>
+        `;
+        tr.addEventListener("click", () => {
+          selectedRowIndex = idx;
+          renderTable(rows);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function setResult(message, success = false) {
+      if (!resultBox) return;
+      resultBox.textContent = message || "";
+      resultBox.classList.toggle("success", !!success);
+    }
+
+    async function ensureCredentials(force = false) {
+      if (!force && cachedUser && cachedPassword) return cachedUser;
+      const user = window.prompt("Entrez votre nom d'utilisateur (Oracle) :", cachedUser || "");
+      if (!user) return null;
+      const pwd = window.prompt("Entrez votre mot de passe (Oracle) :", "");
+      if (!pwd) return null;
+      cachedUser = user;
+      cachedPassword = pwd;
+      return user;
+    }
+
+    async function loadIdentification(numero) {
+      if (!numero) return;
+      if (!window.pywebview?.api?.fetch_collectivite_identification) return;
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) return;
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_identification(user, pwd, numero);
+        if (resp?.ok === "true" && resp.data) {
+          applyIdentification(resp.data);
+        }
+      } catch (_) {
+        /* ignore identification errors */
+      }
+    }
+
+    async function loadAdresse(numero) {
+      if (!numero) {
+        Object.values(addrFields).forEach((el) => setVal(el, "-"));
+        setAddrStatus("Numéro de collectivité manquant.");
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_adresse) {
+        Object.values(addrFields).forEach((el) => setVal(el, "-"));
+        fillFromSelectedFallback();
+        setAddrStatus("Données locales (API indisponible).", false);
+        return;
+      }
+      setAddrStatus("Chargement de l'adresse...");
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        Object.values(addrFields).forEach((el) => setVal(el, "-"));
+        setAddrStatus("Identifiants manquants.", false);
+        return;
+      }
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_adresse(user, pwd, numero);
+        if (resp?.ok === "true" && resp.data) {
+          const d = resp.data;
+          setVal(addrFields.adr1, d.adr1);
+          setVal(addrFields.adr2, d.adr2);
+          setVal(addrFields.adr3, d.adr3);
+          setVal(addrFields.adr4, d.adr4);
+          setVal(addrFields.cp, d.cp);
+          setVal(addrFields.ville, d.ville);
+          setVal(addrFields.pays, d.pays);
+          setVal(addrFields.email, d.email);
+          setVal(addrFields.tel, d.tel);
+          setVal(addrFields.fax, d.fax);
+          setVal(addrFields.npai, d.npai);
+          setVal(addrFields.maj, d.date_maj);
+          if (d.denom1) setVal(identDenom1, d.denom1);
+          if (d.denom2) setVal(identDenom2, d.denom2);
+          setAddrStatus("Adresse récupérée.", true);
+        } else {
+          Object.values(addrFields).forEach((el) => setVal(el, "-"));
+          fillFromSelectedFallback();
+          setAddrStatus(resp?.message || "Aucune donnée d'adresse.", false);
+        }
+      } catch (_) {
+        Object.values(addrFields).forEach((el) => setVal(el, "-"));
+        fillFromSelectedFallback();
+        setAddrStatus("Erreur lors du chargement de l'adresse.", false);
+      }
+    }
+
+    async function loadSituations(numero) {
+      if (!numero) {
+        currentSituations = [];
+        renderTables();
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_situations) {
+        currentSituations = [];
+        renderTables();
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        currentSituations = [];
+        renderTables();
+        return;
+      }
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_situations(user, pwd, numero);
+        if (resp?.ok === "true") {
+          currentSituations = resp.data || [];
+        } else {
+          currentSituations = [];
+        }
+      } catch (_) {
+        currentSituations = [];
+      }
+      renderTables();
+    }
+
+    async function loadFusions(numero) {
+      if (!numero) {
+        currentFusions = [];
+        renderTables();
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_fusions) {
+        currentFusions = [];
+        renderTables();
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        currentFusions = [];
+        renderTables();
+        return;
+      }
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_fusions(user, pwd, numero);
+        if (resp?.ok === "true") {
+          currentFusions = resp.data || [];
+        } else {
+          currentFusions = [];
+        }
+      } catch (_) {
+        currentFusions = [];
+      }
+      renderTables();
+    }
+
+    async function loadResponsable(numero, kind) {
+      const fields = kind === "maladie" ? respMaladieFields : respVieFields;
+      const apiName = kind === "maladie" ? "fetch_collectivite_responsable_maladie" : "fetch_collectivite_responsable_vieillesse";
+      if (!numero) {
+        clearResponsable(fields);
+        return;
+      }
+      if (!window.pywebview?.api?.[apiName]) {
+        clearResponsable(fields);
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        clearResponsable(fields);
+        return;
+      }
+      try {
+        const resp = await window.pywebview.api[apiName](user, pwd, numero);
+        if (resp?.ok === "true" && resp.data) {
+          const d = resp.data;
+          setVal(fields.nom, d.nom);
+          setVal(fields.adr1, d.adr1);
+          setVal(fields.adr2, d.adr2);
+          setVal(fields.adr3, d.adr3);
+          setVal(fields.adr4, d.adr4);
+          setVal(fields.cp, d.cp);
+          setVal(fields.ville, d.ville);
+          setVal(fields.pays, d.pays);
+          setVal(fields.email, d.email);
+          setVal(fields.tel, d.tel);
+          setVal(fields.fax, d.fax);
+          setVal(fields.maj, d.date_maj);
+        } else {
+          clearResponsable(fields);
+        }
+      } catch (_) {
+        clearResponsable(fields);
+      }
+    }
+
+    function getAssureFilters() {
+      const filter = document.querySelector('input[name="assure-filter"]:checked')?.value || "tout";
+      const tri = document.querySelector('input[name="assure-tri"]:checked')?.value || "nom";
+      return { filter, tri };
+    }
+
+    async function loadAssures(numero) {
+      if (!numero) {
+        renderAssures([]);
+        setAssuresResult("");
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_assures) {
+        renderAssures([]);
+        setAssuresResult("API pywebview indisponible (assurés).");
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        renderAssures([]);
+        setAssuresResult("Identifiants manquants.");
+        return;
+      }
+      const { filter, tri } = getAssureFilters();
+      setAssuresResult("Chargement des assurés...");
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_assures(user, pwd, numero, filter, tri);
+        if (resp?.ok === "true") {
+          const rows = resp.data || [];
+          renderAssures(rows);
+          setAssuresResult(resp.message || "Assurés récupérés.", true);
+        } else {
+          renderAssures([]);
+          setAssuresResult(resp?.message || "Aucun assuré.", false);
+        }
+      } catch (_) {
+        renderAssures([]);
+        setAssuresResult("Erreur lors du chargement des assurés.", false);
+      }
+    }
+
+    async function loadCommunautes(numero) {
+      if (!numero) {
+        renderCommunautes([]);
+        setCommunautesResult("");
+        return;
+      }
+      if (!window.pywebview?.api?.fetch_collectivite_communautes) {
+        renderCommunautes([]);
+        setCommunautesResult("API pywebview indisponible (communautés).");
+        return;
+      }
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        renderCommunautes([]);
+        setCommunautesResult("Identifiants manquants.");
+        return;
+      }
+      setCommunautesResult("Chargement des communautés...");
+      try {
+        const resp = await window.pywebview.api.fetch_collectivite_communautes(user, pwd, numero);
+        if (resp?.ok === "true") {
+          const rows = resp.data || [];
+          renderCommunautes(rows);
+          setCommunautesResult(resp.message || "Communautés récupérées.", true);
+        } else {
+          renderCommunautes([]);
+          setCommunautesResult(resp?.message || "Aucune communauté.", false);
+        }
+      } catch (_) {
+        renderCommunautes([]);
+        setCommunautesResult("Erreur lors du chargement des communautés.", false);
+      }
+    }
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      toggleDetails(false);
+      toggleList(true);
+      selectedData = null;
+      currentSituations = [];
+      currentFusions = [];
+      clearResponsable(respMaladieFields);
+      clearResponsable(respVieFields);
+      renderAssures([]);
+      setAssuresResult("");
+      renderCommunautes([]);
+      setCommunautesResult("");
+      selectedRowIndex = null;
+      const num = (numInput?.value || "").trim();
+      const denom = (denom1Input?.value || "").trim();
+      const cp = (cpInput?.value || "").trim();
+
+      if (!num && !denom && !cp) {
+        setResult("", false);
+        showError("Renseignez au moins un filtre (Numéro, Dénomination 1 ou Code postal).");
+        renderTable([]);
+        return;
+      }
+
+      if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_collectivites) {
+        showError("API pywebview indisponible (collectivités).");
+        return;
+      }
+
+      setResult("Recherche en cours...");
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (!user || !pwd) {
+        setResult("Connexion annulée (identifiants manquants).");
+        return;
+      }
+
+      try {
+        const response = await window.pywebview.api.fetch_collectivites(user, pwd, num, denom, cp);
+        if (response?.ok === "true") {
+          currentRows = response.data || [];
+          renderTable(currentRows);
+          setResult(response.message || "Résultat disponible.", true);
+        } else {
+          currentRows = [];
+          renderTable(currentRows);
+          setResult("");
+          showError(response?.message || "Aucun résultat.");
+        }
+      } catch (err) {
+        currentRows = [];
+        renderTable(currentRows);
+        setResult("");
+        showError("Erreur pendant la recherche : " + err);
+      }
+    });
+
+    btnOk?.addEventListener("click", async () => {
+      if (!tableBody) return;
+      const rows = Array.from(tableBody.querySelectorAll("tr"));
+      const sel = rows.findIndex((r) => r.classList.contains("row-selected"));
+      if (sel === -1) {
+        window.alert("S?lectionnez une collectivit? dans la liste.");
+        return;
+      }
+      const selected = currentRows[sel];
+      if (!selected || !selected.numero) {
+        window.alert("Num?ro de collectivit? manquant.");
+        return;
+      }
+      selectedData = selected;
+      applyIdentification(selected);
+      renderTables();
+      toggleList(false);
+      toggleDetails(true);
+      setActiveTab("ident");
+      await loadIdentification(selected.numero);
+      await loadAdresse(selected.numero);
+      await loadSituations(selected.numero);
+      await loadFusions(selected.numero);
+      await loadResponsable(selected.numero, "maladie");
+      await loadResponsable(selected.numero, "vieillesse");
+      await loadAssures(selected.numero);
+      await loadCommunautes(selected.numero);
+    });
+
+    btnCancel?.addEventListener("click", () => {
+      selectedRowIndex = null;
+      selectedData = null;
+      currentSituations = [];
+      currentFusions = [];
+      clearResponsable(respMaladieFields);
+      clearResponsable(respVieFields);
+      renderAssures([]);
+      setAssuresResult("");
+      renderCommunautes([]);
+      setCommunautesResult("");
+      if (numInput) numInput.value = "";
+      if (denom1Input) denom1Input.value = "";
+      if (cpInput) cpInput.value = "";
+      currentRows = [];
+      renderTable(currentRows);
+      setResult("", false);
+    });
+    btnNew?.addEventListener("click", () => {
+      window.alert("Création d'une nouvelle collectivité : fonctionnalité à venir.");
+    });
+
+    assuresForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const numero = selectedData?.numero;
+      if (numero) {
+        await loadAssures(numero);
+      } else {
+        renderAssures([]);
+        setAssuresResult("Num?ro de collectivit? manquant.");
+      }
+    });
+
+
+    backResultsButton?.addEventListener("click", () => {
+      toggleDetails(false);
+      toggleList(true);
+    });
+
+    renderTable(currentRows);
+  </script>
 </body>
 </html>

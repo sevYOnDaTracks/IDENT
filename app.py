@@ -28,6 +28,8 @@ class Api:
         self.window: Optional[webview.Window] = None
         self._cached_user: Optional[str] = None
         self._cached_password: Optional[str] = None
+        self._selected_collectivite: Optional[dict] = None
+        self._selected_assure_nni: Optional[str] = None
 
     def set_window(self, window: webview.Window) -> None:
         self.window = window
@@ -55,6 +57,20 @@ class Api:
         self._cached_password = None
         return {"ok": "true"}
 
+    def set_selected_collectivite(self, payload: dict):
+        self._selected_collectivite = payload or None
+        return {"ok": "true"}
+
+    def get_selected_collectivite(self):
+        return {"ok": "true", "data": self._selected_collectivite}
+
+    def set_selected_assure_nni(self, nni: str):
+        self._selected_assure_nni = (nni or "").strip() or None
+        return {"ok": "true"}
+
+    def get_selected_assure_nni(self):
+        return {"ok": "true", "data": self._selected_assure_nni}
+
     def fetch_assure(self, username: str, password: str, nir: str, nom: str = "", prenom: str = "", tri: str = "nir"):
         nir_value = (nir or "").strip()
         nom_value = (nom or "").strip()
@@ -75,6 +91,172 @@ class Api:
         self._cached_user = user
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} assure(s) trouve(s).", "data": data}
+
+    def fetch_collectivites(self, username: str, password: str, numero: str, denom1: str, code_postal: str):
+        numero_value = (numero or "").strip()
+        denom1_value = (denom1 or "").strip()
+        cp_value = (code_postal or "").strip()
+
+        if not (numero_value or denom1_value or cp_value):
+            return {"ok": "false", "message": "Renseignez au moins un filtre (numéro, dénomination 1 ou le code postal).", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_collectivites(user, pwd, numero_value, denom1_value, cp_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"]
+        if not data:
+            return {"ok": "false", "message": "Aucune collectivité trouvée.", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} collectivité(s) trouvée(s).", "data": data}
+
+    def fetch_collectivite_adresse(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivité manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_collectivite_adresse(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+        if not result["data"]:
+            return {"ok": "false", "message": "Collectivité introuvable.", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Détails collectivité récupérés.", "data": result["data"]}
+
+    def fetch_collectivite_identification(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_collectivite_identification(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+        if not result["data"]:
+            return {"ok": "false", "message": "Collectivite introuvable.", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Identification collectivite recuperee.", "data": result["data"]}
+
+    def fetch_collectivite_situations(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_collectivite_situations(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Situations collectivité récupérées.", "data": result["data"]}
+
+    def fetch_collectivite_fusions(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_collectivite_fusions(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Fusions collectivité récupérées.", "data": result["data"]}
+
+    def fetch_collectivite_responsable_maladie(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_collectivite_responsable(user, pwd, collect_value, 1)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Responsable maladie récupéré.", "data": result["data"]}
+
+    def fetch_collectivite_responsable_vieillesse(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_collectivite_responsable(user, pwd, collect_value, 2)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Responsable vieillesse récupéré.", "data": result["data"]}
+
+    def fetch_collectivite_assures(self, username: str, password: str, collect_id: str, filter_type: str = "tout", tri: str = "nom"):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        filter_value = (filter_type or "tout").strip().lower()
+        tri_value = (tri or "nom").strip().lower()
+        result = self.client.query_collectivite_assures(user, pwd, collect_value, filter_value, tri_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Assurés collectivité récupérés.", "data": result["data"]}
+
+    def fetch_collectivite_communautes(self, username: str, password: str, collect_id: str):
+        collect_value = (collect_id or "").strip()
+        if not collect_value:
+            return {"ok": "false", "message": "Identifiant collectivite manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_collectivite_communautes(user, pwd, collect_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Communautés collectivité récupérées.", "data": result["data"]}
 
     def export_assure(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
@@ -129,8 +311,8 @@ def main() -> None:
     window = webview.create_window(
         "IDENT - SIED V1.0",
         html_path.as_uri(),
-        width=960,
-        height=640,
+        width=1280,
+        height=720,
         resizable=True,
         js_api=api,
     )

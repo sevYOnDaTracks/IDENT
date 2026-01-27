@@ -10,22 +10,11 @@
   <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-  <div class="logo-top-left">
-    <img src="../images/Logo Securité Social.png" alt="Logo Sécurité Sociale">
-  </div>
-
-  <div class="logo-corner">
-    <img src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
-  </div>
-
   <div class="grid">
     <div class="card">
       <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
         <a class="button ghost" href="home.html" id="btn-home">Accueil</a>
-        <div class="connection">
-          <button id="btn-test-conn" class="button outline">Tester connexion Oracle</button>
-          <div id="conn-status" class="result" aria-live="polite"></div>
-        </div>
+        <button id="btn-back-results" class="button outline" hidden>Retour aux résultats</button>
       </div>
 
       <h1 class="title">Assurés</h1>
@@ -86,13 +75,17 @@
           </div>
           <div class="actions">
             <button class="button outline" id="btn-export">Exporter en Excel</button>
-            <button class="button ghost" id="btn-hide-details">Retour aux résultats</button>
           </div>
         </div>
       <div class="tabs" role="tablist">
         <button class="tab active" data-tab="infos">Infos personnels</button>
         <button class="tab" data-tab="situations">Situations</button>
         <button class="tab" data-tab="maladie">Maladie</button>
+        <button class="tab" data-tab="vieillesse">Vieillesse</button>
+        <button class="tab" data-tab="rco">RCO</button>
+        <button class="tab" data-tab="csg">CSG</button>
+        <button class="tab" data-tab="adresse">Adresse</button>
+        <button class="tab" data-tab="ayantdroit">Ayant droit</button>
       </div>
       <div class="tab-panels">
         <div class="tab-panel active" data-tab="infos">
@@ -148,6 +141,201 @@
             </div>
           </div>
         </div>
+        <div class="tab-panel" data-tab="vieillesse">
+          <div class="table-title">Historique des situations vieillesse</div>
+          <table class="data-table" id="table-sit-vieillesse">
+            <thead>
+              <tr>
+                <th>Code situation</th>
+                <th>Code nature 1</th>
+                <th>Code nature 2</th>
+                <th>Date nature 2</th>
+                <th>Date des conditions</th>
+                <th>Date de déclaration</th>
+                <th>Date d'effet</th>
+                <th>Date MAJ situation</th>
+                <th>Date MAJ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="maladie-grid">
+            <div>
+              <div class="table-title">Historique des collectivités vieillesse</div>
+              <table class="data-table" id="table-collect-vieillesse">
+                <thead>
+                  <tr>
+                    <th>N° collectivité</th>
+                    <th>Date effet</th>
+                    <th>Date MAJ</th>
+                    <th>État actuel</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" data-tab="rco">
+          <div class="table-title">Historique des situations RCO</div>
+          <table class="data-table" id="table-sit-rco">
+            <thead>
+              <tr>
+                <th>Code situation</th>
+                <th>Date des conditions</th>
+                <th>Date de déclaration</th>
+                <th>Date d'effet</th>
+                <th>Date MAJ situation</th>
+                <th>Date MAJ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="maladie-grid">
+            <div>
+              <div class="table-title">Historique des collectivités vieillesse</div>
+              <table class="data-table" id="table-collect-rco">
+                <thead>
+                  <tr>
+                    <th>N° collectivité</th>
+                    <th>Date effet</th>
+                    <th>Date MAJ</th>
+                    <th>État actuel</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" data-tab="csg">
+          <div class="table-title">Historique des situations CSG</div>
+          <table class="data-table" id="table-sit-csg">
+            <thead>
+              <tr>
+                <th>Code situation</th>
+                <th>Date des conditions</th>
+                <th>Date de déclaration</th>
+                <th>Date d'effet</th>
+                <th>Date MAJ situation</th>
+                <th>Date MAJ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="maladie-grid">
+            <div>
+              <div class="table-title">Historique des collectivités maladie</div>
+              <table class="data-table" id="table-collect-csg">
+                <thead>
+                  <tr>
+                    <th>N° collectivité</th>
+                    <th>Date effet</th>
+                    <th>Date MAJ</th>
+                    <th>État actuel</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" data-tab="adresse">
+          <div class="info-section">Adresse de l'assuré</div>
+          <div class="info-grid two-col">
+            <div class="info-row">
+              <div class="info-label">Type adresse</div>
+              <div class="info-value" id="addr-type">-</div>
+            </div>
+            <div></div>
+            <div class="info-row">
+              <div class="info-label">Ligne 1</div>
+              <div class="info-value" id="addr-line1">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Ligne 2</div>
+              <div class="info-value" id="addr-line2">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Ligne 3</div>
+              <div class="info-value" id="addr-line3">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Ligne 4</div>
+              <div class="info-value" id="addr-line4">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Code postal / Ville</div>
+              <div class="info-value" id="addr-cp-ville">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Pays</div>
+              <div class="info-value" id="addr-pays">-</div>
+            </div>
+          </div>
+
+          <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
+          <div class="info-grid two-col">
+            <div class="info-row">
+              <div class="info-label">E-mail</div>
+              <div class="info-value" id="addr-mail">-</div>
+            </div>
+            <div></div>
+            <div class="info-row">
+              <div class="info-label">Numéro téléphone</div>
+              <div class="info-value" id="addr-tel">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Numéro télécopie</div>
+              <div class="info-value" id="addr-fax">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Indicatif ville étranger (tél)</div>
+              <div class="info-value" id="addr-indic-tel">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Indicatif ville étranger (fax)</div>
+              <div class="info-value" id="addr-indic-fax">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Indicatif DOM TOM (tél)</div>
+              <div class="info-value" id="addr-dom-tel">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Indicatif DOM TOM (fax)</div>
+              <div class="info-value" id="addr-dom-fax">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Nombre lettres d'info</div>
+              <div class="info-value" id="addr-nb-lettres">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Date de MAJ</div>
+              <div class="info-value" id="addr-date-maj">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">NPAI</div>
+              <div class="info-value" id="addr-npai">-</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" data-tab="ayantdroit">
+          <div class="table-title">Liste des ayants droit</div>
+          <table class="data-table" id="table-ayantdroit">
+            <thead>
+              <tr>
+                <th>Rang bénéficiaire</th>
+                <th>Nom</th>
+                <th>Prénoms</th>
+                <th>Date de naissance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
     </div>
@@ -164,7 +352,7 @@
     const loadMoreButton = document.getElementById("btn-load-more");
     const homeButton = document.getElementById("btn-home");
     const detailsSection = document.getElementById("assure-details");
-    const hideDetailsButton = document.getElementById("btn-hide-details");
+    const backResultsButton = document.getElementById("btn-back-results");
     const exportButton = document.getElementById("btn-export");
     const assureFullname = document.getElementById("assure-fullname");
     const assureMeta = document.getElementById("assure-meta");
@@ -173,11 +361,34 @@
     const tableSitMaladie = document.querySelector("#table-sit-maladie tbody");
     const tableRenouvMaladie = document.querySelector("#table-renouv-maladie tbody");
     const tableCollectMalie = document.querySelector("#table-collect-malie tbody");
+    const tableSitVieillesse = document.querySelector("#table-sit-vieillesse tbody");
+    const tableCollectVieillesse = document.querySelector("#table-collect-vieillesse tbody");
+    const tableSitRco = document.querySelector("#table-sit-rco tbody");
+    const tableCollectRco = document.querySelector("#table-collect-rco tbody");
+    const tableSitCsg = document.querySelector("#table-sit-csg tbody");
+    const tableCollectCsg = document.querySelector("#table-collect-csg tbody");
+    const tableAyantDroit = document.querySelector("#table-ayantdroit tbody");
+    const addrFields = {
+      type: document.getElementById("addr-type"),
+      line1: document.getElementById("addr-line1"),
+      line2: document.getElementById("addr-line2"),
+      line3: document.getElementById("addr-line3"),
+      line4: document.getElementById("addr-line4"),
+      cpVille: document.getElementById("addr-cp-ville"),
+      pays: document.getElementById("addr-pays"),
+      mail: document.getElementById("addr-mail"),
+      tel: document.getElementById("addr-tel"),
+      fax: document.getElementById("addr-fax"),
+      indicTel: document.getElementById("addr-indic-tel"),
+      indicFax: document.getElementById("addr-indic-fax"),
+      domTel: document.getElementById("addr-dom-tel"),
+      domFax: document.getElementById("addr-dom-fax"),
+      nbLettres: document.getElementById("addr-nb-lettres"),
+      dateMaj: document.getElementById("addr-date-maj"),
+      npai: document.getElementById("addr-npai"),
+    };
     const tabs = document.querySelectorAll("#assure-details .tab");
     const panels = document.querySelectorAll("#assure-details .tab-panel");
-    const testConnButton = document.getElementById("btn-test-conn");
-    const connStatus = document.getElementById("conn-status");
-
     let assureData = [];
     let selectedAssure = null;
     let lastNirValue = "";
@@ -186,6 +397,7 @@
     let openStates = {};
     let cachedUser = null;
     let cachedPassword = null;
+    let hasSearched = false;
 
     const showError = (message) => {
       try {
@@ -222,6 +434,7 @@
         }
         const response = await window.pywebview.api.fetch_assure(user, pwd, value, nom, prenom, tri);
         if (response?.ok === "true") {
+          hasSearched = true;
           assureData = response.data || [];
           nirResult.textContent = response.message || "Assuré trouvé.";
           nirResult.classList.add("success");
@@ -233,6 +446,7 @@
           toggleDetails(false);
           toggleSearchArea(false);
         } else {
+          hasSearched = true;
           nirResult.textContent = "";
           nirResult.classList.remove("success");
           showError(response?.message || "Aucun résultat.");
@@ -246,6 +460,7 @@
           toggleSearchArea(false);
         }
       } catch (error) {
+        hasSearched = true;
         nirResult.textContent = "";
         nirResult.classList.remove("success");
         showError("Erreur pendant la recherche : " + error);
@@ -259,34 +474,6 @@
         toggleSearchArea(false);
       }
     });
-
-    async function testConnection() {
-      if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.test_connection) {
-        connStatus && (connStatus.textContent = "API pywebview non disponible.");
-        showError("API pywebview non disponible pour le test de connexion.");
-        return;
-      }
-      const username = await ensureCredentials(true);
-      const password = cachedPassword;
-      if (!username || !password) return;
-      connStatus && (connStatus.textContent = "Test de connexion en cours...");
-      connStatus && connStatus.classList.remove("success");
-      try {
-        const response = await window.pywebview.api.test_connection(username, password);
-        if (response?.ok === "true") {
-          connStatus && (connStatus.textContent = response.message || "Connexion réussie.");
-          connStatus && connStatus.classList.add("success");
-        } else {
-        connStatus && (connStatus.textContent = "");
-          showError(response?.message || "Échec de connexion.");
-      }
-    } catch (error) {
-        connStatus && (connStatus.textContent = "");
-        showError("Erreur pendant le test de connexion : " + error);
-      }
-    }
-
-    testConnButton?.addEventListener("click", testConnection);
 
     function renderAssureResults() {
       if (!resultsContainer) return;
@@ -351,6 +538,11 @@
           renderInfoDetails();
           renderSituationDetails();
           renderMaladieDetails();
+          renderVieillesseDetails();
+          renderRcoDetails();
+          renderCsgDetails();
+          renderAdresseDetails();
+          renderAyantDroitDetails();
           toggleDetails(true);
           toggleSearchArea(true);
           nirInput.value = "";
@@ -365,6 +557,9 @@
     function toggleDetails(show) {
       if (!detailsSection) return;
       detailsSection.hidden = !show;
+      if (backResultsButton) {
+        backResultsButton.hidden = !show || !hasSearched;
+      }
       if (!show) {
         setActiveTab("infos");
       }
@@ -375,7 +570,7 @@
       loadMoreContainer.hidden = !show;
     }
 
-    hideDetailsButton?.addEventListener("click", () => {
+    backResultsButton?.addEventListener("click", () => {
       toggleDetails(false);
       toggleSearchArea(false);
     });
@@ -428,6 +623,11 @@
         renderInfoDetails();
         renderSituationDetails();
         renderMaladieDetails();
+        renderVieillesseDetails();
+        renderRcoDetails();
+        renderCsgDetails();
+        renderAdresseDetails();
+        renderAyantDroitDetails();
         return;
       }
       const parts = [selectedAssure.nom_usage, selectedAssure.prenom_usage].filter(Boolean).join(" ");
@@ -627,6 +827,219 @@
       }
     }
 
+    function renderVieillesseDetails() {
+      const sampleSit = [
+        {
+          code_situation: "11",
+          code_nature1: "51",
+          code_nature2: "",
+          date_nature2: "00/00/0000",
+          date_conditions: "01/11/2002",
+          date_declaration: "00/00/0000",
+          date_effet: "01/11/2002",
+          date_maj_situation: "21/11/2002",
+          date_maj: "21/11/2002",
+        },
+        {
+          code_situation: "21",
+          code_nature1: "",
+          code_nature2: "",
+          date_nature2: "00/00/0000",
+          date_conditions: "31/12/1978",
+          date_declaration: "00/00/0000",
+          date_effet: "31/12/1978",
+          date_maj_situation: "20/01/1993",
+          date_maj: "12/09/2002",
+        },
+      ];
+
+      const sampleCollect = [
+        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
+        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
+      ];
+
+      if (tableSitVieillesse) {
+        tableSitVieillesse.innerHTML = "";
+        const rows = selectedAssure?.situations_vieillesse || sampleSit;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.code_situation || "-"}</td>
+            <td>${r.code_nature1 || "-"}</td>
+            <td>${r.code_nature2 || "-"}</td>
+            <td>${r.date_nature2 || "-"}</td>
+            <td>${r.date_conditions || "-"}</td>
+            <td>${r.date_declaration || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj_situation || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+          `;
+          tableSitVieillesse.appendChild(tr);
+        });
+      }
+
+      if (tableCollectVieillesse) {
+        tableCollectVieillesse.innerHTML = "";
+        const rows = selectedAssure?.collectivites_vieillesse || sampleCollect;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.collectivite || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+            <td>${r.etat_actuel || "-"}</td>
+          `;
+          tableCollectVieillesse.appendChild(tr);
+        });
+      }
+    }
+
+    function renderRcoDetails() {
+      const sampleSit = [
+        {
+          code_situation: "-",
+          date_conditions: "-",
+          date_declaration: "-",
+          date_effet: "-",
+          date_maj_situation: "-",
+          date_maj: "-",
+        },
+      ];
+
+      const sampleCollect = [
+        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
+        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
+      ];
+
+      if (tableSitRco) {
+        tableSitRco.innerHTML = "";
+        const rows = selectedAssure?.situations_rco || sampleSit;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.code_situation || "-"}</td>
+            <td>${r.date_conditions || "-"}</td>
+            <td>${r.date_declaration || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj_situation || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+          `;
+          tableSitRco.appendChild(tr);
+        });
+      }
+
+      if (tableCollectRco) {
+        tableCollectRco.innerHTML = "";
+        const rows = selectedAssure?.collectivites_rco || sampleCollect;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.collectivite || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+            <td>${r.etat_actuel || "-"}</td>
+          `;
+          tableCollectRco.appendChild(tr);
+        });
+      }
+    }
+
+    function renderCsgDetails() {
+      const sampleSit = [
+        {
+          code_situation: "-",
+          date_conditions: "-",
+          date_declaration: "-",
+          date_effet: "-",
+          date_maj_situation: "-",
+          date_maj: "-",
+        },
+      ];
+
+      const sampleCollect = [
+        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
+        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
+      ];
+
+      if (tableSitCsg) {
+        tableSitCsg.innerHTML = "";
+        const rows = selectedAssure?.situations_csg || sampleSit;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.code_situation || "-"}</td>
+            <td>${r.date_conditions || "-"}</td>
+            <td>${r.date_declaration || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj_situation || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+          `;
+          tableSitCsg.appendChild(tr);
+        });
+      }
+
+      if (tableCollectCsg) {
+        tableCollectCsg.innerHTML = "";
+        const rows = selectedAssure?.collectivites_csg || sampleCollect;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.collectivite || "-"}</td>
+            <td>${r.date_effet || "-"}</td>
+            <td>${r.date_maj || "-"}</td>
+            <td>${r.etat_actuel || "-"}</td>
+          `;
+          tableCollectCsg.appendChild(tr);
+        });
+      }
+    }
+
+    function renderAdresseDetails() {
+      if (!addrFields) return;
+      const a = selectedAssure || {};
+      const setVal = (el, val) => {
+        if (el) el.textContent = val || "-";
+      };
+      setVal(addrFields.type, a.addr_type);
+      setVal(addrFields.line1, a.addr_l1);
+      setVal(addrFields.line2, a.addr_l2);
+      setVal(addrFields.line3, a.addr_l3);
+      setVal(addrFields.line4, a.addr_l4);
+      setVal(addrFields.cpVille, a.addr_cp || a.addr_ville ? `${a.addr_cp || ""} ${a.addr_ville || ""}`.trim() : "-");
+      setVal(addrFields.pays, a.addr_pays);
+      setVal(addrFields.mail, a.addr_mail);
+      setVal(addrFields.tel, a.addr_tel);
+      setVal(addrFields.fax, a.addr_fax);
+      setVal(addrFields.indicTel, a.addr_indic_tel);
+      setVal(addrFields.indicFax, a.addr_indic_fax);
+      setVal(addrFields.domTel, a.addr_dom_tel);
+      setVal(addrFields.domFax, a.addr_dom_fax);
+      setVal(addrFields.nbLettres, a.addr_nb_lettres);
+      setVal(addrFields.dateMaj, a.addr_date_maj);
+      setVal(addrFields.npai, a.addr_npai);
+    }
+
+    function renderAyantDroitDetails() {
+      const sample = [
+        { rang: "-", nom: "-", prenoms: "-", date_naissance: "-" },
+      ];
+
+      if (tableAyantDroit) {
+        tableAyantDroit.innerHTML = "";
+        const rows = selectedAssure?.ayants_droit || sample;
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.rang || "-"}</td>
+            <td>${r.nom || "-"}</td>
+            <td>${r.prenoms || "-"}</td>
+            <td>${r.date_naissance || "-"}</td>
+          `;
+          tableAyantDroit.appendChild(tr);
+        });
+      }
+    }
+
     async function ensureCredentials(force = false) {
       if (!force && cachedUser && cachedPassword) return cachedUser;
       const user = window.prompt("Entrez votre nom d'utilisateur (Oracle) :", cachedUser || "");
@@ -657,6 +1070,126 @@
       [nirForm, nirResult, resultsContainer, loadMoreContainer].forEach((el) => {
         el?.classList.toggle("hidden", hide);
       });
+    }
+
+    async function bootstrapFromQuery() {
+      const params = new URLSearchParams(window.location.search || "");
+      let nir = params.get("nir");
+      if (!nir && window.pywebview?.api?.get_selected_assure_nni) {
+        try {
+          const resp = await window.pywebview.api.get_selected_assure_nni();
+          if (resp?.ok === "true" && resp.data) {
+            nir = resp.data;
+          }
+        } catch (_) {
+          /* ignore api errors */
+        }
+      }
+      if (!nir) {
+        const rawName = window.name || "";
+        if (rawName) {
+          try {
+            const parsed = JSON.parse(rawName);
+            if (parsed && typeof parsed === "object" && parsed.assureNni) {
+              nir = parsed.assureNni;
+            }
+          } catch (_) {
+            // fallback: if window.name is just the NNI
+            nir = rawName;
+          }
+        }
+      }
+      if (!nir) return;
+      const normalizedNir = String(nir).replace(/\D/g, "");
+      const nirToSearch = normalizedNir || String(nir);
+      nir = nirToSearch;
+      if (nirInput) nirInput.value = nir;
+      if (!window.pywebview?.api?.fetch_assure) {
+        nirResult.textContent = "API pywebview non disponible.";
+        return;
+      }
+
+      nirResult.textContent = "Recherche en cours...";
+      nirResult.classList.remove("success");
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) {
+          nirResult.textContent = "Connexion annulée (identifiants manquants).";
+          return;
+        }
+        const response = await window.pywebview.api.fetch_assure(user, pwd, nir, "", "", "nir");
+        if (response?.ok === "true") {
+          hasSearched = true;
+          assureData = response.data || [];
+          nirResult.textContent = response.message || "Assuré trouvé.";
+          nirResult.classList.add("success");
+          visibleCount = Math.min(pageSize, assureData.length);
+          selectedAssure = null;
+          lastNirValue = nir;
+          openStates = {};
+          renderAssureResults();
+          const match = assureData.find((a) => {
+            const value = String(a.nir || "").replace(/\D/g, "");
+            return value && value === String(nir);
+          }) || assureData[0];
+          if (match) {
+            selectedAssure = match;
+            updateAssureHeader();
+            renderInfoDetails();
+            renderSituationDetails();
+            renderMaladieDetails();
+            renderVieillesseDetails();
+            renderRcoDetails();
+            renderCsgDetails();
+            renderAdresseDetails();
+            renderAyantDroitDetails();
+            setActiveTab("infos");
+            toggleDetails(true);
+            toggleSearchArea(true);
+          } else {
+            toggleDetails(false);
+            toggleSearchArea(false);
+          }
+        } else {
+          hasSearched = true;
+          nirResult.textContent = "";
+          nirResult.classList.remove("success");
+          showError(response?.message || "Aucun résultat.");
+          assureData = [];
+          selectedAssure = null;
+          lastNirValue = "";
+          visibleCount = 0;
+          openStates = {};
+          renderAssureResults();
+          toggleDetails(false);
+          toggleSearchArea(false);
+        }
+      } catch (error) {
+        hasSearched = true;
+        nirResult.textContent = "";
+        nirResult.classList.remove("success");
+        showError("Erreur pendant la recherche : " + error);
+        assureData = [];
+        selectedAssure = null;
+        lastNirValue = "";
+        visibleCount = 0;
+        openStates = {};
+        renderAssureResults();
+        toggleDetails(false);
+        toggleSearchArea(false);
+      }
+    }
+
+    if (window.pywebview && window.pywebview.api) {
+      bootstrapFromQuery();
+    } else {
+      document.addEventListener("pywebviewready", bootstrapFromQuery);
+      setTimeout(() => {
+        if (!window.pywebview?.api) {
+          bootstrapFromQuery();
+        }
+      }, 500);
     }
   </script>
 </body>

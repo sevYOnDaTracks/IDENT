@@ -122,6 +122,522 @@ class OracleClient:
             )
         return {"data": data, "error": None}
 
+    def query_collectivites(
+        self,
+        username: str,
+        password: str,
+        numero: str,
+        denom1: str,
+        code_postal: str,
+    ) -> Dict[str, object]:
+        """Recherche des collectivites par numero / denom1 / code postal (prefixes, insensible Ã  la casse)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        params = {
+            "num_pattern": f"{numero}%" if numero else None,
+            "denom_pattern": f"{denom1}%" if denom1 else None,
+            "cp_pattern": f"{code_postal}%" if code_postal else None,
+        }
+
+        sql = """
+            SELECT
+                cl.cl_id,
+                cl.cl_denom1,
+                cl.cl_adrcp,
+                cl.cl_adrvil
+            FROM AT_CL#COLLECTIVITE cl
+            WHERE (:num_pattern IS NULL OR UPPER(cl.cl_id) LIKE UPPER(:num_pattern))
+              AND (:denom_pattern IS NULL OR UPPER(cl.cl_denom1) LIKE UPPER(:denom_pattern))
+              AND (:cp_pattern IS NULL OR UPPER(cl.cl_adrcp) LIKE UPPER(:cp_pattern))
+            ORDER BY cl.cl_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, params)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "numero": row[0],
+                    "denom1": row[1],
+                    "denom2": None,
+                    "cp": row[2],
+                    "ville": row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_collectivite_adresse(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Récupère les informations d'adresse d'une collectivité par identifiant."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": None, "error": "Identifiant collectivité manquant."}
+
+        sql = """
+            SELECT
+                cl.cl_id,
+                cl.cl_denom1,
+                cl.cl_denom2,
+                cl.cl_adrcp,
+                cl.cl_adr1,
+                cl.cl_adr2,
+                cl.cl_adr3,
+                cl.cl_adr4,
+                cl.cl_adrvil,
+                p.py_lib,
+                cl.cl_email,
+                cl.cl_tel1,
+                cl.cl_tec1,
+                cl.cl_npai,
+                cl.cl_dtadr
+            FROM AT_CL#COLLECTIVITE cl
+            LEFT JOIN at_py#pays p on cl.clpy_id = p.py_id
+            WHERE cl.cl_id = :collect_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "numero": row[0],
+            "denom1": row[1],
+            "denom2": row[2],
+            "cp": row[3],
+            "adr1": row[4],
+            "adr2": row[5],
+            "adr3": row[6],
+            "adr4": row[7],
+            "ville": row[8],
+            "pays": row[9],
+            "email": row[10],
+            "tel": row[11],
+            "fax": row[12],
+            "npai": row[13],
+            "date_maj": _format_date(row[14]) if hasattr(row[14], "strftime") else row[14],
+        }
+        return {"data": data, "error": None}
+
+    def query_collectivite_identification(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Recupere les informations d'identification d'une collectivite par identifiant."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": None, "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                cl.cl_id,
+                cl.cl_denom1,
+                cl.cl_denom2,
+                cu.cu_lib,
+                cl.cl_dtdec,
+                cl.cl_dtcrjo,
+                mv.vm_lib,
+                cl.cl_dtrec,
+                cl.cl_dtmaj,
+                cl.cl_nblet
+            FROM AT_CL#COLLECTIVITE cl
+            LEFT JOIN AT_CU#Culte cu on cl.clcu_id = cu.cu_id
+            LEFT JOIN at_vm#mode_vie mv on cl.clvm_id = mv.vm_id
+            WHERE cl.cl_id = :collect_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "numero": row[0],
+            "denom1": row[1],
+            "denom2": row[2],
+            "culte": row[3],
+            "date_adhesion": _format_date(row[4]) if hasattr(row[4], "strftime") else row[4],
+            "date_journal": _format_date(row[5]) if hasattr(row[5], "strftime") else row[5],
+            "mode_vie": row[6],
+            "recult": _format_date(row[7]) if hasattr(row[7], "strftime") else row[7],
+            "date_maj": _format_date(row[8]) if hasattr(row[8], "strftime") else row[8],
+            "nb_lettres": row[9],
+        }
+        return {"data": data, "error": None}
+
+    def query_collectivite_situations(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Recupere l'historique des situations pour une collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": [], "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                his.hc_dtdeb,
+                cs.cs_lib,
+                CASE
+                    WHEN his.hccs_id = 'U' THEN fc.fccl2_id
+                    ELSE ''
+                END AS coll_accueil,
+                his.hc_dtmaj
+            FROM at_hc#his_sit_col his
+            LEFT JOIN at_cs#lib_sit_col cs on his.hccs_id = cs.cs_id
+            LEFT JOIN at_fc#fusion_col fc on his.HCCL_ID = fc.fccl1_id
+            WHERE his.HCCL_ID = :collect_id
+            ORDER BY his.hc_dtmaj desc
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "date_effet": _format_date(row[0]) if hasattr(row[0], "strftime") else row[0],
+                    "libelle": row[1],
+                    "coll_accueil": row[2],
+                    "date_maj": _format_date(row[3]) if hasattr(row[3], "strftime") else row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_collectivite_fusions(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Recupere l'historique des collectivites reprises suite a fusion."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": [], "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                a.fc_dteff,
+                a.fccl1_id,
+                a.fc_dtmaj
+            FROM at_fc#fusion_col a
+            WHERE a.fccl2_id = :collect_id
+            ORDER BY a.fc_dtmaj desc
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "date_effet": _format_date(row[0]) if hasattr(row[0], "strftime") else row[0],
+                    "coll_transf": row[1],
+                    "date_maj": _format_date(row[2]) if hasattr(row[2], "strftime") else row[2],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_collectivite_responsable(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+        role_id: int,
+    ) -> Dict[str, object]:
+        """Recupere les informations d'un responsable (maladie/vieillesse) pour une collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": None, "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                responsable.rs_nomrespo,
+                responsable.rs_adr1,
+                responsable.rs_adr2,
+                responsable.rs_adr3,
+                responsable.rs_adr4,
+                responsable.rs_adrcp,
+                responsable.rs_adrvil,
+                p_adresse.py_lib,
+                responsable.rs_email,
+                responsable.rs_tel1,
+                responsable.rs_tec1,
+                responsable.rs_dtmaj
+            FROM AT_CL#COLLECTIVITE a
+            LEFT JOIN AT_RS#RESPONSABLE responsable
+                ON a.cl_id = responsable.rscl_id
+                AND responsable.rsst_id = :role_id
+            LEFT JOIN at_py#pays p_adresse
+                ON responsable.rspy_id = p_adresse.py_id
+            WHERE a.cl_id = :collect_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id, "role_id": role_id})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "nom": row[0],
+            "adr1": row[1],
+            "adr2": row[2],
+            "adr3": row[3],
+            "adr4": row[4],
+            "cp": row[5],
+            "ville": row[6],
+            "pays": row[7],
+            "email": row[8],
+            "tel": row[9],
+            "fax": row[10],
+            "date_maj": _format_date(row[11]) if hasattr(row[11], "strftime") else row[11],
+        }
+        return {"data": data, "error": None}
+
+    def query_collectivite_assures(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+        filter_type: str,
+        order_by: str,
+    ) -> Dict[str, object]:
+        """Recupere la liste des assures d'une collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": [], "error": "Identifiant collectivite manquant."}
+
+        filter_clause = ""
+        if filter_type == "maladie":
+            filter_clause = """
+              AND sm.smsa_id IS NOT NULL
+              AND (sm.sm_dteffin = TO_DATE('31-12-3999', 'DD-MM-YYYY') OR sm.sm_dteffin IS NULL)
+            """
+        elif filter_type == "vieillesse":
+            filter_clause = """
+              AND sv.svsa_id IS NOT NULL
+              AND (sv.sv_dteffin = TO_DATE('31-12-3999', 'DD-MM-YYYY') OR sv.sv_dteffin IS NULL)
+            """
+        elif filter_type == "adresse":
+            filter_clause = " AND b.as_typadr = 2"
+
+        order_field = "b.as_nompat" if order_by != "nni" else "b.as_nni"
+
+        sql = f"""
+            WITH
+            sm_last AS (
+              SELECT *
+              FROM (
+                SELECT
+                  c.*,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY c.smas_id
+                    ORDER BY
+                      CASE WHEN c.sm_dteffin IS NULL THEN 1 ELSE 0 END DESC,
+                      c.sm_dteffin DESC,
+                      c.sm_dtefdeb DESC
+                  ) rn
+                FROM AT_SM#ASS_SIT_CAM c
+              )
+              WHERE rn = 1
+            ),
+            sv_last AS (
+              SELECT *
+              FROM (
+                SELECT
+                  d.*,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY d.svas_id
+                    ORDER BY
+                      CASE WHEN d.sv_dteffin IS NULL THEN 1 ELSE 0 END DESC,
+                      d.sv_dteffin DESC,
+                      d.sv_dtefdeb DESC
+                  ) rn
+                FROM AT_SV#ASS_SIT_VIC d
+              )
+              WHERE rn = 1
+            )
+            SELECT DISTINCT
+              b.as_nompat,
+              b.as_prenoms,
+              b.as_nni,
+              sm.smsa_id,
+              sm.sm_dtefdeb,
+              sm.sm_dteffin,
+              a.accl_id,
+              sv.svsa_id,
+              sv.sv_dtefdeb,
+              sv.sv_dteffin,
+              a.accl_id,
+              CASE
+                WHEN b.as_typadr = 1 THEN 'Assuré'
+                ELSE 'Collectivité'
+              END AS type_adresse
+            FROM AT_AC#ASS_COL a
+            LEFT JOIN AT_AS#ASSURE b
+              ON a.acas_id = b.as_id
+            LEFT JOIN sm_last sm
+              ON b.as_id = sm.smas_id
+            LEFT JOIN sv_last sv
+              ON b.as_id = sv.svas_id
+            WHERE a.accl_id = :collect_id
+              AND a.ac_dteffin = TO_DATE('31-12-3999', 'DD-MM-YYYY')
+              {filter_clause}
+            ORDER BY {order_field}
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "nom": row[0],
+                    "prenoms": row[1],
+                    "nni": row[2],
+                    "code_maladie": row[3],
+                    "date_effet_maladie": _format_date(row[4]) if hasattr(row[4], "strftime") else row[4],
+                    "date_fin_maladie": _format_date(row[5]) if hasattr(row[5], "strftime") else row[5],
+                    "num_coll_maladie": row[6],
+                    "code_vieillesse": row[7],
+                    "date_effet_vieillesse": _format_date(row[8]) if hasattr(row[8], "strftime") else row[8],
+                    "date_fin_vieillesse": _format_date(row[9]) if hasattr(row[9], "strftime") else row[9],
+                    "num_coll_vieillesse": row[10],
+                    "type_adresse": row[11],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_collectivite_communautes(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+    ) -> Dict[str, object]:
+        """Recupere la liste des communautes pour une collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        if not collect_id:
+            return {"data": [], "error": "Identifiant collectivite manquant."}
+
+        sql = """
+            SELECT
+                cl.cl_id,
+                ROW_NUMBER() OVER (ORDER BY co.co_denom1) AS rang,
+                co.co_denom1,
+                co.co_denom2,
+                co.co_adrcp,
+                co.co_adrvil
+            FROM AT_CO#COMMUNAUTE co
+            LEFT JOIN at_cl#collectivite cl
+                ON cl.cl_id = co.cocl_id
+            WHERE cl.cl_id = :collect_id
+            ORDER BY co.co_denom1
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"collect_id": collect_id})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "numero": row[0],
+                    "rang": row[1],
+                    "denom1": row[2],
+                    "denom2": row[3],
+                    "cp": row[4],
+                    "ville": row[5],
+                }
+            )
+        return {"data": data, "error": None}
+
 
 def build_assure_workbook(data: List[Dict[str, object]]):
     """Construit un classeur Excel pour les assurés."""
