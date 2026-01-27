@@ -82,7 +82,7 @@ class Api:
 
         result = self.client.query_assures(user, pwd, nir_value, nom_value, prenom_value, order_by=tri or "nir")
         if result["error"]:
-            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+            return {"ok": "false", "message": f"Echec de récuperation : {result['error']}", "data": []}
 
         data = result["data"]
         if not data:

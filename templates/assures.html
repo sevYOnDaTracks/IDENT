@@ -10,6 +10,34 @@
   <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="toolbar-left">
+        <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+          </svg>
+        </a>
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-nav" type="button" aria-label="Avancer" title="Avancer" onclick="history.forward()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+
+      </div>
+      <div class="toolbar-right">
+        <img class="toolbar-logo" src="../images/Logo Securit&#233; Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+    </div>
+  </div>
+
   <div class="grid">
     <div class="card">
       <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
@@ -60,7 +88,6 @@
           </div>
         </div>
       </form>
-      <p class="hint">Un ou plusieurs filtres suffisent (recherche par préfixe).</p>
       <div id="nir-result" class="result" aria-live="polite"></div>
       <div id="assure-results" class="result-list"></div>
       <div id="load-more" class="more" hidden>

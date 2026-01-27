@@ -10,23 +10,48 @@
   <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-  <div class="logo-top-left">
-    <img src="../images/Logo Securité Social.png" alt="Logo Sécurité Sociale">
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="toolbar-left">
+        <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+          </svg>
+        </a>
+      </div>
+      <div class="toolbar-right">
+        <img class="toolbar-logo" src="../images/Logo Securité Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+    </div>
   </div>
 
-  <div class="logo-corner">
-    <img src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
-  </div>
+
+
+
 
   <div class="grid">
-    <div class="card">
-      <p class="badge">IDENT • SIED V1.0</p>
-      <h1 class="title">Bienvenue</h1>
-      <p class="subtitle">Choisissez un module pour continuer.</p>
-      <div class="actions">
-        <a class="button primary" href="assures.html">Assurés</a>
-        <a class="button ghost" href="collectivites.html">Collectivités</a>
-        <a class="button ghost" href="referentiel.html">Référentiel</a>
+    <div class="card home-layout">
+      <div class="home-hero">
+        <div class="home-badge">IDENT &#8226; SIED V1.0</div>
+        <h1 class="home-title">Bienvenue</h1>
+        <p class="home-subtitle">Choisissez un module pour continuer.</p>
+      </div>
+
+      <div class="home-grid">
+        <a class="home-card" href="assures.html">
+          <div class="home-card-title">Assur&#233;s</div>
+          <p class="home-card-text">Recherche, situations, adresses et export.</p>
+        </a>
+        <a class="home-card" href="collectivites.html">
+          <div class="home-card-title">Collectivit&#233;s</div>
+          <p class="home-card-text">Identification, responsables, assur&#233;s li&#233;s.</p>
+        </a>
+        <a class="home-card" href="referentiel.html">
+          <div class="home-card-title">R&#233;f&#233;rentiel</div>
+          <p class="home-card-text">Acc&#232;s aux tables de r&#233;f&#233;rence.</p>
+        </a>
       </div>
     </div>
   </div>

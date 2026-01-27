@@ -10,14 +10,45 @@
   <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-  <div class="grid">
-    <div class="card">
-      <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
-        <a class="button ghost" href="home.html">Accueil</a>
-        <button id="btn-back-results" class="button outline" hidden>Retour aux résultats</button>
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="toolbar-left">
+        <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+          </svg>
+        </a>
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-nav" type="button" aria-label="Avancer" title="Avancer" onclick="history.forward()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+
       </div>
-      <h1 class="title">Collectivites</h1>
-      <p class="subtitle">Renseignez un ou plusieurs critères puis lancez la recherche (préfixe, insensible à la casse).</p>
+      <div class="toolbar-center">
+        <div class="toolbar-entity" id="toolbar-collectivite" hidden>
+          <span class="toolbar-entity-label">Collectivité</span>
+          <span class="toolbar-entity-value" id="toolbar-collectivite-value">-</span>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <img class="toolbar-logo" src="../images/Logo Securit&#233; Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="details">
+      <h1 class="title" style="padding-left: 10px;">Collectivités</h1>
+
+     <!-- <p class="subtitle">Renseignez un ou plusieurs critères puis lancez la recherche (préfixe, insensible à la casse).</p> -->
 
       <form id="collect-form" class="form search-panel">
         <div class="panel panel-search">
@@ -55,6 +86,7 @@
               <th>Dénomination 2</th>
               <th>Code postal</th>
               <th>Ville</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -62,15 +94,15 @@
       </div>
 
       <div class="actions" id="collect-actions" style="justify-content: flex-end; gap: 10px; margin-top: 12px;">
-        <button type="button" class="button ghost" id="btn-ok">Ok</button>
-        <button type="button" class="button outline" id="btn-cancel">Annuler</button>
-        <button type="button" class="button primary" id="btn-new">Nouveau</button>
+       <!--  <button type="button" class="button ghost" id="btn-ok">consulter</button> -->
+        <button type="button" class="button outline" id="btn-cancel">Réinitialiser le tableau</button>
+       <!-- <button type="button" class="button primary" id="btn-new">Nouveau</button> -->
       </div>
 
       <div id="collect-details" class="details" hidden>
-        <div class="details-header" style="margin-top: 16px;">
+        <div class="details-header" style="margin-top: 4px;">
           <div>
-            <div class="label">Collectivité consultée</div>
+            <div class="label">Collectivité consultée :</div>
             <div class="details-title" id="coll-title">-</div>
             <div class="details-sub" id="coll-sub">-</div>
           </div>
@@ -312,6 +344,8 @@
     const panels = document.querySelectorAll("#collect-details .tab-panel");
     const collTitle = document.getElementById("coll-title");
     const collSub = document.getElementById("coll-sub");
+    const toolbarCollectivite = document.getElementById("toolbar-collectivite");
+    const toolbarCollectiviteValue = document.getElementById("toolbar-collectivite-value");
     const identNumero = document.getElementById("ident-numero");
     const identDenom1 = document.getElementById("ident-denom1");
     const identDenom2 = document.getElementById("ident-denom2");
@@ -429,6 +463,10 @@
       setVal(identMaj, data.date_maj);
       if (collTitle) collTitle.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
       if (collSub) collSub.textContent = denom2 ?? "";
+      if (toolbarCollectivite && toolbarCollectiviteValue) {
+        toolbarCollectivite.hidden = false;
+        toolbarCollectiviteValue.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
+      }
     }
 
     function fillFromSelectedFallback() {
@@ -612,6 +650,28 @@
           <td>${r.cp || "-"}</td>
           <td>${r.ville || "-"}</td>
         `;
+        const actionsTd = document.createElement("td");
+        actionsTd.style.whiteSpace = "nowrap";
+        const btnView = document.createElement("button");
+        btnView.className = "button outline";
+        btnView.type = "button";
+        btnView.textContent = "Consulter";
+        btnView.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await openCollectivite(r);
+        });
+        const btnExport = document.createElement("button");
+        btnExport.className = "button ghost";
+        btnExport.type = "button";
+        btnExport.style.marginLeft = "6px";
+        btnExport.textContent = "Exporter";
+        btnExport.addEventListener("click", (e) => {
+          e.stopPropagation();
+          window.alert("Export collectivit? : fonctionnalit? ? venir.");
+        });
+        actionsTd.appendChild(btnView);
+        actionsTd.appendChild(btnExport);
+        tr.appendChild(actionsTd);
         tr.addEventListener("click", () => {
           selectedRowIndex = idx;
           renderTable(rows);
@@ -635,6 +695,28 @@
       cachedUser = user;
       cachedPassword = pwd;
       return user;
+    }
+
+    async function openCollectivite(selected) {
+      if (!selected || !selected.numero) {
+        window.alert("Num?ro de collectivit? manquant.");
+        return;
+      }
+      selectedData = selected;
+      applyIdentification(selected);
+      renderTables();
+      toggleList(false);
+      toggleDetails(true);
+      setActiveTab("ident");
+      await loadIdentification(selected.numero);
+      await loadAdresse(selected.numero);
+      await loadSituations(selected.numero);
+      await loadFusions(selected.numero);
+      await loadResponsable(selected.numero, "maladie");
+      await loadResponsable(selected.numero, "vieillesse");
+      await loadAssures(selected.numero);
+      await loadCommunautes(selected.numero);
+      await loadReferent(selected.numero);
     }
 
     async function loadIdentification(numero) {
@@ -982,7 +1064,7 @@
       }
     });
 
-    btnOk?.addEventListener("click", async () => {
+        btnOk?.addEventListener("click", async () => {
       if (!tableBody) return;
       const rows = Array.from(tableBody.querySelectorAll("tr"));
       const sel = rows.findIndex((r) => r.classList.contains("row-selected"));
@@ -991,25 +1073,7 @@
         return;
       }
       const selected = currentRows[sel];
-      if (!selected || !selected.numero) {
-        window.alert("Num?ro de collectivit? manquant.");
-        return;
-      }
-      selectedData = selected;
-      applyIdentification(selected);
-      renderTables();
-      toggleList(false);
-      toggleDetails(true);
-      setActiveTab("ident");
-      await loadIdentification(selected.numero);
-      await loadAdresse(selected.numero);
-      await loadSituations(selected.numero);
-      await loadFusions(selected.numero);
-      await loadResponsable(selected.numero, "maladie");
-      await loadResponsable(selected.numero, "vieillesse");
-      await loadAssures(selected.numero);
-      await loadCommunautes(selected.numero);
-      await loadReferent(selected.numero);
+      await openCollectivite(selected);
     });
 
     btnCancel?.addEventListener("click", () => {
@@ -1024,6 +1088,10 @@
       renderCommunautes([]);
       setCommunautesResult("");
       clearReferent();
+      if (toolbarCollectivite && toolbarCollectiviteValue) {
+        toolbarCollectivite.hidden = true;
+        toolbarCollectiviteValue.textContent = "-";
+      }
       if (numInput) numInput.value = "";
       if (denom1Input) denom1Input.value = "";
       if (cpInput) cpInput.value = "";
@@ -1050,7 +1118,30 @@
     backResultsButton?.addEventListener("click", () => {
       toggleDetails(false);
       toggleList(true);
+      if (toolbarCollectivite && toolbarCollectiviteValue) {
+        toolbarCollectivite.hidden = true;
+        toolbarCollectiviteValue.textContent = "-";
+      }
     });
+
+    const toolbarBack = document.querySelector('.toolbar-nav[aria-label="Retour"]');
+    if (toolbarBack) {
+      toolbarBack.removeAttribute("onclick");
+      toolbarBack.addEventListener("click", (e) => {
+        if (detailsSection && !detailsSection.hidden) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          toggleDetails(false);
+          toggleList(true);
+          if (toolbarCollectivite && toolbarCollectiviteValue) {
+            toolbarCollectivite.hidden = true;
+            toolbarCollectiviteValue.textContent = "-";
+          }
+          return;
+        }
+        history.back();
+      });
+    }
 
     renderTable(currentRows);
   </script>
