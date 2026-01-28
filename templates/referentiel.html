@@ -57,12 +57,435 @@
   </div>
 
   <div class="grid">
-    <div class="card">
-      <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
-        <a class="button ghost" href="home.html">Accueil</a>
-      </div>
+    <div class="details">
       <h1 class="title">Référentiel</h1>
-      <p class="subtitle">Section à venir.</p>
+      <p class="subtitle">Gestion des tables de référence.</p>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="civilite">Civilité</button>
+        <button class="tab" data-tab="culte">Culte</button>
+        <button class="tab" data-tab="comp-num-voie">Complément adresse</button>
+        <button class="tab" data-tab="jod">J.O.D</button>
+        <button class="tab" data-tab="mode-vie">Mode de vie</button>
+        <button class="tab" data-tab="nature-situation">Nature de situation</button>
+        <button class="tab" data-tab="pays">Pays</button>
+        <button class="tab" data-tab="situation">Situation</button>
+        <button class="tab" data-tab="situation-coll">Situation collectivité</button>
+        <button class="tab" data-tab="type-nationalite">Type nationalité</button>
+        <button class="tab" data-tab="type-voie">Type de voie</button>
+        <button class="tab" data-tab="societe">Société</button>
+      </div>
+
+      <div class="tab-panels">
+        <div class="tab-panel active" data-tab="civilite">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des civilités</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="civilite-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="civilite-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="civilite-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé civilité</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="civilite-pagination">
+            <span class="pagination-info">Affichage : <span id="civilite-range">0</span> sur <span id="civilite-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="civilite-prev">Précédent</button>
+            <button class="button outline" type="button" id="civilite-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="culte">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des cultes</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="culte-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="culte-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="culte-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé du culte</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="culte-pagination">
+            <span class="pagination-info">Affichage : <span id="culte-range">0</span> sur <span id="culte-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="culte-prev">Précédent</button>
+            <button class="button outline" type="button" id="culte-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="comp-num-voie">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des compléments numéro de voie</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="compvoie-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="compvoie-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="compvoie-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé du complément numéro de voie</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="compvoie-pagination">
+            <span class="pagination-info">Affichage : <span id="compvoie-range">0</span> sur <span id="compvoie-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="compvoie-prev">Précédent</button>
+            <button class="button outline" type="button" id="compvoie-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="jod">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des justificatifs d’ouverture des droits (J.O.D)</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="jod-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="jod-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="jod-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé du J.O.D</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="jod-pagination">
+            <span class="pagination-info">Affichage : <span id="jod-range">0</span> sur <span id="jod-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="jod-prev">Précédent</button>
+            <button class="button outline" type="button" id="jod-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="mode-vie">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des modes de vie</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="modevie-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="modevie-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="modevie-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé du mode de vie</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="modevie-pagination">
+            <span class="pagination-info">Affichage : <span id="modevie-range">0</span> sur <span id="modevie-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="modevie-prev">Précédent</button>
+            <button class="button outline" type="button" id="modevie-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="nature-situation">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des natures de situation</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="natsit-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="natsit-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="natsit-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé nature de situation</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="natsit-pagination">
+            <span class="pagination-info">Affichage : <span id="natsit-range">0</span> sur <span id="natsit-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="natsit-prev">Précédent</button>
+            <button class="button outline" type="button" id="natsit-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="pays">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des pays</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="pays-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="pays-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="pays-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé pays</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="pays-pagination">
+            <span class="pagination-info">Affichage : <span id="pays-range">0</span> sur <span id="pays-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="pays-prev">Précédent</button>
+            <button class="button outline" type="button" id="pays-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="situation">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des situations des assurés</div>
+              <div class="details-sub">Liste des catégories, codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="situation-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="situation-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="situation-table">
+              <thead>
+                <tr>
+                  <th>Catégorie</th>
+                  <th>Code</th>
+                  <th>Libellé de la situation</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="situation-pagination">
+            <span class="pagination-info">Affichage : <span id="situation-range">0</span> sur <span id="situation-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="situation-prev">Précédent</button>
+            <button class="button outline" type="button" id="situation-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="situation-coll">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des situations collectivité</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="sitcol-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="sitcol-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="sitcol-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé situation collectivité</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="sitcol-pagination">
+            <span class="pagination-info">Affichage : <span id="sitcol-range">0</span> sur <span id="sitcol-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="sitcol-prev">Précédent</button>
+            <button class="button outline" type="button" id="sitcol-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="type-nationalite">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des types de nationalité</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="typenat-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="typenat-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="typenat-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé type de nationalité</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="typenat-pagination">
+            <span class="pagination-info">Affichage : <span id="typenat-range">0</span> sur <span id="typenat-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="typenat-prev">Précédent</button>
+            <button class="button outline" type="button" id="typenat-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="type-voie">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des types de voie</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="typevoie-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="typevoie-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="typevoie-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé type de voie</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="typevoie-pagination">
+            <span class="pagination-info">Affichage : <span id="typevoie-range">0</span> sur <span id="typevoie-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="typevoie-prev">Précédent</button>
+            <button class="button outline" type="button" id="typevoie-next">Suivant</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="societe">
+          <div class="details-header">
+            <div>
+              <div class="details-title">Gestion des sociétés</div>
+              <div class="details-sub">Liste des codes et libellés disponibles.</div>
+            </div>
+          </div>
+
+          <div id="societe-result" class="result hidden" aria-live="polite"></div>
+
+          <div id="societe-loader" class="loader hidden" aria-hidden="true">
+            <span class="spinner"></span>
+            <span>Chargement...</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table" id="societe-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé société</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="societe-pagination">
+            <span class="pagination-info">Affichage : <span id="societe-range">0</span> sur <span id="societe-total">0</span> résultats</span>
+            <button class="button outline" type="button" id="societe-prev">Précédent</button>
+            <button class="button outline" type="button" id="societe-next">Suivant</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <script>
@@ -139,6 +562,954 @@
 
     loadUserFromApi();
     window.addEventListener("pywebviewready", loadUserFromApi);
+
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".tab-panel");
+    const civiliteTableBody = document.querySelector("#civilite-table tbody");
+    const civiliteResult = document.getElementById("civilite-result");
+    const civiliteLoader = document.getElementById("civilite-loader");
+    const civiliteRange = document.getElementById("civilite-range");
+    const civiliteTotal = document.getElementById("civilite-total");
+    const civilitePrev = document.getElementById("civilite-prev");
+    const civiliteNext = document.getElementById("civilite-next");
+    const culteTableBody = document.querySelector("#culte-table tbody");
+    const culteResult = document.getElementById("culte-result");
+    const culteLoader = document.getElementById("culte-loader");
+    const culteRange = document.getElementById("culte-range");
+    const culteTotal = document.getElementById("culte-total");
+    const cultePrev = document.getElementById("culte-prev");
+    const culteNext = document.getElementById("culte-next");
+    const compVoieTableBody = document.querySelector("#compvoie-table tbody");
+    const compVoieResult = document.getElementById("compvoie-result");
+    const compVoieLoader = document.getElementById("compvoie-loader");
+    const compVoieRange = document.getElementById("compvoie-range");
+    const compVoieTotal = document.getElementById("compvoie-total");
+    const compVoiePrev = document.getElementById("compvoie-prev");
+    const compVoieNext = document.getElementById("compvoie-next");
+    const jodTableBody = document.querySelector("#jod-table tbody");
+    const jodResult = document.getElementById("jod-result");
+    const jodLoader = document.getElementById("jod-loader");
+    const jodRange = document.getElementById("jod-range");
+    const jodTotal = document.getElementById("jod-total");
+    const jodPrev = document.getElementById("jod-prev");
+    const jodNext = document.getElementById("jod-next");
+    const modeVieTableBody = document.querySelector("#modevie-table tbody");
+    const modeVieResult = document.getElementById("modevie-result");
+    const modeVieLoader = document.getElementById("modevie-loader");
+    const modeVieRange = document.getElementById("modevie-range");
+    const modeVieTotal = document.getElementById("modevie-total");
+    const modeViePrev = document.getElementById("modevie-prev");
+    const modeVieNext = document.getElementById("modevie-next");
+    const natSitTableBody = document.querySelector("#natsit-table tbody");
+    const natSitResult = document.getElementById("natsit-result");
+    const natSitLoader = document.getElementById("natsit-loader");
+    const natSitRange = document.getElementById("natsit-range");
+    const natSitTotal = document.getElementById("natsit-total");
+    const natSitPrev = document.getElementById("natsit-prev");
+    const natSitNext = document.getElementById("natsit-next");
+    const paysTableBody = document.querySelector("#pays-table tbody");
+    const paysResult = document.getElementById("pays-result");
+    const paysLoader = document.getElementById("pays-loader");
+    const paysRange = document.getElementById("pays-range");
+    const paysTotal = document.getElementById("pays-total");
+    const paysPrev = document.getElementById("pays-prev");
+    const paysNext = document.getElementById("pays-next");
+    const situationTableBody = document.querySelector("#situation-table tbody");
+    const situationResult = document.getElementById("situation-result");
+    const situationLoader = document.getElementById("situation-loader");
+    const situationRange = document.getElementById("situation-range");
+    const situationTotal = document.getElementById("situation-total");
+    const situationPrev = document.getElementById("situation-prev");
+    const situationNext = document.getElementById("situation-next");
+    const sitColTableBody = document.querySelector("#sitcol-table tbody");
+    const sitColResult = document.getElementById("sitcol-result");
+    const sitColLoader = document.getElementById("sitcol-loader");
+    const sitColRange = document.getElementById("sitcol-range");
+    const sitColTotal = document.getElementById("sitcol-total");
+    const sitColPrev = document.getElementById("sitcol-prev");
+    const sitColNext = document.getElementById("sitcol-next");
+    const typeNatTableBody = document.querySelector("#typenat-table tbody");
+    const typeNatResult = document.getElementById("typenat-result");
+    const typeNatLoader = document.getElementById("typenat-loader");
+    const typeNatRange = document.getElementById("typenat-range");
+    const typeNatTotal = document.getElementById("typenat-total");
+    const typeNatPrev = document.getElementById("typenat-prev");
+    const typeNatNext = document.getElementById("typenat-next");
+    const typeVoieTableBody = document.querySelector("#typevoie-table tbody");
+    const typeVoieResult = document.getElementById("typevoie-result");
+    const typeVoieLoader = document.getElementById("typevoie-loader");
+    const typeVoieRange = document.getElementById("typevoie-range");
+    const typeVoieTotal = document.getElementById("typevoie-total");
+    const typeVoiePrev = document.getElementById("typevoie-prev");
+    const typeVoieNext = document.getElementById("typevoie-next");
+    const societeTableBody = document.querySelector("#societe-table tbody");
+    const societeResult = document.getElementById("societe-result");
+    const societeLoader = document.getElementById("societe-loader");
+    const societeRange = document.getElementById("societe-range");
+    const societeTotal = document.getElementById("societe-total");
+    const societePrev = document.getElementById("societe-prev");
+    const societeNext = document.getElementById("societe-next");
+    let civiliteRows = [];
+    let civilitePage = 1;
+    const civilitePageSize = 20;
+    let culteRows = [];
+    let cultePage = 1;
+    const cultePageSize = 20;
+    let compVoieRows = [];
+    let compVoiePage = 1;
+    const compVoiePageSize = 20;
+    let jodRows = [];
+    let jodPage = 1;
+    const jodPageSize = 20;
+    let modeVieRows = [];
+    let modeViePage = 1;
+    const modeViePageSize = 20;
+    let natSitRows = [];
+    let natSitPage = 1;
+    const natSitPageSize = 20;
+    let paysRows = [];
+    let paysPage = 1;
+    const paysPageSize = 20;
+    let situationRows = [];
+    let situationPage = 1;
+    const situationPageSize = 20;
+    let sitColRows = [];
+    let sitColPage = 1;
+    const sitColPageSize = 20;
+    let typeNatRows = [];
+    let typeNatPage = 1;
+    const typeNatPageSize = 20;
+    let typeVoieRows = [];
+    let typeVoiePage = 1;
+    const typeVoiePageSize = 20;
+    let societeRows = [];
+    let societePage = 1;
+    const societePageSize = 20;
+
+    const setCiviliteLoading = (loading) => {
+      if (!civiliteLoader) return;
+      civiliteLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setCiviliteResult = (message) => {
+      if (!civiliteResult) return;
+      civiliteResult.textContent = message || "";
+      civiliteResult.classList.toggle("hidden", !message);
+    };
+
+    const setCulteLoading = (loading) => {
+      if (!culteLoader) return;
+      culteLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setCulteResult = (message) => {
+      if (!culteResult) return;
+      culteResult.textContent = message || "";
+      culteResult.classList.toggle("hidden", !message);
+    };
+
+    const setCompVoieLoading = (loading) => {
+      if (!compVoieLoader) return;
+      compVoieLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setCompVoieResult = (message) => {
+      if (!compVoieResult) return;
+      compVoieResult.textContent = message || "";
+      compVoieResult.classList.toggle("hidden", !message);
+    };
+
+    const setJodLoading = (loading) => {
+      if (!jodLoader) return;
+      jodLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setJodResult = (message) => {
+      if (!jodResult) return;
+      jodResult.textContent = message || "";
+      jodResult.classList.toggle("hidden", !message);
+    };
+
+    const setModeVieLoading = (loading) => {
+      if (!modeVieLoader) return;
+      modeVieLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setModeVieResult = (message) => {
+      if (!modeVieResult) return;
+      modeVieResult.textContent = message || "";
+      modeVieResult.classList.toggle("hidden", !message);
+    };
+
+    const setNatSitLoading = (loading) => {
+      if (!natSitLoader) return;
+      natSitLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setNatSitResult = (message) => {
+      if (!natSitResult) return;
+      natSitResult.textContent = message || "";
+      natSitResult.classList.toggle("hidden", !message);
+    };
+
+    const setPaysLoading = (loading) => {
+      if (!paysLoader) return;
+      paysLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setPaysResult = (message) => {
+      if (!paysResult) return;
+      paysResult.textContent = message || "";
+      paysResult.classList.toggle("hidden", !message);
+    };
+
+    const setSituationLoading = (loading) => {
+      if (!situationLoader) return;
+      situationLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setSituationResult = (message) => {
+      if (!situationResult) return;
+      situationResult.textContent = message || "";
+      situationResult.classList.toggle("hidden", !message);
+    };
+
+    const setSitColLoading = (loading) => {
+      if (!sitColLoader) return;
+      sitColLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setSitColResult = (message) => {
+      if (!sitColResult) return;
+      sitColResult.textContent = message || "";
+      sitColResult.classList.toggle("hidden", !message);
+    };
+
+    const setTypeNatLoading = (loading) => {
+      if (!typeNatLoader) return;
+      typeNatLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setTypeNatResult = (message) => {
+      if (!typeNatResult) return;
+      typeNatResult.textContent = message || "";
+      typeNatResult.classList.toggle("hidden", !message);
+    };
+
+    const setTypeVoieLoading = (loading) => {
+      if (!typeVoieLoader) return;
+      typeVoieLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setTypeVoieResult = (message) => {
+      if (!typeVoieResult) return;
+      typeVoieResult.textContent = message || "";
+      typeVoieResult.classList.toggle("hidden", !message);
+    };
+
+    const setSocieteLoading = (loading) => {
+      if (!societeLoader) return;
+      societeLoader.classList.toggle("hidden", !loading);
+    };
+
+    const setSocieteResult = (message) => {
+      if (!societeResult) return;
+      societeResult.textContent = message || "";
+      societeResult.classList.toggle("hidden", !message);
+    };
+
+    const renderCivilitePage = () => {
+      if (!civiliteTableBody) return;
+      civiliteTableBody.innerHTML = "";
+      const total = civiliteRows.length;
+      const start = (civilitePage - 1) * civilitePageSize;
+      const pageRows = civiliteRows.slice(start, start + civilitePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        civiliteTableBody.appendChild(tr);
+      });
+      if (civiliteRange) {
+        const end = Math.min(start + pageRows.length, total);
+        civiliteRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (civiliteTotal) civiliteTotal.textContent = total.toString();
+      if (civilitePrev) civilitePrev.disabled = civilitePage <= 1;
+      if (civiliteNext) civiliteNext.disabled = start + civilitePageSize >= total;
+    };
+
+    const renderCultePage = () => {
+      if (!culteTableBody) return;
+      culteTableBody.innerHTML = "";
+      const total = culteRows.length;
+      const start = (cultePage - 1) * cultePageSize;
+      const pageRows = culteRows.slice(start, start + cultePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        culteTableBody.appendChild(tr);
+      });
+      if (culteRange) {
+        const end = Math.min(start + pageRows.length, total);
+        culteRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (culteTotal) culteTotal.textContent = total.toString();
+      if (cultePrev) cultePrev.disabled = cultePage <= 1;
+      if (culteNext) culteNext.disabled = start + cultePageSize >= total;
+    };
+
+    const renderCompVoiePage = () => {
+      if (!compVoieTableBody) return;
+      compVoieTableBody.innerHTML = "";
+      const total = compVoieRows.length;
+      const start = (compVoiePage - 1) * compVoiePageSize;
+      const pageRows = compVoieRows.slice(start, start + compVoiePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        compVoieTableBody.appendChild(tr);
+      });
+      if (compVoieRange) {
+        const end = Math.min(start + pageRows.length, total);
+        compVoieRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (compVoieTotal) compVoieTotal.textContent = total.toString();
+      if (compVoiePrev) compVoiePrev.disabled = compVoiePage <= 1;
+      if (compVoieNext) compVoieNext.disabled = start + compVoiePageSize >= total;
+    };
+
+    const renderJodPage = () => {
+      if (!jodTableBody) return;
+      jodTableBody.innerHTML = "";
+      const total = jodRows.length;
+      const start = (jodPage - 1) * jodPageSize;
+      const pageRows = jodRows.slice(start, start + jodPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        jodTableBody.appendChild(tr);
+      });
+      if (jodRange) {
+        const end = Math.min(start + pageRows.length, total);
+        jodRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (jodTotal) jodTotal.textContent = total.toString();
+      if (jodPrev) jodPrev.disabled = jodPage <= 1;
+      if (jodNext) jodNext.disabled = start + jodPageSize >= total;
+    };
+
+    const renderModeViePage = () => {
+      if (!modeVieTableBody) return;
+      modeVieTableBody.innerHTML = "";
+      const total = modeVieRows.length;
+      const start = (modeViePage - 1) * modeViePageSize;
+      const pageRows = modeVieRows.slice(start, start + modeViePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        modeVieTableBody.appendChild(tr);
+      });
+      if (modeVieRange) {
+        const end = Math.min(start + pageRows.length, total);
+        modeVieRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (modeVieTotal) modeVieTotal.textContent = total.toString();
+      if (modeViePrev) modeViePrev.disabled = modeViePage <= 1;
+      if (modeVieNext) modeVieNext.disabled = start + modeViePageSize >= total;
+    };
+
+    const renderNatSitPage = () => {
+      if (!natSitTableBody) return;
+      natSitTableBody.innerHTML = "";
+      const total = natSitRows.length;
+      const start = (natSitPage - 1) * natSitPageSize;
+      const pageRows = natSitRows.slice(start, start + natSitPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        natSitTableBody.appendChild(tr);
+      });
+      if (natSitRange) {
+        const end = Math.min(start + pageRows.length, total);
+        natSitRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (natSitTotal) natSitTotal.textContent = total.toString();
+      if (natSitPrev) natSitPrev.disabled = natSitPage <= 1;
+      if (natSitNext) natSitNext.disabled = start + natSitPageSize >= total;
+    };
+
+    const renderPaysPage = () => {
+      if (!paysTableBody) return;
+      paysTableBody.innerHTML = "";
+      const total = paysRows.length;
+      const start = (paysPage - 1) * paysPageSize;
+      const pageRows = paysRows.slice(start, start + paysPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        paysTableBody.appendChild(tr);
+      });
+      if (paysRange) {
+        const end = Math.min(start + pageRows.length, total);
+        paysRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (paysTotal) paysTotal.textContent = total.toString();
+      if (paysPrev) paysPrev.disabled = paysPage <= 1;
+      if (paysNext) paysNext.disabled = start + paysPageSize >= total;
+    };
+
+    const renderSituationPage = () => {
+      if (!situationTableBody) return;
+      situationTableBody.innerHTML = "";
+      const total = situationRows.length;
+      const start = (situationPage - 1) * situationPageSize;
+      const pageRows = situationRows.slice(start, start + situationPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.categorie ?? "-"}</td><td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        situationTableBody.appendChild(tr);
+      });
+      if (situationRange) {
+        const end = Math.min(start + pageRows.length, total);
+        situationRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (situationTotal) situationTotal.textContent = total.toString();
+      if (situationPrev) situationPrev.disabled = situationPage <= 1;
+      if (situationNext) situationNext.disabled = start + situationPageSize >= total;
+    };
+
+    const renderSitColPage = () => {
+      if (!sitColTableBody) return;
+      sitColTableBody.innerHTML = "";
+      const total = sitColRows.length;
+      const start = (sitColPage - 1) * sitColPageSize;
+      const pageRows = sitColRows.slice(start, start + sitColPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        sitColTableBody.appendChild(tr);
+      });
+      if (sitColRange) {
+        const end = Math.min(start + pageRows.length, total);
+        sitColRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (sitColTotal) sitColTotal.textContent = total.toString();
+      if (sitColPrev) sitColPrev.disabled = sitColPage <= 1;
+      if (sitColNext) sitColNext.disabled = start + sitColPageSize >= total;
+    };
+
+    const renderTypeNatPage = () => {
+      if (!typeNatTableBody) return;
+      typeNatTableBody.innerHTML = "";
+      const total = typeNatRows.length;
+      const start = (typeNatPage - 1) * typeNatPageSize;
+      const pageRows = typeNatRows.slice(start, start + typeNatPageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        typeNatTableBody.appendChild(tr);
+      });
+      if (typeNatRange) {
+        const end = Math.min(start + pageRows.length, total);
+        typeNatRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (typeNatTotal) typeNatTotal.textContent = total.toString();
+      if (typeNatPrev) typeNatPrev.disabled = typeNatPage <= 1;
+      if (typeNatNext) typeNatNext.disabled = start + typeNatPageSize >= total;
+    };
+
+    const renderTypeVoiePage = () => {
+      if (!typeVoieTableBody) return;
+      typeVoieTableBody.innerHTML = "";
+      const total = typeVoieRows.length;
+      const start = (typeVoiePage - 1) * typeVoiePageSize;
+      const pageRows = typeVoieRows.slice(start, start + typeVoiePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        typeVoieTableBody.appendChild(tr);
+      });
+      if (typeVoieRange) {
+        const end = Math.min(start + pageRows.length, total);
+        typeVoieRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (typeVoieTotal) typeVoieTotal.textContent = total.toString();
+      if (typeVoiePrev) typeVoiePrev.disabled = typeVoiePage <= 1;
+      if (typeVoieNext) typeVoieNext.disabled = start + typeVoiePageSize >= total;
+    };
+
+    const renderSocietePage = () => {
+      if (!societeTableBody) return;
+      societeTableBody.innerHTML = "";
+      const total = societeRows.length;
+      const start = (societePage - 1) * societePageSize;
+      const pageRows = societeRows.slice(start, start + societePageSize);
+      pageRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row.code ?? "-"}</td><td>${row.libelle ?? "-"}</td>`;
+        societeTableBody.appendChild(tr);
+      });
+      if (societeRange) {
+        const end = Math.min(start + pageRows.length, total);
+        societeRange.textContent = total ? `${start + 1}-${end}` : "0";
+      }
+      if (societeTotal) societeTotal.textContent = total.toString();
+      if (societePrev) societePrev.disabled = societePage <= 1;
+      if (societeNext) societeNext.disabled = start + societePageSize >= total;
+    };
+
+    const fetchCivilites = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_civilites) return;
+      setCiviliteLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_civilites("", "");
+        if (resp?.ok === "true") {
+          civiliteRows = resp.data || [];
+          civilitePage = 1;
+          renderCivilitePage();
+          setCiviliteResult(civiliteRows.length ? "" : "Aucune civilité trouvée.");
+        } else {
+          setCiviliteResult(resp?.message || "Impossible de charger les civilités.");
+        }
+      } finally {
+        setCiviliteLoading(false);
+      }
+    };
+
+    const fetchCultes = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_cultes) return;
+      setCulteLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_cultes("", "");
+        if (resp?.ok === "true") {
+          culteRows = resp.data || [];
+          cultePage = 1;
+          renderCultePage();
+          setCulteResult(culteRows.length ? "" : "Aucun culte trouvé.");
+        } else {
+          setCulteResult(resp?.message || "Impossible de charger les cultes.");
+        }
+      } finally {
+        setCulteLoading(false);
+      }
+    };
+
+    const fetchCompVoie = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_complements_num_voie) return;
+      setCompVoieLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_complements_num_voie("", "");
+        if (resp?.ok === "true") {
+          compVoieRows = resp.data || [];
+          compVoiePage = 1;
+          renderCompVoiePage();
+          setCompVoieResult(compVoieRows.length ? "" : "Aucun complément trouvé.");
+        } else {
+          setCompVoieResult(resp?.message || "Impossible de charger les compléments.");
+        }
+      } finally {
+        setCompVoieLoading(false);
+      }
+    };
+
+    const fetchJod = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_jod) return;
+      setJodLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_jod("", "");
+        if (resp?.ok === "true") {
+          jodRows = resp.data || [];
+          jodPage = 1;
+          renderJodPage();
+          setJodResult(jodRows.length ? "" : "Aucun J.O.D trouvé.");
+        } else {
+          setJodResult(resp?.message || "Impossible de charger les J.O.D.");
+        }
+      } finally {
+        setJodLoading(false);
+      }
+    };
+
+    const fetchModeVie = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_mode_vie) return;
+      setModeVieLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_mode_vie("", "");
+        if (resp?.ok === "true") {
+          modeVieRows = resp.data || [];
+          modeViePage = 1;
+          renderModeViePage();
+          setModeVieResult(modeVieRows.length ? "" : "Aucun mode de vie trouvé.");
+        } else {
+          setModeVieResult(resp?.message || "Impossible de charger les modes de vie.");
+        }
+      } finally {
+        setModeVieLoading(false);
+      }
+    };
+
+    const fetchNatSit = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_nature_situation) return;
+      setNatSitLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_nature_situation("", "");
+        if (resp?.ok === "true") {
+          natSitRows = resp.data || [];
+          natSitPage = 1;
+          renderNatSitPage();
+          setNatSitResult(natSitRows.length ? "" : "Aucune nature de situation trouvée.");
+        } else {
+          setNatSitResult(resp?.message || "Impossible de charger les natures de situation.");
+        }
+      } finally {
+        setNatSitLoading(false);
+      }
+    };
+
+    const fetchPays = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_pays) return;
+      setPaysLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_pays("", "");
+        if (resp?.ok === "true") {
+          paysRows = resp.data || [];
+          paysPage = 1;
+          renderPaysPage();
+          setPaysResult(paysRows.length ? "" : "Aucun pays trouvé.");
+        } else {
+          setPaysResult(resp?.message || "Impossible de charger les pays.");
+        }
+      } finally {
+        setPaysLoading(false);
+      }
+    };
+
+    const fetchSituations = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_situations) return;
+      setSituationLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_situations("", "");
+        if (resp?.ok === "true") {
+          situationRows = resp.data || [];
+          situationPage = 1;
+          renderSituationPage();
+          setSituationResult(situationRows.length ? "" : "Aucune situation trouvée.");
+        } else {
+          setSituationResult(resp?.message || "Impossible de charger les situations.");
+        }
+      } finally {
+        setSituationLoading(false);
+      }
+    };
+
+    const fetchSitCol = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_situations_collectivite) return;
+      setSitColLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_situations_collectivite("", "");
+        if (resp?.ok === "true") {
+          sitColRows = resp.data || [];
+          sitColPage = 1;
+          renderSitColPage();
+          setSitColResult(sitColRows.length ? "" : "Aucune situation collectivité trouvée.");
+        } else {
+          setSitColResult(resp?.message || "Impossible de charger les situations collectivité.");
+        }
+      } finally {
+        setSitColLoading(false);
+      }
+    };
+
+    const fetchTypeNat = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_type_nationalite) return;
+      setTypeNatLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_type_nationalite("", "");
+        if (resp?.ok === "true") {
+          typeNatRows = resp.data || [];
+          typeNatPage = 1;
+          renderTypeNatPage();
+          setTypeNatResult(typeNatRows.length ? "" : "Aucun type de nationalité trouvé.");
+        } else {
+          setTypeNatResult(resp?.message || "Impossible de charger les types de nationalité.");
+        }
+      } finally {
+        setTypeNatLoading(false);
+      }
+    };
+
+    const fetchTypeVoie = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_type_voie) return;
+      setTypeVoieLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_type_voie("", "");
+        if (resp?.ok === "true") {
+          typeVoieRows = resp.data || [];
+          typeVoiePage = 1;
+          renderTypeVoiePage();
+          setTypeVoieResult(typeVoieRows.length ? "" : "Aucun type de voie trouvé.");
+        } else {
+          setTypeVoieResult(resp?.message || "Impossible de charger les types de voie.");
+        }
+      } finally {
+        setTypeVoieLoading(false);
+      }
+    };
+
+    const fetchSociete = async () => {
+      if (!window.pywebview?.api?.fetch_referentiel_societe) return;
+      setSocieteLoading(true);
+      try {
+        const resp = await window.pywebview.api.fetch_referentiel_societe("", "");
+        if (resp?.ok === "true") {
+          societeRows = resp.data || [];
+          societePage = 1;
+          renderSocietePage();
+          setSocieteResult(societeRows.length ? "" : "Aucune société trouvée.");
+        } else {
+          setSocieteResult(resp?.message || "Impossible de charger les sociétés.");
+        }
+      } finally {
+        setSocieteLoading(false);
+      }
+    };
+
+    if (civilitePrev) {
+      civilitePrev.addEventListener("click", () => {
+        if (civilitePage > 1) {
+          civilitePage -= 1;
+          renderCivilitePage();
+        }
+      });
+    }
+    if (civiliteNext) {
+      civiliteNext.addEventListener("click", () => {
+        if (civilitePage * civilitePageSize < civiliteRows.length) {
+          civilitePage += 1;
+          renderCivilitePage();
+        }
+      });
+    }
+
+    if (cultePrev) {
+      cultePrev.addEventListener("click", () => {
+        if (cultePage > 1) {
+          cultePage -= 1;
+          renderCultePage();
+        }
+      });
+    }
+    if (culteNext) {
+      culteNext.addEventListener("click", () => {
+        if (cultePage * cultePageSize < culteRows.length) {
+          cultePage += 1;
+          renderCultePage();
+        }
+      });
+    }
+
+    if (compVoiePrev) {
+      compVoiePrev.addEventListener("click", () => {
+        if (compVoiePage > 1) {
+          compVoiePage -= 1;
+          renderCompVoiePage();
+        }
+      });
+    }
+    if (compVoieNext) {
+      compVoieNext.addEventListener("click", () => {
+        if (compVoiePage * compVoiePageSize < compVoieRows.length) {
+          compVoiePage += 1;
+          renderCompVoiePage();
+        }
+      });
+    }
+
+    if (jodPrev) {
+      jodPrev.addEventListener("click", () => {
+        if (jodPage > 1) {
+          jodPage -= 1;
+          renderJodPage();
+        }
+      });
+    }
+    if (jodNext) {
+      jodNext.addEventListener("click", () => {
+        if (jodPage * jodPageSize < jodRows.length) {
+          jodPage += 1;
+          renderJodPage();
+        }
+      });
+    }
+
+    if (modeViePrev) {
+      modeViePrev.addEventListener("click", () => {
+        if (modeViePage > 1) {
+          modeViePage -= 1;
+          renderModeViePage();
+        }
+      });
+    }
+    if (modeVieNext) {
+      modeVieNext.addEventListener("click", () => {
+        if (modeViePage * modeViePageSize < modeVieRows.length) {
+          modeViePage += 1;
+          renderModeViePage();
+        }
+      });
+    }
+
+    if (natSitPrev) {
+      natSitPrev.addEventListener("click", () => {
+        if (natSitPage > 1) {
+          natSitPage -= 1;
+          renderNatSitPage();
+        }
+      });
+    }
+    if (natSitNext) {
+      natSitNext.addEventListener("click", () => {
+        if (natSitPage * natSitPageSize < natSitRows.length) {
+          natSitPage += 1;
+          renderNatSitPage();
+        }
+      });
+    }
+
+    if (paysPrev) {
+      paysPrev.addEventListener("click", () => {
+        if (paysPage > 1) {
+          paysPage -= 1;
+          renderPaysPage();
+        }
+      });
+    }
+    if (paysNext) {
+      paysNext.addEventListener("click", () => {
+        if (paysPage * paysPageSize < paysRows.length) {
+          paysPage += 1;
+          renderPaysPage();
+        }
+      });
+    }
+
+    if (situationPrev) {
+      situationPrev.addEventListener("click", () => {
+        if (situationPage > 1) {
+          situationPage -= 1;
+          renderSituationPage();
+        }
+      });
+    }
+    if (situationNext) {
+      situationNext.addEventListener("click", () => {
+        if (situationPage * situationPageSize < situationRows.length) {
+          situationPage += 1;
+          renderSituationPage();
+        }
+      });
+    }
+
+    if (sitColPrev) {
+      sitColPrev.addEventListener("click", () => {
+        if (sitColPage > 1) {
+          sitColPage -= 1;
+          renderSitColPage();
+        }
+      });
+    }
+    if (sitColNext) {
+      sitColNext.addEventListener("click", () => {
+        if (sitColPage * sitColPageSize < sitColRows.length) {
+          sitColPage += 1;
+          renderSitColPage();
+        }
+      });
+    }
+
+    if (typeNatPrev) {
+      typeNatPrev.addEventListener("click", () => {
+        if (typeNatPage > 1) {
+          typeNatPage -= 1;
+          renderTypeNatPage();
+        }
+      });
+    }
+    if (typeNatNext) {
+      typeNatNext.addEventListener("click", () => {
+        if (typeNatPage * typeNatPageSize < typeNatRows.length) {
+          typeNatPage += 1;
+          renderTypeNatPage();
+        }
+      });
+    }
+
+    if (typeVoiePrev) {
+      typeVoiePrev.addEventListener("click", () => {
+        if (typeVoiePage > 1) {
+          typeVoiePage -= 1;
+          renderTypeVoiePage();
+        }
+      });
+    }
+    if (typeVoieNext) {
+      typeVoieNext.addEventListener("click", () => {
+        if (typeVoiePage * typeVoiePageSize < typeVoieRows.length) {
+          typeVoiePage += 1;
+          renderTypeVoiePage();
+        }
+      });
+    }
+
+    if (societePrev) {
+      societePrev.addEventListener("click", () => {
+        if (societePage > 1) {
+          societePage -= 1;
+          renderSocietePage();
+        }
+      });
+    }
+    if (societeNext) {
+      societeNext.addEventListener("click", () => {
+        if (societePage * societePageSize < societeRows.length) {
+          societePage += 1;
+          renderSocietePage();
+        }
+      });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        tabs.forEach((btn) => btn.classList.toggle("active", btn === tab));
+        panels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tab === tab.dataset.tab));
+        if (tab.dataset.tab === "civilite") fetchCivilites();
+        if (tab.dataset.tab === "culte") fetchCultes();
+        if (tab.dataset.tab === "comp-num-voie") fetchCompVoie();
+        if (tab.dataset.tab === "jod") fetchJod();
+        if (tab.dataset.tab === "mode-vie") fetchModeVie();
+        if (tab.dataset.tab === "nature-situation") fetchNatSit();
+        if (tab.dataset.tab === "pays") fetchPays();
+        if (tab.dataset.tab === "situation") fetchSituations();
+        if (tab.dataset.tab === "situation-coll") fetchSitCol();
+        if (tab.dataset.tab === "type-nationalite") fetchTypeNat();
+        if (tab.dataset.tab === "type-voie") fetchTypeVoie();
+        if (tab.dataset.tab === "societe") fetchSociete();
+      });
+    });
+
+    fetchCivilites();
+    window.addEventListener("pywebviewready", fetchCivilites);
+    window.addEventListener("pywebviewready", fetchCultes);
+    window.addEventListener("pywebviewready", fetchCompVoie);
+    window.addEventListener("pywebviewready", fetchJod);
+    window.addEventListener("pywebviewready", fetchModeVie);
+    window.addEventListener("pywebviewready", fetchNatSit);
+    window.addEventListener("pywebviewready", fetchPays);
+    window.addEventListener("pywebviewready", fetchSituations);
+    window.addEventListener("pywebviewready", fetchSitCol);
+    window.addEventListener("pywebviewready", fetchTypeNat);
+    window.addEventListener("pywebviewready", fetchTypeVoie);
+    window.addEventListener("pywebviewready", fetchSociete);
   </script>
 </body>
 </html>

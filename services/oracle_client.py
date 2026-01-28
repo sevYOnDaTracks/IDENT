@@ -747,6 +747,344 @@ class OracleClient:
         }
         return {"data": data, "error": None}
 
+    def query_referentiel_civilites(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des civilites."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cv.cv_id,
+                cv.cv_lib
+            FROM AT_CV#CIVILITE cv
+            ORDER BY cv.cv_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_cultes(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des cultes."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cu.cu_id,
+                cu.cu_lib
+            FROM AT_CU#CULTE cu
+            ORDER BY cu.cu_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_complements_num_voie(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des complements numero de voie."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cc.cc_id,
+                cc.cc_lib
+            FROM AT_CC#COM_NUM_VOI cc
+            ORDER BY cc.cc_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_jod(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des justificatifs d'ouverture des droits (J.O.D)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                jo.jo_id,
+                jo.jo_lib
+            FROM AT_JO#COD_JOD jo
+            ORDER BY jo.jo_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_mode_vie(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des modes de vie."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                vm.vm_id,
+                vm.vm_lib
+            FROM AT_VM#MODE_VIE vm
+            ORDER BY vm.vm_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_nature_situation(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des natures de situation."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ns.ns_id,
+                ns.ns_lib
+            FROM AT_NS#LIB_NAT_SIT ns
+            ORDER BY ns.ns_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_pays(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des pays."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                py.py_id,
+                py.py_lib
+            FROM AT_PY#PAYS py
+            ORDER BY py.py_lib
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_situations(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des situations assure."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                st.st_lib,
+                sa.sa_id,
+                sa.sa_lib
+            FROM AT_SA#LIB_SIT_ASS sa
+            LEFT JOIN at_st#societe st ON sa.sast_id = st.st_id
+            ORDER BY st.st_id ASC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"categorie": row[0], "code": row[1], "libelle": row[2]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_situations_collectivite(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des situations collectivite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cs.cs_id,
+                cs.cs_lib
+            FROM AT_CS#LIB_SIT_COL cs
+            ORDER BY cs.cs_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_type_nationalite(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des types de nationalite."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                tn.tn_id,
+                tn.tn_lib
+            FROM AT_TN#TYPE_NATIONAL tn
+            ORDER BY tn.tn_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_type_voie(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des types de voie."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cn.cn_id,
+                cn.cn_lib
+            FROM AT_CN#TYP_VOIE cn
+            ORDER BY cn.cn_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
+    def query_referentiel_societe(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des societes."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                st.st_id,
+                st.st_lib
+            FROM AT_ST#SOCIETE st
+            ORDER BY st.st_id
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append({"code": row[0], "libelle": row[1]})
+        return {"data": data, "error": None}
+
 
 def build_assure_workbook(data: List[Dict[str, object]]):
     """Construit un classeur Excel pour les assurés."""

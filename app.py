@@ -301,6 +301,162 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": "Référent collectivité récupéré.", "data": result["data"]}
 
+    def fetch_referentiel_civilites(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_civilites(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Civilites recuperees.", "data": result["data"]}
+
+    def fetch_referentiel_cultes(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_cultes(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Cultes recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_complements_num_voie(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_complements_num_voie(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Complements numero de voie recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_jod(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_jod(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "J.O.D recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_mode_vie(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_mode_vie(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Modes de vie recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_nature_situation(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_nature_situation(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Natures de situation recuperees.", "data": result["data"]}
+
+    def fetch_referentiel_pays(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_pays(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Pays recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_situations(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_situations(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Situations recuperees.", "data": result["data"]}
+
+    def fetch_referentiel_situations_collectivite(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_situations_collectivite(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Situations collectivite recuperees.", "data": result["data"]}
+
+    def fetch_referentiel_type_nationalite(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_type_nationalite(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Types de nationalite recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_type_voie(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_type_voie(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Types de voie recuperes.", "data": result["data"]}
+
+    def fetch_referentiel_societe(self, username: str, password: str):
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_referentiel_societe(user, pwd)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Societes recuperees.", "data": result["data"]}
+
     def export_assure(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
         if not nir_value:

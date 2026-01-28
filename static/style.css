@@ -754,6 +754,11 @@ body[data-theme="dark"] .tab.active {
   border-color: #0f172a;
 }
 
+.tab.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .tab-panels {
   border: 1px solid var(--border);
   border-radius: 12px;
