@@ -66,6 +66,8 @@
   <div class="grid">
     <div class="details">
       <h1 class="title" id="collect-title" style="padding-left: 10px;">Collectivités</h1>
+      <!--  <p class="subtitle">Recherchez une collectivité en saisissant nom, ville, code postal etc...</p> -->
+
 
      <!-- <p class="subtitle">Renseignez un ou plusieurs critères puis lancez la recherche (préfixe, insensible à la casse).</p> -->
 
@@ -128,6 +130,9 @@
             <div class="details-sub" id="coll-sub">-</div>
             <div class="details-sub" id="coll-culte">Culte : -</div>
           </div>
+          <div class="actions">
+            <button class="button outline" type="button" id="btn-export-collect-header">Exporter en Excel</button>
+          </div>
         </div>
 
         <div class="tabs" role="tablist">
@@ -137,7 +142,7 @@
           <button class="tab" data-tab="assures">Assurés</button>
           <button class="tab" data-tab="communautes">Communautés</button>
           <button class="tab" data-tab="referent">Référent</button>
-          <button class="tab" data-tab="export">Export</button>
+       <!-- <button class="tab" data-tab="export">Export</button> -->  
         </div>
 
         <div class="tab-panels">
@@ -456,6 +461,7 @@
     const assuresNext = document.getElementById("assures-next");
     const exportResult = document.getElementById("export-result");
     const exportButton = document.getElementById("btn-export-collect");
+    const exportHeaderButton = document.getElementById("btn-export-collect-header");
     const toast = document.getElementById("toast");
     const themeToggle = document.getElementById("theme-toggle");
     const commuResult = document.getElementById("commu-result");
@@ -1342,14 +1348,17 @@
       }
     });
 
-    exportButton?.addEventListener("click", async () => {
+    const handleCollectExport = async () => {
       const numero = selectedData?.numero;
       if (!numero) {
         setExportResult("Numéro de collectivité manquant.", false);
         return;
       }
       await exportCollectivite(numero);
-    });
+    };
+
+    exportButton?.addEventListener("click", handleCollectExport);
+    exportHeaderButton?.addEventListener("click", handleCollectExport);
 
     let assuresReloadTimer;
     function scheduleAssuresReload() {

@@ -109,23 +109,75 @@ class OracleClient:
         prenom_pattern = f"{prenom_value}%" if prenom_value else None
 
         order_field = {
-            "nir": "ass.as_NNI",
-            "nom": "ass.as_nompat",
-            "prenom": "ass.as_prenoms",
-        }.get(order_by, "ass.as_NNI")
+            "nir": "a.as_nni",
+            "nom": "a.as_nompat",
+            "prenom": "a.as_prenoms",
+        }.get(order_by, "a.as_nni")
 
         sql = """
             SELECT
-                ass.as_NNI,
-                ass.as_nompat,
-                ass.as_prenoms,
-                ass.as_dtnais,
-                cv.cv_lib
-            FROM AT_AS#ASSURE ass
-            LEFT JOIN AT_CV#civilite cv ON ass.ascv_id = cv.cv_id
-            WHERE ( :nir_pattern IS NULL OR UPPER(ass.as_NNI) LIKE UPPER(:nir_pattern) )
-              AND ( :nom_pattern IS NULL OR UPPER(ass.as_nompat) LIKE UPPER(:nom_pattern) )
-              AND ( :prenom_pattern IS NULL OR UPPER(ass.as_prenoms) LIKE UPPER(:prenom_pattern) )
+                a.as_nni,
+                a.as_nompat,
+                a.as_prenoms,
+                a.as_dtnais,
+                cv.cv_lib,
+                a.as_nomusuel,
+                a.as_dtrniam,
+                a.as_naiscp,
+                a.as_codcomnais,
+                a.as_naiscom,
+                p0.py_lib,
+                tn.tn_lib,
+                p1.py_lib,
+                p2.py_lib,
+                a.as_dtnatur,
+                a.as_dtvierel,
+                a.as_dtcesact,
+                a.as_dtfin_visa,
+                a.as_dtmaj,
+                COALESCE(
+                    MAX(CASE WHEN ac.acst_id = 1 THEN ac.accl_id END),
+                    a.ascocl_id
+                ) AS collectivite_maladie,
+                COALESCE(
+                    MAX(CASE WHEN ac.acst_id = 2 THEN ac.accl_id END),
+                    a.asco_id
+                ) AS collectivite_vieillesse
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_CV#CIVILITE cv ON a.ascv_id = cv.cv_id
+            LEFT JOIN AT_PY#PAYS p0 ON a.aspy_nais_id = p0.py_id
+            LEFT JOIN AT_TN#TYPE_NATIONAL tn ON a.astn_id = tn.tn_id
+            LEFT JOIN AT_PY#PAYS p1 ON a.aspy_natpays1_id = p1.py_id
+            LEFT JOIN AT_PY#PAYS p2 ON a.aspy_natpays2_id = p2.py_id
+            LEFT JOIN AT_AC#ASS_COL ac
+              ON ac.acas_id = a.as_id
+             AND ac.ac_dtefdeb <= SYSDATE
+             AND (ac.ac_dteffin IS NULL OR ac.ac_dteffin = TO_DATE('31123999', 'DDMMYYYY'))
+            WHERE ( :nir_pattern IS NULL OR UPPER(a.as_nni) LIKE UPPER(:nir_pattern) )
+              AND ( :nom_pattern IS NULL OR UPPER(a.as_nompat) LIKE UPPER(:nom_pattern) )
+              AND ( :prenom_pattern IS NULL OR UPPER(a.as_prenoms) LIKE UPPER(:prenom_pattern) )
+            GROUP BY
+                a.as_nni,
+                a.as_nompat,
+                a.as_prenoms,
+                a.as_dtnais,
+                cv.cv_lib,
+                a.as_nomusuel,
+                a.as_dtrniam,
+                a.as_naiscp,
+                a.as_codcomnais,
+                a.as_naiscom,
+                p0.py_lib,
+                tn.tn_lib,
+                p1.py_lib,
+                p2.py_lib,
+                a.as_dtnatur,
+                a.as_dtvierel,
+                a.as_dtcesact,
+                a.as_dtfin_visa,
+                a.as_dtmaj,
+                a.ascocl_id,
+                a.asco_id
         """
 
         sql = f"{sql} ORDER BY {order_field}"
@@ -152,6 +204,22 @@ class OracleClient:
                     "prenom_usage": row[2],
                     "date_naissance": _format_date(row[3]),
                     "civilite": row[4],
+                    "nom_usuel": row[5],
+                    "date_certif_rniam": _format_date(row[6]),
+                    "code_postal": row[7],
+                    "code_commune_naissance": row[8],
+                    "commune": row[9],
+                    "pays_naissance": row[10],
+                    "type_nationalite": row[11],
+                    "pays1": row[12],
+                    "pays2": row[13],
+                    "date_naturalisation": _format_date(row[14]),
+                    "date_entree_vie_religieuse": _format_date(row[15]),
+                    "date_cessation_vie_religieuse": _format_date(row[16]),
+                    "date_fin_visa": _format_date(row[17]),
+                    "date_maj": _format_date(row[18]),
+                    "collectivite_maladie": row[19],
+                    "collectivite_vieillesse": row[20],
                     "sexe": None,
                     "email": None,
                     "pays_nationalite": None,
@@ -161,6 +229,174 @@ class OracleClient:
                     "raison_sociale": None,
                     "date_effet_contrat": None,
                     "date_conditions_contrat": None,
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_situations_maladie(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne les situations maladie d'un assure (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sm.smsa_id,
+                sm.smns_id,
+                sm.smns_id2,
+                sm.sm_dtsitnat,
+                sm.sm_dtcond,
+                sm.sm_dtdecl,
+                sm.sm_dtefdeb,
+                sm.sm_dtnot,
+                sm.sm_dtmaj
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_SM#ASS_SIT_CAM sm
+              ON sm.smas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY sm.sm_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "code_nature1": row[1],
+                    "code_nature2": row[2],
+                    "date_nature2": _format_date(row[3]),
+                    "date_conditions": _format_date(row[4]),
+                    "date_declaration": _format_date(row[5]),
+                    "date_effet": _format_date(row[6]),
+                    "cristallisation": None,
+                    "date_maj_situation": _format_date(row[7]),
+                    "date_maj": _format_date(row[8]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_situation_maladie_current(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne la situation maladie en cours d'un assure (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sm.smsa_id,
+                sm.smns_id,
+                sm.smns_id2,
+                sm.sm_dtsitnat,
+                sm.sm_dtcond,
+                sm.sm_dtdecl,
+                sm.sm_dtefdeb,
+                sm.sm_dtnot,
+                sm.sm_dtmaj
+            FROM AT_AS#ASSURE a
+            JOIN AT_SM#ASS_SIT_CAM sm
+              ON sm.smas_id = a.as_id
+            WHERE a.as_nni = :nir
+              AND sm.sm_dteffin = TO_DATE('31123999', 'DDMMYYYY')
+            ORDER BY sm.sm_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "code_nature1": row[1],
+                    "code_nature2": row[2],
+                    "date_nature2": _format_date(row[3]),
+                    "date_conditions": _format_date(row[4]),
+                    "date_declaration": _format_date(row[5]),
+                    "date_effet": _format_date(row[6]),
+                    "date_maj_situation": _format_date(row[7]),
+                    "date_maj": _format_date(row[8]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_situation_vieillesse_current(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne la situation vieillesse en cours d'un assure (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sv.svsa_id,
+                sv.svns_id,
+                sv.svns_id2,
+                NULL,
+                sv.sv_dtcond,
+                sv.sv_dtdecl,
+                sv.sv_dtefdeb,
+                sv.sv_dtnot,
+                sv.sv_dtmaj
+            FROM AT_AS#ASSURE a
+            JOIN AT_SV#ASS_SIT_VIC sv
+              ON sv.svas_id = a.as_id
+            WHERE a.as_nni = :nir
+              AND sv.sv_dteffin = TO_DATE('31123999', 'DDMMYYYY')
+            ORDER BY sv.sv_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "code_nature1": row[1],
+                    "code_nature2": row[2],
+                    "date_nature2": _format_date(row[3]),
+                    "date_conditions": _format_date(row[4]),
+                    "date_declaration": _format_date(row[5]),
+                    "date_effet": _format_date(row[6]),
+                    "date_maj_situation": _format_date(row[7]),
+                    "date_maj": _format_date(row[8]),
                 }
             )
         return {"data": data, "error": None}

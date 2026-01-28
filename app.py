@@ -22,6 +22,9 @@ def _bootstrap_site_packages() -> None:
 
 _bootstrap_site_packages()
 
+##############################################################################################
+# L ' API CONSTITUE LES REQUETES ET LES DATA RECUPERER DANS LA DATABASE ET AFFICHE A L'ECRAN #
+##############################################################################################
 
 class Api:
     """Backend API exposed to the frontend (pywebview)."""
@@ -117,6 +120,60 @@ class Api:
         self._cached_user = user
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} assure(s) trouve(s).", "data": data}
+
+    def fetch_assure_situations_maladie(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_situations_maladie(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} situation(s) maladie trouvee(s).", "data": data}
+
+    def fetch_assure_situation_maladie_current(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_situation_maladie_current(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} situation(s) maladie trouvee(s).", "data": data}
+
+    def fetch_assure_situation_vieillesse_current(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_situation_vieillesse_current(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} situation(s) vieillesse trouvee(s).", "data": data}
 
     def fetch_collectivites(self, username: str, password: str, numero: str, denom1: str, code_postal: str):
         numero_value = (numero or "").strip()
@@ -561,6 +618,13 @@ class Api:
         except Exception as exc:  # noqa: BLE001
             return {"ok": "false", "message": f"Echec de sauvegarde : {exc}"}
 
+
+
+
+
+#######################################################################################################
+# LA PARTIE MAIN EST IMPORTANTE POUR LE LANCEMENT DE L'APPLI DE L'ENREGISTREMENT DE PARAMETRE DE BASE #
+#######################################################################################################
 
 def main() -> None:
     """Launch a native window that renders the local HTML/CSS UI."""

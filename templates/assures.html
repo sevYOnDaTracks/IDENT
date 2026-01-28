@@ -57,64 +57,59 @@
   </div>
 
   <div class="grid">
-    <div class="card">
-      <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
-        <a class="button ghost" href="home.html" id="btn-home">Accueil</a>
-        <button id="btn-back-results" class="button outline" hidden>Retour aux résultats</button>
-      </div>
+    <div class="details">
+      <h1 class="title" id="assure-page-title">Assurés</h1>
+      <!-- <p class="subtitle">Recherchez un assuré par NIR, nom ou prénoms, puis ouvrez le détail.</p> -->
 
-      <h1 class="title">Assurés</h1>
-      <p class="subtitle">Saisissez un ou plusieurs critères (recherche par préfixe), puis choisissez l'ordre de tri.</p>
-
-      <form id="nir-form" class="form search-panel">
+      <form id="assure-form" class="form search-panel">
         <div class="panel panel-search">
-          <div class="panel-title">Critères de recherche</div>
           <div class="panel-body">
             <div class="form-row compact">
-              <label class="form-label" for="nir-input">NIR (actuel ou ancien)</label>
-              <input id="nir-input" name="nir" type="text" placeholder="Ex : 1234567890123" autocomplete="off">
-            </div>
-            <div class="form-row compact">
-              <label class="form-label" for="nom-input">Nom patronymique</label>
-              <input id="nom-input" name="nom" type="text" placeholder="Ex : DUPONT" autocomplete="off">
-            </div>
-            <div class="form-row compact">
-              <label class="form-label" for="prenom-input">Prénoms</label>
-              <input id="prenom-input" name="prenom" type="text" placeholder="Ex : Jean" autocomplete="off">
+              <input id="assure-search" name="search" type="text" placeholder="Rechercher par NIR, nom ou prénoms..." autocomplete="off">
             </div>
           </div>
         </div>
 
         <div class="panel panel-tri">
-          <div class="panel-title">Critères de tri</div>
-          <div class="panel-body radios">
-            <label class="radio-line">
-              <input type="radio" name="tri" value="nom" checked>
-              <span>Nom - Prénoms</span>
-            </label>
-            <label class="radio-line">
-              <input type="radio" name="tri" value="nir">
-              <span>NIR</span>
-            </label>
-            <label class="radio-line">
-              <input type="radio" name="tri" value="prenom">
-              <span>Prénoms</span>
-            </label>
-          </div>
-          <div class="panel-actions">
-            <button class="button primary" type="submit">Rechercher</button>
+          <div class="panel-body">
+            <div class="field">
+              <select id="assure-tri-select" name="tri">
+                <option value="nom">Nom - Prénoms</option>
+                <option value="nir">NNI</option>
+                <option value="prenom">Prénoms</option>
+              </select>
+            </div>
           </div>
         </div>
       </form>
-      <div id="nir-result" class="result" aria-live="polite"></div>
-      <div id="assure-results" class="result-list"></div>
-      <div id="load-more" class="more" hidden>
-        <button id="btn-load-more" class="button outline">Afficher 3 de plus</button>
+
+      <div id="nir-result" class="result hidden" aria-live="polite"></div>
+
+      <div class="table-wrapper" id="assure-table-wrapper">
+        <table class="data-table" id="assure-table">
+          <thead>
+            <tr>
+              <th>NNI</th>
+              <th>Nom</th>
+              <th>Prénoms</th>
+              <th>Date de naissance</th>
+              <th>Civilité</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div id="assure-details" class="details" hidden>
+
+      <div class="pagination hidden" id="assure-pagination">
+        <span class="pagination-info" id="assure-pagination-text">0 résultat</span>
+        <button class="button outline" type="button" id="assure-prev">Précédent</button>
+        <button class="button outline" type="button" id="assure-next">Suivant</button>
+      </div>
+
+      <div id="assure-details" class="details-base" hidden>
         <div class="details-header">
           <div>
-            <div class="label">Assuré consulté</div>
             <div class="details-title" id="assure-fullname">-</div>
             <div class="details-sub" id="assure-meta">-</div>
           </div>
@@ -461,16 +456,19 @@
     loadUserFromApi();
     window.addEventListener("pywebviewready", loadUserFromApi);
 
-    const nirForm = document.getElementById("nir-form");
-    const nirInput = document.getElementById("nir-input");
-    const nomInput = document.getElementById("nom-input");
-    const prenomInput = document.getElementById("prenom-input");
+    const assureForm = document.getElementById("assure-form");
+    const assureSearch = document.getElementById("assure-search");
+    const assureTriSelect = document.getElementById("assure-tri-select");
     const nirResult = document.getElementById("nir-result");
-    const resultsContainer = document.getElementById("assure-results");
-    const loadMoreContainer = document.getElementById("load-more");
-    const loadMoreButton = document.getElementById("btn-load-more");
+    const assureTableBody = document.querySelector("#assure-table tbody");
+    const assureTableWrapper = document.getElementById("assure-table-wrapper");
+    const assurePagination = document.getElementById("assure-pagination");
+    const assurePaginationText = document.getElementById("assure-pagination-text");
+    const assurePrev = document.getElementById("assure-prev");
+    const assureNext = document.getElementById("assure-next");
     const homeButton = document.getElementById("btn-home");
     const detailsSection = document.getElementById("assure-details");
+    const assurePageTitle = document.getElementById("assure-page-title");
     const backResultsButton = document.getElementById("btn-back-results");
     const exportButton = document.getElementById("btn-export");
     const assureFullname = document.getElementById("assure-fullname");
@@ -511,9 +509,9 @@
     let assureData = [];
     let selectedAssure = null;
     let lastNirValue = "";
-    let visibleCount = 0;
-    const pageSize = 3;
-    let openStates = {};
+    let assurePage = 1;
+    const assurePageSize = 20;
+    let selectedRowIndex = null;
     let cachedUser = null;
     let cachedPassword = null;
     let hasSearched = false;
@@ -526,21 +524,44 @@
       }
     };
 
+    const setResultMessage = (text, success = false) => {
+      if (!nirResult) return;
+      nirResult.textContent = text || "";
+      nirResult.classList.toggle("success", !!success);
+      nirResult.classList.toggle("hidden", !text);
+    };
+
     window.addEventListener("unhandledrejection", (event) => {
       showError("Erreur inattendue : " + (event.reason || ""));
     });
 
-    nirForm?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const value = (nirInput?.value || "").trim();
-      const nom = (nomInput?.value || "").trim();
-      const prenom = (prenomInput?.value || "").trim();
-      const tri = (document.querySelector('input[name="tri"]:checked')?.value || "nir").trim();
-        nirResult.textContent = "Recherche en cours...";
-        nirResult.classList.remove("success");
+    function resolveSearchValues(input) {
+      const query = (input || "").trim();
+      if (!query) return { nir: "", nom: "", prenom: "" };
+      if (/^\d+$/.test(query)) {
+        return { nir: query, nom: "", prenom: "" };
+      }
+      const parts = query.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return { nir: "", nom: parts[0], prenom: parts.slice(1).join(" ") };
+      }
+      return { nir: "", nom: query, prenom: "" };
+    }
+
+    const runAssureSearch = async () => {
+      const searchValue = (assureSearch?.value || "").trim();
+      const { nir, nom, prenom } = resolveSearchValues(searchValue);
+      const tri = (assureTriSelect?.value || "nom").trim();
+
+      if (!searchValue) {
+        setResultMessage("Renseignez un critère de recherche.");
+        return;
+      }
+
+      setResultMessage("Recherche en cours...");
 
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_assure) {
-        nirResult.textContent = "API pywebview non disponible.";
+        setResultMessage("API pywebview non disponible.");
         return;
       }
 
@@ -548,134 +569,226 @@
         const user = await ensureCredentials();
         const pwd = cachedPassword;
         if (!user || !pwd) {
-          nirResult.textContent = "Connexion annulée (identifiants manquants).";
+          setResultMessage("Connexion annulée (identifiants manquants).");
           return;
         }
-        const response = await window.pywebview.api.fetch_assure(user, pwd, value, nom, prenom, tri);
+        const response = await window.pywebview.api.fetch_assure(user, pwd, nir, nom, prenom, tri);
         if (response?.ok === "true") {
           hasSearched = true;
           assureData = response.data || [];
-          nirResult.textContent = response.message || "Assuré trouvé.";
-          nirResult.classList.add("success");
-          visibleCount = Math.min(pageSize, assureData.length);
+          setResultMessage(response.message || "Assuré trouvé.", true);
           selectedAssure = null;
-          lastNirValue = value;
-          openStates = {};
-          renderAssureResults();
+          selectedRowIndex = null;
+          lastNirValue = nir || "";
+          assurePage = 1;
+          renderAssureTable(assureData);
           toggleDetails(false);
-          toggleSearchArea(false);
+          toggleList(true);
         } else {
           hasSearched = true;
-          nirResult.textContent = "";
-          nirResult.classList.remove("success");
+          setResultMessage("");
           showError(response?.message || "Aucun résultat.");
           assureData = [];
           selectedAssure = null;
+          selectedRowIndex = null;
           lastNirValue = "";
-          visibleCount = 0;
-          openStates = {};
-          renderAssureResults();
+          assurePage = 1;
+          renderAssureTable(assureData);
           toggleDetails(false);
-          toggleSearchArea(false);
+          toggleList(true);
         }
       } catch (error) {
         hasSearched = true;
-        nirResult.textContent = "";
-        nirResult.classList.remove("success");
+        setResultMessage("");
         showError("Erreur pendant la recherche : " + error);
         assureData = [];
         selectedAssure = null;
+        selectedRowIndex = null;
         lastNirValue = "";
-        visibleCount = 0;
-        openStates = {};
-        renderAssureResults();
+        assurePage = 1;
+        renderAssureTable(assureData);
         toggleDetails(false);
-        toggleSearchArea(false);
+        toggleList(true);
       }
+    };
+
+    assureForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      runAssureSearch();
     });
 
-    function renderAssureResults() {
-      if (!resultsContainer) return;
-      resultsContainer.innerHTML = "";
-      if (!assureData.length || visibleCount === 0) {
-        toggleLoadMore(false);
+    assureTriSelect?.addEventListener("change", () => {
+      if (!(assureSearch?.value || "").trim()) return;
+      runAssureSearch();
+    });
+
+    function updateAssurePagination(total, start, end, pageCount) {
+      if (!assurePagination || !assurePaginationText) return;
+      if (!total) {
+        assurePagination.classList.add("hidden");
+        assurePaginationText.textContent = "0 résultat";
+        if (assurePrev) assurePrev.disabled = true;
+        if (assureNext) assureNext.disabled = true;
         return;
       }
-      const end = Math.min(visibleCount, assureData.length);
-      for (let i = 0; i < end; i++) {
-        const item = assureData[i];
-        const isOpen = !!openStates[i];
-        const card = document.createElement("div");
-        card.className = "result-card" + (isOpen ? " open" : "");
-        card.innerHTML = `
-          <div class="card-header" data-index="${i}">
-            <div class="title-line">
-              <span class="title-main">${item.nom_usage || "-"} ${item.prenom_usage || ""}</span>
-              <span class="title-sub">${item.nir || ""}</span>
-            </div>
-            <button class="toggle" type="button">${isOpen ? "Masquer" : "Voir"}</button>
-          </div>
-          <div class="card-body">
-            <div class="result-row">
-              <span class="label">Nom</span>
-              <span class="value">${item.nom_usage || "-"}</span>
-            </div>
-            <div class="result-row">
-              <span class="label">Prénom</span>
-              <span class="value">${item.prenom_usage || "-"}</span>
-            </div>
-            <div class="result-row">
-              <span class="label">Civilité</span>
-              <span class="value">${item.civilite || "-"}</span>
-            </div>
-            <div class="result-row">
-              <span class="label">Date de naissance</span>
-              <span class="value">${item.date_naissance || "-"}</span>
-            </div>
-            <div class="card-actions">
-              <button class="button ghost card-more" data-index="${i}">Voir plus</button>
-            </div>
-          </div>
-        `;
-        resultsContainer.appendChild(card);
-      }
+      assurePagination.classList.remove("hidden");
+      assurePaginationText.textContent = `${start + 1}-${end} sur ${total} résultats`;
+      if (assurePrev) assurePrev.disabled = assurePage <= 1;
+      if (assureNext) assureNext.disabled = assurePage >= pageCount;
+    }
 
-      resultsContainer.querySelectorAll(".card-header").forEach((hdr) => {
-        hdr.addEventListener("click", () => {
-          const idx = Number(hdr.dataset.index);
-          openStates[idx] = !openStates[idx];
-          renderAssureResults();
+    function getAssurePageSlice(rows) {
+      const total = rows.length;
+      if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
+      const pageCount = Math.max(1, Math.ceil(total / assurePageSize));
+      if (assurePage > pageCount) assurePage = pageCount;
+      if (assurePage < 1) assurePage = 1;
+      const start = (assurePage - 1) * assurePageSize;
+      const end = Math.min(start + assurePageSize, total);
+      return { slice: rows.slice(start, end), start, end, pageCount };
+    }
+
+    function renderAssureTable(rows) {
+      if (!assureTableBody) return;
+      assureTableBody.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        const emptyText = hasSearched ? "Aucun assuré trouvé" : "-";
+        tr.innerHTML = `<td colspan="6" style="text-align:center;">${emptyText}</td>`;
+        assureTableBody.appendChild(tr);
+        updateAssurePagination(0, 0, 0, 1);
+        return;
+      }
+      const { slice, start, end, pageCount } = getAssurePageSlice(rows);
+      slice.forEach((item, idx) => {
+        const absoluteIndex = start + idx;
+        const tr = document.createElement("tr");
+        tr.dataset.index = absoluteIndex;
+        if (absoluteIndex === selectedRowIndex) tr.classList.add("row-selected");
+        tr.innerHTML = `
+          <td>${item.nir || "-"}</td>
+          <td>${item.nom_usage || "-"}</td>
+          <td>${item.prenom_usage || "-"}</td>
+          <td>${item.date_naissance || "-"}</td>
+          <td>${item.civilite || "-"}</td>
+          <td><button class="button outline assure-consult" data-index="${absoluteIndex}">Consulter</button></td>
+        `;
+        tr.addEventListener("click", () => {
+          selectedRowIndex = absoluteIndex;
+          renderAssureTable(rows);
         });
+        tr.addEventListener("dblclick", () => {
+          openAssureByIndex(absoluteIndex);
+        });
+        assureTableBody.appendChild(tr);
       });
 
-      resultsContainer.querySelectorAll(".card-more").forEach((btn) => {
+      assureTableBody.querySelectorAll(".assure-consult").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const idx = Number(btn.dataset.index);
-          selectedAssure = assureData[idx];
-          updateAssureHeader();
-          renderInfoDetails();
-          renderSituationDetails();
-          renderMaladieDetails();
-          renderVieillesseDetails();
-          renderRcoDetails();
-          renderCsgDetails();
-          renderAdresseDetails();
-          renderAyantDroitDetails();
-          toggleDetails(true);
-          toggleSearchArea(true);
-          nirInput.value = "";
-          nomInput.value = "";
-          prenomInput.value = "";
+          openAssureByIndex(idx);
         });
       });
 
-      toggleLoadMore(end < assureData.length);
+      updateAssurePagination(rows.length, start, end, pageCount);
+    }
+
+    async function loadMaladieSituations(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_situations_maladie) return;
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const response = await window.pywebview.api.fetch_assure_situations_maladie(user, pwd, nirValue);
+        if (response?.ok === "true" && selectedAssure?.nir === nirValue) {
+          selectedAssure.situations_maladie = response.data || [];
+          renderMaladieDetails();
+        }
+      } catch (_) {
+        // ignore errors to avoid blocking the UI
+      }
+    }
+
+    async function loadCurrentSituations(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_situation_maladie_current || !window.pywebview?.api?.fetch_assure_situation_vieillesse_current) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const [malResp, vieResp] = await Promise.all([
+          window.pywebview.api.fetch_assure_situation_maladie_current(user, pwd, nirValue),
+          window.pywebview.api.fetch_assure_situation_vieillesse_current(user, pwd, nirValue),
+        ]);
+        if (selectedAssure?.nir !== nirValue) return;
+
+        const applySituation = (prefix, data) => {
+          const row = data || {};
+          if (prefix === "maladie") {
+            selectedAssure.sit_maladie = row.code_situation || null;
+            selectedAssure.nature1_maladie = row.code_nature1 || null;
+            selectedAssure.nature2_maladie = row.code_nature2 || null;
+            selectedAssure.date_nature2_maladie = row.date_nature2 || null;
+            selectedAssure.date_condition_maladie = row.date_conditions || null;
+            selectedAssure.date_declaration_maladie = row.date_declaration || null;
+            selectedAssure.date_effet_maladie = row.date_effet || null;
+            selectedAssure.date_maj_situation_maladie = row.date_maj_situation || null;
+            selectedAssure.date_maj_maladie = row.date_maj || null;
+            selectedAssure.cristallisation_maladie = row.cristallisation || null;
+            selectedAssure.date_edition_notification_maladie = row.date_edition_notification || null;
+          } else {
+            selectedAssure.sit_vieillesse = row.code_situation || null;
+            selectedAssure.nature1_vieillesse = row.code_nature1 || null;
+            selectedAssure.nature2_vieillesse = row.code_nature2 || null;
+            selectedAssure.date_nature2_vieillesse = row.date_nature2 || null;
+            selectedAssure.date_condition_vieillesse = row.date_conditions || null;
+            selectedAssure.date_declaration_vieillesse = row.date_declaration || null;
+            selectedAssure.date_effet_vieillesse = row.date_effet || null;
+            selectedAssure.date_maj_situation_vieillesse = row.date_maj_situation || null;
+            selectedAssure.date_maj_vieillesse = row.date_maj || null;
+            selectedAssure.cristallisation_vieillesse = row.cristallisation || null;
+            selectedAssure.date_edition_notification_vieillesse = row.date_edition_notification || null;
+          }
+        };
+
+        applySituation("maladie", malResp?.data?.[0]);
+        applySituation("vieillesse", vieResp?.data?.[0]);
+        renderSituationDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    function openAssureByIndex(idx) {
+      selectedAssure = assureData[idx];
+      if (!selectedAssure) return;
+      lastNirValue = selectedAssure.nir || lastNirValue;
+      updateAssureHeader();
+      renderInfoDetails();
+      renderSituationDetails();
+      renderMaladieDetails();
+      renderVieillesseDetails();
+      renderRcoDetails();
+      renderCsgDetails();
+      renderAdresseDetails();
+      renderAyantDroitDetails();
+      toggleDetails(true);
+      toggleList(false);
+      if (assureSearch) assureSearch.value = "";
+      loadMaladieSituations(selectedAssure.nir);
+      loadCurrentSituations(selectedAssure.nir);
     }
 
     function toggleDetails(show) {
       if (!detailsSection) return;
       detailsSection.hidden = !show;
+      if (assurePageTitle) assurePageTitle.classList.toggle("hidden", show);
       if (backResultsButton) {
         backResultsButton.hidden = !show || !hasSearched;
       }
@@ -684,49 +797,80 @@
       }
     }
 
-    function toggleLoadMore(show) {
-      if (!loadMoreContainer) return;
-      loadMoreContainer.hidden = !show;
+    function toggleList(show) {
+      [assureForm, assureTableWrapper, assurePagination].forEach((el) => {
+        el?.classList.toggle("hidden", !show);
+      });
+      if (nirResult) {
+        if (show) {
+          setResultMessage(nirResult.textContent || "", nirResult.classList.contains("success"));
+        } else {
+          nirResult.classList.add("hidden");
+        }
+      }
+      if (show) {
+        renderAssureTable(assureData);
+      }
+      if (backResultsButton) backResultsButton.hidden = show;
     }
 
     backResultsButton?.addEventListener("click", () => {
       toggleDetails(false);
-      toggleSearchArea(false);
+      toggleList(true);
     });
 
-    loadMoreButton?.addEventListener("click", () => {
-      visibleCount = Math.min(visibleCount + pageSize, assureData.length);
-      renderAssureResults();
+    const toolbarBack = document.querySelector('.toolbar-nav[aria-label="Retour"]');
+    if (toolbarBack) {
+      toolbarBack.removeAttribute("onclick");
+      toolbarBack.addEventListener("click", (e) => {
+        if (detailsSection && !detailsSection.hidden) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          toggleDetails(false);
+          toggleList(true);
+          return;
+        }
+        history.back();
+      });
+    }
+
+    assurePrev?.addEventListener("click", () => {
+      if (assurePage <= 1) return;
+      assurePage -= 1;
+      renderAssureTable(assureData);
+    });
+
+    assureNext?.addEventListener("click", () => {
+      const pageCount = Math.max(1, Math.ceil(assureData.length / assurePageSize));
+      if (assurePage >= pageCount) return;
+      assurePage += 1;
+      renderAssureTable(assureData);
     });
 
     exportButton?.addEventListener("click", async () => {
       if (!lastNirValue) {
-        nirResult.textContent = "Aucun critère sélectionné pour l'export.";
+        setResultMessage("Aucun critère sélectionné pour l'export.");
         return;
       }
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.export_assure) {
-        nirResult.textContent = "";
+        setResultMessage("");
         showError("API pywebview non disponible pour l'export.");
         return;
       }
       const user = await ensureCredentials();
       const pwd = cachedPassword;
       if (!user || !pwd) return;
-      nirResult.textContent = "Export en cours...";
-      nirResult.classList.remove("success");
+      setResultMessage("Export en cours...");
       try {
         const response = await window.pywebview.api.export_assure(user, pwd, selectedAssure?.nir || lastNirValue);
         if (response?.ok === "true") {
-          nirResult.textContent = response.message || "Export réussi.";
-          nirResult.classList.add("success");
+          setResultMessage(response.message || "Export réussi.", true);
         } else {
-          nirResult.textContent = "";
-          nirResult.classList.remove("success");
+          setResultMessage("");
           showError(response?.message || "Échec export.");
         }
       } catch (error) {
-        nirResult.textContent = "";
-        nirResult.classList.remove("success");
+        setResultMessage("");
         showError("Erreur export : " + error);
       }
     });
@@ -750,7 +894,8 @@
         return;
       }
       const parts = [selectedAssure.nom_usage, selectedAssure.prenom_usage].filter(Boolean).join(" ");
-      assureFullname.textContent = parts || "-";
+      const nirLabel = selectedAssure.nir ? ` - ${selectedAssure.nir}` : "";
+      assureFullname.textContent = parts ? `${parts}${nirLabel}` : selectedAssure.nir || "-";
       const metaParts = [];
       if (selectedAssure.date_naissance) metaParts.push(`Né(e) le ${selectedAssure.date_naissance}`);
       if (selectedAssure.sexe) metaParts.push(selectedAssure.sexe);
@@ -771,28 +916,28 @@
       infoList.innerHTML = "";
       if (!selectedAssure) return;
       const items = [
-        { section: "Informations générales" },
+        { section: "1 - Informations générales" },
         { label: "NIR", value: selectedAssure.nir },
         { label: "Nom usage", value: selectedAssure.nom_usage },
         { label: "Prénom usage", value: selectedAssure.prenom_usage },
         { label: "Date de naissance", value: selectedAssure.date_naissance },
         { label: "Civilité", value: selectedAssure.civilite },
-        { section: "Identification" },
+        { section: "2 - Identification" },
         { label: "Nom usuel", value: selectedAssure.nom_usuel },
         { label: "Date certification RNIAM", value: selectedAssure.date_certif_rniam },
-        { section: "Collectivités" },
+        { section: "3 - Collectivités" },
         { label: "Collectivité maladie", value: selectedAssure.collectivite_maladie },
         { label: "Collectivité vieillesse", value: selectedAssure.collectivite_vieillesse },
         { label: "Communauté", value: selectedAssure.communaute },
-        { section: "Lieu de naissance" },
+        { section: "4 - Lieu de naissance" },
         { label: "Code postal", value: selectedAssure.code_postal },
         { label: "Commune", value: selectedAssure.commune },
         { label: "Pays", value: selectedAssure.pays_naissance },
-        { section: "Nationalité" },
+        { section: "5 - Nationalité" },
         { label: "Type nationalité", value: selectedAssure.type_nationalite },
         { label: "Date naturalisation", value: selectedAssure.date_naturalisation },
         { label: "Pays 1", value: selectedAssure.pays1 },
-        { section: "Vie religieuse" },
+        { section: "6 - Vie religieuse" },
         { label: "Entrée en vie religieuse", value: selectedAssure.date_entree_vie_religieuse },
         { label: "Cessation de vie religieuse", value: selectedAssure.date_cessation_vie_religieuse },
         { label: "Date fin visa VLS/TS", value: selectedAssure.date_fin_visa },
@@ -869,8 +1014,8 @@
         return card;
       };
 
-      situationGrid.appendChild(buildCard("Maladie", maladie));
-      situationGrid.appendChild(buildCard("Vieillesse", vieillesse));
+      situationGrid.appendChild(buildCard("1 - Maladie", maladie));
+      situationGrid.appendChild(buildCard("2 - Vieillesse", vieillesse));
     }
 
     function renderMaladieDetails() {
@@ -1182,9 +1327,7 @@
     });
 
     function toggleSearchArea(hide) {
-      [nirForm, nirResult, resultsContainer, loadMoreContainer].forEach((el) => {
-        el?.classList.toggle("hidden", hide);
-      });
+      toggleList(!hide);
     }
 
     async function bootstrapFromQuery() {
@@ -1218,32 +1361,31 @@
       const normalizedNir = String(nir).replace(/\D/g, "");
       const nirToSearch = normalizedNir || String(nir);
       nir = nirToSearch;
-      if (nirInput) nirInput.value = nir;
+      if (assureSearch) assureSearch.value = nir;
+      if (assureTriSelect) assureTriSelect.value = "nir";
       if (!window.pywebview?.api?.fetch_assure) {
-        nirResult.textContent = "API pywebview non disponible.";
+        setResultMessage("API pywebview non disponible.");
         return;
       }
 
-      nirResult.textContent = "Recherche en cours...";
-      nirResult.classList.remove("success");
+      setResultMessage("Recherche en cours...");
       try {
         const user = await ensureCredentials();
         const pwd = cachedPassword;
         if (!user || !pwd) {
-          nirResult.textContent = "Connexion annulée (identifiants manquants).";
+          setResultMessage("Connexion annulée (identifiants manquants).");
           return;
         }
         const response = await window.pywebview.api.fetch_assure(user, pwd, nir, "", "", "nir");
         if (response?.ok === "true") {
           hasSearched = true;
           assureData = response.data || [];
-          nirResult.textContent = response.message || "Assuré trouvé.";
-          nirResult.classList.add("success");
-          visibleCount = Math.min(pageSize, assureData.length);
+          setResultMessage(response.message || "Assuré trouvé.", true);
           selectedAssure = null;
+          selectedRowIndex = null;
           lastNirValue = nir;
-          openStates = {};
-          renderAssureResults();
+          assurePage = 1;
+          renderAssureTable(assureData);
           const match = assureData.find((a) => {
             const value = String(a.nir || "").replace(/\D/g, "");
             return value && value === String(nir);
@@ -1259,6 +1401,8 @@
             renderCsgDetails();
             renderAdresseDetails();
             renderAyantDroitDetails();
+            loadMaladieSituations(match.nir);
+            loadCurrentSituations(match.nir);
             setActiveTab("infos");
             toggleDetails(true);
             toggleSearchArea(true);
@@ -1268,29 +1412,27 @@
           }
         } else {
           hasSearched = true;
-          nirResult.textContent = "";
-          nirResult.classList.remove("success");
+          setResultMessage("");
           showError(response?.message || "Aucun résultat.");
           assureData = [];
           selectedAssure = null;
+          selectedRowIndex = null;
           lastNirValue = "";
-          visibleCount = 0;
-          openStates = {};
-          renderAssureResults();
+          assurePage = 1;
+          renderAssureTable(assureData);
           toggleDetails(false);
           toggleSearchArea(false);
         }
       } catch (error) {
         hasSearched = true;
-        nirResult.textContent = "";
-        nirResult.classList.remove("success");
+        setResultMessage("");
         showError("Erreur pendant la recherche : " + error);
         assureData = [];
         selectedAssure = null;
+        selectedRowIndex = null;
         lastNirValue = "";
-        visibleCount = 0;
-        openStates = {};
-        renderAssureResults();
+        assurePage = 1;
+        renderAssureTable(assureData);
         toggleDetails(false);
         toggleSearchArea(false);
       }
