@@ -175,6 +175,113 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} situation(s) vieillesse trouvee(s).", "data": data}
 
+    def fetch_assure_historique_situation_maladie(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_historique_situation_maladie(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} historique(s) maladie trouve(s).", "data": data}
+
+    def fetch_assure_collectivites_maladie(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_collectivites_maladie(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} collectivite(s) maladie trouvee(s).", "data": data}
+
+    def fetch_assure_historique_situation_vieillesse(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_historique_situation_vieillesse(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} historique(s) vieillesse trouve(s).", "data": data}
+
+    def fetch_assure_collectivites_vieillesse(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_collectivites_vieillesse(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} collectivite(s) vieillesse trouvee(s).", "data": data}
+
+    def fetch_assure_adresse(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_assure_adresse(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Adresse assure recuperee.", "data": result["data"]}
+
+    def fetch_assure_ayants_droit(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_ayants_droit(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} ayant(s) droit trouve(s).", "data": data}
+
     def fetch_collectivites(self, username: str, password: str, numero: str, denom1: str, code_postal: str):
         numero_value = (numero or "").strip()
         denom1_value = (denom1 or "").strip()

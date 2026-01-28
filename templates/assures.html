@@ -285,12 +285,11 @@
         </div>
         <div class="tab-panel" data-tab="adresse">
           <div class="info-section">Adresse de l'assuré</div>
-          <div class="info-grid two-col">
+          <div class="info-grid two-max">
             <div class="info-row">
               <div class="info-label">Type adresse</div>
               <div class="info-value" id="addr-type">-</div>
             </div>
-            <div></div>
             <div class="info-row">
               <div class="info-label">Ligne 1</div>
               <div class="info-value" id="addr-line1">-</div>
@@ -318,12 +317,11 @@
           </div>
 
           <div class="info-section" style="margin-top: 16px;">Coordonnées</div>
-          <div class="info-grid two-col">
+          <div class="info-grid two-max">
             <div class="info-row">
               <div class="info-label">E-mail</div>
               <div class="info-value" id="addr-mail">-</div>
             </div>
-            <div></div>
             <div class="info-row">
               <div class="info-label">Numéro téléphone</div>
               <div class="info-value" id="addr-tel">-</div>
@@ -765,6 +763,99 @@
       }
     }
 
+    async function loadMaladieHistorique(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_historique_situation_maladie || !window.pywebview?.api?.fetch_assure_collectivites_maladie) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const [situResp, collResp] = await Promise.all([
+          window.pywebview.api.fetch_assure_historique_situation_maladie(user, pwd, nirValue),
+          window.pywebview.api.fetch_assure_collectivites_maladie(user, pwd, nirValue),
+        ]);
+        if (selectedAssure?.nir !== nirValue) return;
+        selectedAssure.situations_maladie = situResp?.data || [];
+        selectedAssure.collectivites_maladie = collResp?.data || [];
+        renderMaladieDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    async function loadVieillesseHistorique(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_historique_situation_vieillesse || !window.pywebview?.api?.fetch_assure_collectivites_vieillesse) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const [situResp, collResp] = await Promise.all([
+          window.pywebview.api.fetch_assure_historique_situation_vieillesse(user, pwd, nirValue),
+          window.pywebview.api.fetch_assure_collectivites_vieillesse(user, pwd, nirValue),
+        ]);
+        if (selectedAssure?.nir !== nirValue) return;
+        selectedAssure.situations_vieillesse = situResp?.data || [];
+        selectedAssure.collectivites_vieillesse = collResp?.data || [];
+        renderVieillesseDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    async function loadAssureAdresse(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_adresse) return;
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const resp = await window.pywebview.api.fetch_assure_adresse(user, pwd, nirValue);
+        if (resp?.ok !== "true" || selectedAssure?.nir !== nirValue) return;
+        const data = resp.data || {};
+        selectedAssure.addr_l1 = data.ligne1 || null;
+        selectedAssure.addr_l2 = data.ligne2 || null;
+        selectedAssure.addr_l3 = data.ligne3 || null;
+        selectedAssure.addr_l4 = data.ligne4 || null;
+        selectedAssure.addr_cp = data.code_postal || null;
+        selectedAssure.addr_ville = data.ville || null;
+        selectedAssure.addr_pays = data.pays || null;
+        selectedAssure.addr_mail = data.email || null;
+        selectedAssure.addr_tel = data.tel1 || data.tel2 || data.tel3 || null;
+        selectedAssure.addr_fax = data.fax1 || data.fax2 || data.fax3 || null;
+        selectedAssure.addr_nb_lettres = data.nb_lettres || null;
+        selectedAssure.addr_npai = data.npai || null;
+        selectedAssure.addr_date_maj = data.date_maj || null;
+        renderAdresseDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    async function loadAyantsDroit(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_ayants_droit) return;
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const resp = await window.pywebview.api.fetch_assure_ayants_droit(user, pwd, nirValue);
+        if (resp?.ok !== "true" || selectedAssure?.nir !== nirValue) return;
+        selectedAssure.ayants_droit = resp.data || [];
+        renderAyantDroitDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
     function openAssureByIndex(idx) {
       selectedAssure = assureData[idx];
       if (!selectedAssure) return;
@@ -783,6 +874,10 @@
       if (assureSearch) assureSearch.value = "";
       loadMaladieSituations(selectedAssure.nir);
       loadCurrentSituations(selectedAssure.nir);
+      loadMaladieHistorique(selectedAssure.nir);
+      loadVieillesseHistorique(selectedAssure.nir);
+      loadAssureAdresse(selectedAssure.nir);
+      loadAyantsDroit(selectedAssure.nir);
     }
 
     function toggleDetails(show) {
@@ -1019,142 +1114,110 @@
     }
 
     function renderMaladieDetails() {
-      const sampleSit = [
-        {
-          code_situation: "21",
-          code_nature1: "23",
-          code_nature2: "",
-          date_nature2: "00/00/0000",
-          date_conditions: "01/06/1980",
-          date_declaration: "00/00/0000",
-          date_effet: "01/06/1980",
-          cristallisation: "Non",
-          date_maj_situation: "20/01/1993",
-          date_maj: "20/01/1993",
-        },
-      ];
-
-      const sampleRenouv = {
-        date_effet_dernier_renouvellement: "00/00/0000",
-        date_envoi_renouvellement: "00/00/0000",
-        date_retour_renouvellement: "00/00/0000",
-      };
-
-      const sampleCollect = [
-        { collectivite: "8299", date_effet: "01/01/1993", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
-        { collectivite: "2271", date_effet: "01/01/1920", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
-      ];
-
       if (tableSitMaladie) {
         tableSitMaladie.innerHTML = "";
-        const rows = selectedAssure?.situations_maladie || sampleSit;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.situations_maladie || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.code_situation || "-"}</td>
-            <td>${r.code_nature1 || "-"}</td>
-            <td>${r.code_nature2 || "-"}</td>
-            <td>${r.date_nature2 || "-"}</td>
-            <td>${r.date_conditions || "-"}</td>
-            <td>${r.date_declaration || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.cristallisation || "-"}</td>
-            <td>${r.date_maj_situation || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="10" style="text-align:center;">-</td>`;
           tableSitMaladie.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.code_situation || "-"}</td>
+              <td>${r.code_nature1 || "-"}</td>
+              <td>${r.code_nature2 || "-"}</td>
+              <td>${r.date_nature2 || "-"}</td>
+              <td>${r.date_conditions || "-"}</td>
+              <td>${r.date_declaration || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.cristallisation || "-"}</td>
+              <td>${r.date_maj_situation || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSitMaladie.appendChild(tr);
+          });
+        }
       }
 
       if (tableRenouvMaladie) {
         const r = selectedAssure || {};
         tableRenouvMaladie.innerHTML = `
-          <tr><th>Date d'effet du dernier renouvellement</th><td>${r.date_effet_dernier_renouvellement || sampleRenouv.date_effet_dernier_renouvellement}</td></tr>
-          <tr><th>Date Envoi Renouvellement</th><td>${r.date_envoi_renouvellement || sampleRenouv.date_envoi_renouvellement}</td></tr>
-          <tr><th>Date Retour Renouvellement</th><td>${r.date_retour_renouvellement || sampleRenouv.date_retour_renouvellement}</td></tr>
+          <tr><th>Date d'effet du dernier renouvellement</th><td>${r.date_effet_dernier_renouvellement || "-"}</td></tr>
+          <tr><th>Date Envoi Renouvellement</th><td>${r.date_envoi_renouvellement || "-"}</td></tr>
+          <tr><th>Date Retour Renouvellement</th><td>${r.date_retour_renouvellement || "-"}</td></tr>
         `;
       }
 
       if (tableCollectMalie) {
         tableCollectMalie.innerHTML = "";
-        const rows = selectedAssure?.collectivites_maladie || sampleCollect;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.collectivites_maladie || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.collectivite || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-            <td>${r.etat_actuel || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
           tableCollectMalie.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.collectivite || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+              <td>${r.etat_actuel || "-"}</td>
+            `;
+            tableCollectMalie.appendChild(tr);
+          });
+        }
       }
     }
 
     function renderVieillesseDetails() {
-      const sampleSit = [
-        {
-          code_situation: "11",
-          code_nature1: "51",
-          code_nature2: "",
-          date_nature2: "00/00/0000",
-          date_conditions: "01/11/2002",
-          date_declaration: "00/00/0000",
-          date_effet: "01/11/2002",
-          date_maj_situation: "21/11/2002",
-          date_maj: "21/11/2002",
-        },
-        {
-          code_situation: "21",
-          code_nature1: "",
-          code_nature2: "",
-          date_nature2: "00/00/0000",
-          date_conditions: "31/12/1978",
-          date_declaration: "00/00/0000",
-          date_effet: "31/12/1978",
-          date_maj_situation: "20/01/1993",
-          date_maj: "12/09/2002",
-        },
-      ];
-
-      const sampleCollect = [
-        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
-        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
-      ];
-
       if (tableSitVieillesse) {
         tableSitVieillesse.innerHTML = "";
-        const rows = selectedAssure?.situations_vieillesse || sampleSit;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.situations_vieillesse || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.code_situation || "-"}</td>
-            <td>${r.code_nature1 || "-"}</td>
-            <td>${r.code_nature2 || "-"}</td>
-            <td>${r.date_nature2 || "-"}</td>
-            <td>${r.date_conditions || "-"}</td>
-            <td>${r.date_declaration || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj_situation || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="9" style="text-align:center;">-</td>`;
           tableSitVieillesse.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.code_situation || "-"}</td>
+              <td>${r.code_nature1 || "-"}</td>
+              <td>${r.code_nature2 || "-"}</td>
+              <td>${r.date_nature2 || "-"}</td>
+              <td>${r.date_conditions || "-"}</td>
+              <td>${r.date_declaration || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj_situation || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSitVieillesse.appendChild(tr);
+          });
+        }
       }
 
       if (tableCollectVieillesse) {
         tableCollectVieillesse.innerHTML = "";
-        const rows = selectedAssure?.collectivites_vieillesse || sampleCollect;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.collectivites_vieillesse || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.collectivite || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-            <td>${r.etat_actuel || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
           tableCollectVieillesse.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.collectivite || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+              <td>${r.etat_actuel || "-"}</td>
+            `;
+            tableCollectVieillesse.appendChild(tr);
+          });
+        }
       }
     }
 
@@ -1284,23 +1347,26 @@
     }
 
     function renderAyantDroitDetails() {
-      const sample = [
-        { rang: "-", nom: "-", prenoms: "-", date_naissance: "-" },
-      ];
-
       if (tableAyantDroit) {
         tableAyantDroit.innerHTML = "";
-        const rows = selectedAssure?.ayants_droit || sample;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.ayants_droit || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.rang || "-"}</td>
-            <td>${r.nom || "-"}</td>
-            <td>${r.prenoms || "-"}</td>
-            <td>${r.date_naissance || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
           tableAyantDroit.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            const nom = r.nom_usuel || r.nom || "-";
+            tr.innerHTML = `
+              <td>${r.rang || "-"}</td>
+              <td>${nom}</td>
+              <td>${r.prenoms || "-"}</td>
+              <td>${r.date_naissance || "-"}</td>
+            `;
+            tableAyantDroit.appendChild(tr);
+          });
+        }
       }
     }
 
@@ -1403,6 +1469,10 @@
             renderAyantDroitDetails();
             loadMaladieSituations(match.nir);
             loadCurrentSituations(match.nir);
+            loadMaladieHistorique(match.nir);
+            loadVieillesseHistorique(match.nir);
+            loadAssureAdresse(match.nir);
+            loadAyantsDroit(match.nir);
             setActiveTab("infos");
             toggleDetails(true);
             toggleSearchArea(true);

@@ -800,6 +800,10 @@ body[data-theme="dark"] .tab.active {
   background: rgba(15, 28, 63, 0.03);
 }
 
+.situation-card .info-row + .info-row {
+  margin-top: 8px;
+}
+
 .situation-title {
   font-weight: 700;
   color: var(--text);

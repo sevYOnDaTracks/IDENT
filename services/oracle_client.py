@@ -401,6 +401,334 @@ class OracleClient:
             )
         return {"data": data, "error": None}
 
+    def query_assure_historique_situation_maladie(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des situations maladie (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sm.smsa_id,
+                sm.smns_id,
+                sm.smns_id2,
+                sm.sm_dtsitnat,
+                sm.sm_dtcond,
+                sm.sm_dtdecl,
+                sm.sm_dtefdeb,
+                sm.sm_dtnot,
+                sm.sm_dtmaj
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_SM#ASS_SIT_CAM sm
+              ON sm.smas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY sm.sm_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "code_nature1": row[1],
+                    "code_nature2": row[2],
+                    "date_nature2": _format_date(row[3]),
+                    "date_conditions": _format_date(row[4]),
+                    "date_declaration": _format_date(row[5]),
+                    "date_effet": _format_date(row[6]),
+                    "date_maj_situation": _format_date(row[7]),
+                    "date_maj": _format_date(row[8]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_collectivites_maladie(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des collectivites maladie (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ac.accl_id,
+                ac.ac_dtefdeb,
+                ac.ac_dtmaj,
+                cs.cs_lib
+            FROM AT_AC#ASS_COL ac
+            JOIN AT_AS#ASSURE a
+              ON ac.acas_id = a.as_id
+            LEFT JOIN AT_HC#HIS_SIT_COL hc
+              ON hc.hccl_id = ac.accl_id
+             AND hc.hc_dtfin = TO_DATE('31123999', 'DDMMYYYY')
+            LEFT JOIN AT_CS#LIB_SIT_COL cs
+              ON cs.cs_id = hc.hccs_id
+            WHERE a.as_nni = :nir
+              AND ac.acst_id = '1'
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "collectivite": row[0],
+                    "date_effet": _format_date(row[1]),
+                    "date_maj": _format_date(row[2]),
+                    "etat_actuel": row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_historique_situation_vieillesse(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des situations vieillesse (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sv.svsa_id,
+                sv.svns_id,
+                sv.svns_id2,
+                sv.sv_dtsitnat,
+                sv.sv_dtcond,
+                sv.sv_dtdecl,
+                sv.sv_dtefdeb,
+                sv.sv_dtnot,
+                sv.sv_dtmaj
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_SV#ASS_SIT_VIC sv
+              ON sv.svas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY sv.sv_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "code_nature1": row[1],
+                    "code_nature2": row[2],
+                    "date_nature2": _format_date(row[3]),
+                    "date_conditions": _format_date(row[4]),
+                    "date_declaration": _format_date(row[5]),
+                    "date_effet": _format_date(row[6]),
+                    "date_maj_situation": _format_date(row[7]),
+                    "date_maj": _format_date(row[8]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_collectivites_vieillesse(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des collectivites vieillesse (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ac.accl_id,
+                ac.ac_dtefdeb,
+                ac.ac_dtmaj,
+                cs.cs_lib
+            FROM AT_AC#ASS_COL ac
+            JOIN AT_AS#ASSURE a
+              ON ac.acas_id = a.as_id
+            LEFT JOIN AT_HC#HIS_SIT_COL hc
+              ON hc.hccl_id = ac.accl_id
+             AND hc.hc_dtfin = TO_DATE('31123999', 'DDMMYYYY')
+            LEFT JOIN AT_CS#LIB_SIT_COL cs
+              ON cs.cs_id = hc.hccs_id
+            WHERE a.as_nni = :nir
+              AND ac.acst_id = '2'
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "collectivite": row[0],
+                    "date_effet": _format_date(row[1]),
+                    "date_maj": _format_date(row[2]),
+                    "etat_actuel": row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_adresse(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'adresse et les coordonnees de l'assure (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                aa.aa_adr1,
+                aa.aa_adr2,
+                aa.aa_adr3,
+                aa.aa_adr4,
+                aa.aa_adrcp,
+                aa.aa_adrvil,
+                py.py_lib,
+                aa.aa_email,
+                aa.aa_tel1,
+                aa.aa_tel2,
+                aa.aa_tel3,
+                aa.aa_tec1,
+                aa.aa_tec2,
+                aa.aa_tec3,
+                aa.aa_nblet,
+                aa.aa_npai,
+                aa.aa_dtmaj
+            FROM AT_AS#ASSURE a
+            JOIN AT_AA#ADR_ASS aa
+              ON aa.aaas_id = a.as_id
+            LEFT JOIN AT_PY#PAYS py
+              ON py.py_id = aa.aapy_id
+            WHERE a.as_nni = :nir
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "ligne1": row[0],
+            "ligne2": row[1],
+            "ligne3": row[2],
+            "ligne4": row[3],
+            "code_postal": row[4],
+            "ville": row[5],
+            "pays": row[6],
+            "email": row[7],
+            "tel1": row[8],
+            "tel2": row[9],
+            "tel3": row[10],
+            "fax1": row[11],
+            "fax2": row[12],
+            "fax3": row[13],
+            "nb_lettres": row[14],
+            "npai": row[15],
+            "date_maj": _format_date(row[16]),
+        }
+        return {"data": data, "error": None}
+
+    def query_assure_ayants_droit(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne la liste des ayants droit (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ay.ay_noord,
+                ay.ay_nompat,
+                ay.ay_nomusuel,
+                ay.ay_prenoms,
+                ay.ay_dtnais
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_AY#AYANT_DROIT ay
+              ON ay.ayas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY ay.ay_noord
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "rang": row[0],
+                    "nom": row[1],
+                    "nom_usuel": row[2],
+                    "prenoms": row[3],
+                    "date_naissance": _format_date(row[4]),
+                }
+            )
+        return {"data": data, "error": None}
+
     def query_collectivites(
         self,
         username: str,
