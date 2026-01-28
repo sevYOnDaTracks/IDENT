@@ -8,6 +8,9 @@ import webview
 
 from services.oracle_client import OracleClient, build_assure_workbook, build_collectivite_workbook
 
+ORACLE_APP_USER = "ASCOT"
+ORACLE_APP_PASSWORD = "ASCOT"
+
 
 def _bootstrap_site_packages() -> None:
     """Force the local .venv site-packages even if using system Python."""
@@ -26,10 +29,11 @@ class Api:
     def __init__(self, client: OracleClient) -> None:
         self.client = client
         self.window: Optional[webview.Window] = None
-        self._cached_user: Optional[str] = None
-        self._cached_password: Optional[str] = None
+        self._cached_user: Optional[str] = ORACLE_APP_USER
+        self._cached_password: Optional[str] = ORACLE_APP_PASSWORD
         self._selected_collectivite: Optional[dict] = None
         self._selected_assure_nni: Optional[str] = None
+        self._logged_user: Optional[dict] = None
 
     def set_window(self, window: webview.Window) -> None:
         self.window = window
@@ -52,9 +56,31 @@ class Api:
         return {"ok": "true", "message": "Connexion reussie."}
 
     def reset_credentials(self):
-        """Réinitialise le cache d'identifiants côté backend."""
-        self._cached_user = None
-        self._cached_password = None
+        """R?initialise le cache d'identifiants c?t? backend."""
+        self._cached_user = ORACLE_APP_USER
+        self._cached_password = ORACLE_APP_PASSWORD
+        return {"ok": "true"}
+
+    def login(self, email: str, password: str):
+        email_value = (email or "").strip()
+        pwd_value = (password or "").strip()
+        if not email_value or not pwd_value:
+            return {"ok": "false", "message": "Email et mot de passe requis."}
+
+        result = self.client.query_user_login(ORACLE_APP_USER, ORACLE_APP_PASSWORD, email_value, pwd_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de connexion : {result['error']}"}
+        if not result["data"]:
+            return {"ok": "false", "message": "Identifiants invalides."}
+
+        self._logged_user = result["data"]
+        return {"ok": "true", "message": "Connexion reussie.", "data": result["data"]}
+
+    def get_logged_user(self):
+        return {"ok": "true", "data": self._logged_user}
+
+    def logout(self):
+        self._logged_user = None
         return {"ok": "true"}
 
     def set_selected_collectivite(self, payload: dict):
@@ -98,7 +124,7 @@ class Api:
         cp_value = (code_postal or "").strip()
 
         if not (numero_value or denom1_value or cp_value):
-            return {"ok": "false", "message": "Renseignez au moins un filtre (numéro, dénomination 1 ou le code postal).", "data": []}
+            return {"ok": "false", "message": "Renseignez au moins un filtre (numéro, nom, ville ou code postal).", "data": []}
 
         user, pwd = self._resolve_credentials(username, password)
         if not user or not pwd:
@@ -383,7 +409,7 @@ class Api:
 def main() -> None:
     """Launch a native window that renders the local HTML/CSS UI."""
     root = Path(__file__).parent
-    html_path = root / "templates" / "home.html"
+    html_path = root / "templates" / "login.html"
     if not html_path.exists():
         raise FileNotFoundError(f"HTML file not found: {html_path}")
 

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -13,6 +13,10 @@
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="toolbar-left">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+      <div class="toolbar-right">
         <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 11l9-7 9 7"></path>
@@ -29,11 +33,20 @@
             <path d="M9 18l6-6-6-6"></path>
           </svg>
         </button>
-
-      </div>
-      <div class="toolbar-right">
-        <img class="toolbar-logo" src="../images/Logo Securit&#233; Social.png" alt="Logo S&#233;curit&#233; Sociale">
-        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">&#127769;</span>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="button outline user-trigger" type="button" id="user-menu-trigger">
+            <span id="user-trigger-label">Utilisateur</span>
+          </button>
+          <div class="user-dropdown hidden" id="user-menu-panel">
+            <div class="user-actions">
+             <!-- <a class="user-link" href="user_info.html">Mes infos</a> -->
+              <button class="button ghost user-logout" type="button" id="user-logout">D&#233;connexion</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -369,6 +382,80 @@
   </div>
 
   <script>
+    const themeToggle = document.getElementById("theme-toggle");
+    if (themeToggle) {
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") document.body.dataset.theme = "dark";
+      const sync = () => {
+        const isDark = document.body.dataset.theme === "dark";
+        const icon = themeToggle.querySelector(".icon");
+        if (icon) icon.textContent = isDark ? "\u2600" : "\uD83C\uDF19";
+      };
+      sync();
+      themeToggle.addEventListener("click", () => {
+        const isDark = document.body.dataset.theme === "dark";
+        document.body.dataset.theme = isDark ? "" : "dark";
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+        sync();
+      });
+    }
+
+    const userTrigger = document.getElementById("user-menu-trigger");
+    const userPanel = document.getElementById("user-menu-panel");
+    const userName = document.getElementById("user-name");
+    const userService = document.getElementById("user-service");
+    const userEmail = document.getElementById("user-email");
+    const userLogout = document.getElementById("user-logout");
+    const userLabel = document.getElementById("user-trigger-label");
+
+    if (userTrigger && userPanel) {
+      const closeMenu = () => userPanel.classList.add("hidden");
+      userTrigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        userPanel.classList.toggle("hidden");
+      });
+      userPanel.addEventListener("click", (event) => event.stopPropagation());
+      document.addEventListener("click", () => closeMenu());
+    }
+
+    if (userLogout) {
+      userLogout.addEventListener("click", async () => {
+        try {
+          if (window.pywebview?.api?.logout) {
+            await window.pywebview.api.logout();
+          }
+        } catch (_) {}
+        localStorage.removeItem("logged_user");
+        window.location.href = "login.html";
+      });
+    }
+
+    const applyUser = (data) => {
+      if (!data) return;
+      const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
+      const email = data.email || "Utilisateur";
+      const service = data.service || "";
+      if (userName) userName.textContent = fullName || "Utilisateur";
+      if (userService) userService.textContent = service ? `Service : ${service}` : "";
+      if (userEmail) userEmail.textContent = email;
+      if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email;
+    };
+
+    const cached = localStorage.getItem("logged_user");
+    if (cached) {
+      try { applyUser(JSON.parse(cached)); } catch (_) {}
+    }
+
+    const loadUserFromApi = () => {
+      if (!window.pywebview?.api?.get_logged_user) return;
+      window.pywebview.api.get_logged_user().then((resp) => {
+        if (resp?.data) applyUser(resp.data);
+      });
+    };
+
+    loadUserFromApi();
+    window.addEventListener("pywebviewready", loadUserFromApi);
+
     const nirForm = document.getElementById("nir-form");
     const nirInput = document.getElementById("nir-input");
     const nomInput = document.getElementById("nom-input");
@@ -662,7 +749,7 @@
       const metaParts = [];
       if (selectedAssure.date_naissance) metaParts.push(`Né(e) le ${selectedAssure.date_naissance}`);
       if (selectedAssure.sexe) metaParts.push(selectedAssure.sexe);
-      assureMeta.textContent = metaParts.join(" • ") || "-";
+      assureMeta.textContent = metaParts.join(" â€¢ ") || "-";
     }
 
     function setActiveTab(name) {
@@ -1069,13 +1156,9 @@
 
     async function ensureCredentials(force = false) {
       if (!force && cachedUser && cachedPassword) return cachedUser;
-      const user = window.prompt("Entrez votre nom d'utilisateur (Oracle) :", cachedUser || "");
-      if (!user) return null;
-      const pwd = window.prompt("Entrez votre mot de passe (Oracle) :", "");
-      if (pwd === null || pwd === "") return null;
-      cachedUser = user;
-      cachedPassword = pwd;
-      return user;
+      cachedUser = "ASCOT";
+      cachedPassword = "ASCOT";
+      return cachedUser;
     }
 
     homeButton?.addEventListener("click", async (e) => {

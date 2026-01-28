@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -13,6 +13,17 @@
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="toolbar-left">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+      <div class="toolbar-center">
+        <div class="toolbar-entity" id="toolbar-collectivite" hidden>
+          <span class="toolbar-entity-label">Collectivité</span>
+          <span class="toolbar-entity-value" id="toolbar-collectivite-value">-</span>
+          <span class="toolbar-entity-value" id="toolbar-collectivite-culte">-</span>
+        </div>
+      </div>
+      <div class="toolbar-right">
         <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 11l9-7 9 7"></path>
@@ -29,18 +40,20 @@
             <path d="M9 18l6-6-6-6"></path>
           </svg>
         </button>
-
-      </div>
-      <div class="toolbar-center">
-        <div class="toolbar-entity" id="toolbar-collectivite" hidden>
-          <span class="toolbar-entity-label">Collectivité</span>
-          <span class="toolbar-entity-value" id="toolbar-collectivite-value">-</span>
-          <span class="toolbar-entity-value" id="toolbar-collectivite-culte">-</span>
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">&#127769;</span>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="button outline user-trigger" type="button" id="user-menu-trigger">
+            <span id="user-trigger-label">Utilisateur</span>
+          </button>
+          <div class="user-dropdown hidden" id="user-menu-panel">
+            <div class="user-actions">
+            <!--  <a class="user-link" href="user_info.html">Mes infos</a> -->
+              <button class="button ghost user-logout" type="button" id="user-logout">D&#233;connexion</button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="toolbar-right">
-        <img class="toolbar-logo" src="../images/Logo Securit&#233; Social.png" alt="Logo S&#233;curit&#233; Sociale">
-        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
       </div>
     </div>
   </div>
@@ -56,8 +69,8 @@
          <!-- <div class="panel-title">Critères de recherche</div> -->
           <div class="panel-body">
             <div class="form-row compact">
-              <label class="form-label" for="search-input">Recherche</label>
-              <input id="search-input" name="search" type="text" placeholder="Numéro, dénomination ou code postal de la collectivité" autocomplete="off">
+             <!-- <label class="form-label" for="search-input">Recherche</label> -->
+              <input id="search-input" name="search" type="text" placeholder="Rechercher par numéro, nom, ville ou code postal..." autocomplete="off">
             </div>
           </div>
         </div>
@@ -66,6 +79,10 @@
         </div> -->
       </form>
 
+      <div id="collect-loader" class="loader hidden" aria-hidden="true">
+        <span class="spinner"></span>
+        <span>Recherche en cours...</span>
+      </div>
      <!-- <p class="hint" id="collect-hint">Requête à venir : données d'exemple affichées pour prévisualisation.</p> -->
       <div id="collect-result" class="result hidden" aria-live="polite"></div>
 
@@ -84,6 +101,12 @@
           </thead>
           <tbody></tbody>
         </table>
+      </div>
+
+      <div class="pagination hidden" id="collect-pagination">
+        <span class="pagination-info" id="collect-pagination-text">0 résultat</span>
+        <button class="button outline" type="button" id="collect-prev">Précédent</button>
+        <button class="button outline" type="button" id="collect-next">Suivant</button>
       </div>
 
       <div class="actions" id="collect-actions" style="justify-content: flex-end; gap: 10px; margin-top: 12px;">
@@ -270,8 +293,10 @@
                 <tbody></tbody>
               </table>
             </div>
-            <div class="actions" style="justify-content: flex-start; margin-top: 8px;">
-              <div class="hint">Nombre d'assurés : <span id="assures-count">0</span></div>
+            <div class="pagination" id="assures-pagination">
+              <span class="pagination-info">Affichage : <span id="assures-range">0</span> sur <span id="assures-total">0</span> résultats</span>
+              <button class="button outline" type="button" id="assures-prev">Précédent</button>
+              <button class="button outline" type="button" id="assures-next">Suivant</button>
             </div>
           </div>
 
@@ -331,10 +356,12 @@
     </div>
   </div>
 
+  <div id="toast" class="toast"></div>
   <script>
     const form = document.getElementById("collect-form");
     const searchInput = document.getElementById("search-input");
     const resultBox = document.getElementById("collect-result");
+    const collectLoader = document.getElementById("collect-loader");
     const tableBody = document.querySelector("#collect-table tbody");
     const btnOk = document.getElementById("btn-ok");
     const btnCancel = document.getElementById("btn-cancel");
@@ -345,6 +372,10 @@
     const tableTitle = document.getElementById("collect-table-title");
     const tableWrapper = document.getElementById("collect-table-wrapper");
     const actionsPanel = document.getElementById("collect-actions");
+    const collectPagination = document.getElementById("collect-pagination");
+    const collectPaginationText = document.getElementById("collect-pagination-text");
+    const collectPrev = document.getElementById("collect-prev");
+    const collectNext = document.getElementById("collect-next");
     const collectTitle = document.getElementById("collect-title");
     const tabs = document.querySelectorAll("#collect-details .tab");
     const panels = document.querySelectorAll("#collect-details .tab-panel");
@@ -414,9 +445,14 @@
     const assureTriSelect = document.getElementById("assure-tri-select");
     const assuresResult = document.getElementById("assures-result");
     const assuresTableBody = document.querySelector("#assures-table tbody");
-    const assuresCount = document.getElementById("assures-count");
+    const assuresRange = document.getElementById("assures-range");
+    const assuresTotal = document.getElementById("assures-total");
+    const assuresPrev = document.getElementById("assures-prev");
+    const assuresNext = document.getElementById("assures-next");
     const exportResult = document.getElementById("export-result");
     const exportButton = document.getElementById("btn-export-collect");
+    const toast = document.getElementById("toast");
+    const themeToggle = document.getElementById("theme-toggle");
     const commuResult = document.getElementById("commu-result");
     const commuTableBody = document.querySelector("#commu-table tbody");
     const referentFields = {
@@ -435,13 +471,47 @@
     };
     let selectedRowIndex = null;
     let currentRows = [];
+    let hasSearched = false;
+    let currentAssuresRows = [];
     let selectedData = null;
     let cachedUser = null;
     let cachedPassword = null;
+    let collectPage = 1;
+    const collectPageSize = 20;
+    let assuresPage = 1;
+    const assuresPageSize = 20;
 
     const showError = (msg) => {
       try { window.alert(msg); } catch (_) {}
     };
+
+    function showToast(message) {
+      if (!toast) return;
+      toast.textContent = message || "";
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2200);
+    }
+
+    function initThemeToggle() {
+      if (!themeToggle) return;
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") document.body.dataset.theme = "dark";
+      const sync = () => {
+        const isDark = document.body.dataset.theme === "dark";
+        const icon = themeToggle.querySelector(".icon");
+        if (icon) icon.textContent = isDark ? "\u2600" : "\uD83C\uDF19";
+      };
+      sync();
+      themeToggle.addEventListener("click", () => {
+        const isDark = document.body.dataset.theme === "dark";
+        document.body.dataset.theme = isDark ? "" : "dark";
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+        sync();
+      });
+    }
 
     let currentSituations = [];
     let currentFusions = [];
@@ -481,7 +551,7 @@
         toolbarCollectivite.hidden = false;
         toolbarCollectiviteValue.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
         if (toolbarCollectiviteCulte) {
-          toolbarCollectiviteCulte.textContent = culte ? `• ${culte}` : "";
+          toolbarCollectiviteCulte.textContent = culte ? ` * ${culte}` : "";
         }
       }
     }
@@ -531,58 +601,91 @@
       exportResult.classList.toggle("hidden", text.length === 0);
     }
 
-    function renderAssures(rows) {
+    function updateAssuresPagination(total, start, end, pageCount) {
+      if (!assuresRange || !assuresTotal) return;
+      assuresTotal.textContent = String(total || 0);
+      if (!total) {
+        assuresRange.textContent = "0";
+        if (assuresPrev) assuresPrev.disabled = true;
+        if (assuresNext) assuresNext.disabled = true;
+        return;
+      }
+      assuresRange.textContent = `${start + 1}-${end}`;
+      if (assuresPrev) assuresPrev.disabled = assuresPage <= 1;
+      if (assuresNext) assuresNext.disabled = assuresPage >= pageCount;
+    }
+
+    function getAssuresPageSlice(rows) {
+      const total = rows.length;
+      if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
+      const pageCount = Math.max(1, Math.ceil(total / assuresPageSize));
+      if (assuresPage > pageCount) assuresPage = pageCount;
+      if (assuresPage < 1) assuresPage = 1;
+      const start = (assuresPage - 1) * assuresPageSize;
+      const end = Math.min(start + assuresPageSize, total);
+      return { slice: rows.slice(start, end), start, end, pageCount };
+    }
+
+    function renderAssuresPage() {
       if (!assuresTableBody) return;
       assuresTableBody.innerHTML = "";
-      if (!rows.length) {
+      if (!currentAssuresRows.length) {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td colspan="12" style="text-align:center;">-</td>`;
         assuresTableBody.appendChild(tr);
-      } else {
-        rows.forEach((r) => {
-          const tr = document.createElement("tr");
-          tr.dataset.nni = r.nni || "";
-          tr.innerHTML = `
-            <td>${r.nom || "-"}</td>
-            <td>${r.prenoms || "-"}</td>
-            <td>${r.nni || "-"}</td>
-            <td>${r.code_maladie || "-"}</td>
-            <td>${r.date_effet_maladie || "-"}</td>
-            <td>${r.date_fin_maladie || "-"}</td>
-            <td>${r.num_coll_maladie || "-"}</td>
-            <td>${r.code_vieillesse || "-"}</td>
-            <td>${r.date_effet_vieillesse || "-"}</td>
-            <td>${r.date_fin_vieillesse || "-"}</td>
-            <td>${r.num_coll_vieillesse || "-"}</td>
-            <td>${r.type_adresse || "-"}</td>
-          `;
-          tr.addEventListener("dblclick", async () => {
-            if (!r.nni) {
-              window.alert("NNI manquant pour ouvrir l'assuré.");
-              return;
-            }
-            const rawNni = String(r.nni);
-            const normalized = rawNni.replace(/\D/g, "");
-            const nniForSearch = normalized || rawNni;
-            const nir = encodeURIComponent(nniForSearch);
-            try {
-              window.name = JSON.stringify({ assureNni: nniForSearch });
-            } catch (_) {
-              /* ignore window.name errors */
-            }
-            if (window.pywebview?.api?.set_selected_assure_nni) {
-              try {
-                await window.pywebview.api.set_selected_assure_nni(nniForSearch);
-              } catch (_) {
-                /* ignore api errors */
-              }
-            }
-            window.location.href = `assures.html?nir=${nir}`;
-          });
-          assuresTableBody.appendChild(tr);
-        });
+        updateAssuresPagination(0, 0, 0, 1);
+        return;
       }
-      if (assuresCount) assuresCount.textContent = String(rows.length || 0);
+      const { slice, start, end, pageCount } = getAssuresPageSlice(currentAssuresRows);
+      slice.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.dataset.nni = r.nni || "";
+        tr.innerHTML = `
+          <td>${r.nom || "-"}</td>
+          <td>${r.prenoms || "-"}</td>
+          <td>${r.nni || "-"}</td>
+          <td>${r.code_maladie || "-"}</td>
+          <td>${r.date_effet_maladie || "-"}</td>
+          <td>${r.date_fin_maladie || "-"}</td>
+          <td>${r.num_coll_maladie || "-"}</td>
+          <td>${r.code_vieillesse || "-"}</td>
+          <td>${r.date_effet_vieillesse || "-"}</td>
+          <td>${r.date_fin_vieillesse || "-"}</td>
+          <td>${r.num_coll_vieillesse || "-"}</td>
+          <td>${r.type_adresse || "-"}</td>
+        `;
+        tr.addEventListener("dblclick", async () => {
+          if (!r.nni) {
+            window.alert("NNI manquant pour ouvrir l'assure.");
+            return;
+          }
+          const rawNni = String(r.nni);
+          const normalized = rawNni.replace(/\D/g, "");
+          const nniForSearch = normalized || rawNni;
+          const nir = encodeURIComponent(nniForSearch);
+          try {
+            window.name = JSON.stringify({ assureNni: nniForSearch });
+          } catch (_) {
+            /* ignore window.name errors */
+          }
+          if (window.pywebview?.api?.set_selected_assure_nni) {
+            try {
+              await window.pywebview.api.set_selected_assure_nni(nniForSearch);
+            } catch (_) {
+              /* ignore api errors */
+            }
+          }
+          window.location.href = `assures.html?nir=${nir}`;
+        });
+        assuresTableBody.appendChild(tr);
+      });
+      updateAssuresPagination(currentAssuresRows.length, start, end, pageCount);
+    }
+
+    function renderAssures(rows) {
+      currentAssuresRows = rows || [];
+      assuresPage = 1;
+      renderAssuresPage();
     }
 
     function setCommunautesResult(message, success = false) {
@@ -658,10 +761,11 @@
     }
 
     function toggleList(show) {
-      [form, hint, resultBox, tableTitle, tableWrapper, actionsPanel].forEach((el) => {
+      [form, hint, resultBox, collectLoader, tableTitle, tableWrapper, collectPagination, actionsPanel].forEach((el) => {
         el?.classList.toggle("hidden", !show);
       });
       collectTitle?.classList.toggle("hidden", !show);
+      if (show) setCollectLoading(false);
       if (backResultsButton) backResultsButton.hidden = show;
     }
 
@@ -672,12 +776,48 @@
       }
     }
 
+    function updateCollectPagination(total, start, end, pageCount) {
+      if (!collectPagination || !collectPaginationText) return;
+      if (!total) {
+        collectPagination.classList.add("hidden");
+        collectPaginationText.textContent = "0 résultat";
+        if (collectPrev) collectPrev.disabled = true;
+        if (collectNext) collectNext.disabled = true;
+        return;
+      }
+      collectPagination.classList.remove("hidden");
+      collectPaginationText.textContent = `${start + 1}-${end} sur ${total} résultats`;
+      if (collectPrev) collectPrev.disabled = collectPage <= 1;
+      if (collectNext) collectNext.disabled = collectPage >= pageCount;
+    }
+
+    function getCollectPageSlice(rows) {
+      const total = rows.length;
+      if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
+      const pageCount = Math.max(1, Math.ceil(total / collectPageSize));
+      if (collectPage > pageCount) collectPage = pageCount;
+      if (collectPage < 1) collectPage = 1;
+      const start = (collectPage - 1) * collectPageSize;
+      const end = Math.min(start + collectPageSize, total);
+      return { slice: rows.slice(start, end), start, end, pageCount };
+    }
+
     function renderTable(rows) {
       if (!tableBody) return;
       tableBody.innerHTML = "";
-      rows.forEach((r, idx) => {
+      if (!rows.length) {
         const tr = document.createElement("tr");
-        if (selectedRowIndex === idx) tr.classList.add("row-selected");
+        const emptyText = hasSearched ? "Aucune collectivité trouvée" : "-";
+        tr.innerHTML = `<td colspan="6" style="text-align:center;">${emptyText}</td>`;
+        tableBody.appendChild(tr);
+        updateCollectPagination(0, 0, 0, 1);
+        return;
+      }
+      const { slice, start, end, pageCount } = getCollectPageSlice(rows);
+      slice.forEach((r, idx) => {
+        const absoluteIndex = start + idx;
+        const tr = document.createElement("tr");
+        if (selectedRowIndex === absoluteIndex) tr.classList.add("row-selected");
         tr.innerHTML = `
           <td>${r.numero || "-"}</td>
           <td>${r.denom1 || "-"}</td>
@@ -708,11 +848,12 @@
         actionsTd.appendChild(btnExport);
         tr.appendChild(actionsTd);
         tr.addEventListener("click", () => {
-          selectedRowIndex = idx;
+          selectedRowIndex = absoluteIndex;
           renderTable(rows);
         });
         tableBody.appendChild(tr);
       });
+      updateCollectPagination(rows.length, start, end, pageCount);
     }
 
     function setResult(message, success = false) {
@@ -721,6 +862,11 @@
       resultBox.textContent = text;
       resultBox.classList.toggle("success", !!success);
       resultBox.classList.toggle("hidden", text.length === 0);
+    }
+
+    function setCollectLoading(isLoading) {
+      if (!collectLoader) return;
+      collectLoader.classList.toggle("hidden", !isLoading);
     }
 
     function parseCollectSearch(value) {
@@ -738,13 +884,9 @@
 
     async function ensureCredentials(force = false) {
       if (!force && cachedUser && cachedPassword) return cachedUser;
-      const user = window.prompt("Entrez votre nom d'utilisateur (Oracle) :", cachedUser || "");
-      if (!user) return null;
-      const pwd = window.prompt("Entrez votre mot de passe (Oracle) :", "");
-      if (!pwd) return null;
-      cachedUser = user;
-      cachedPassword = pwd;
-      return user;
+      cachedUser = "ASCOT";
+      cachedPassword = "ASCOT";
+      return cachedUser;
     }
 
     async function exportCollectivite(collectId) {
@@ -765,6 +907,7 @@
         const resp = await window.pywebview.api.export_collectivite(user, pwd, numero);
         if (resp?.ok === "true") {
           setExportResult(resp.message || "Export réussi.", true);
+          showToast("Collectivité modifiée avec succès âœ…");
         } else {
           setExportResult(resp?.message || "Export échoué.", false);
         }
@@ -1096,6 +1239,7 @@
       setCommunautesResult("");
       clearReferent();
       selectedRowIndex = null;
+      collectPage = 1;
       const searchValue = (searchInput?.value || "").trim();
       const parsed = parseCollectSearch(searchValue);
       const num = parsed.num;
@@ -1103,22 +1247,24 @@
       const cp = parsed.cp;
 
       if (!num && !denom && !cp) {
-        setResult("", false);
-        showError("Renseignez un terme (numéro, dénomination ou code postal).");
+        setResult("Renseignez un terme (num?ro, nom, ville ou code postal).", false);
         renderTable([]);
         return;
       }
+      hasSearched = true;
 
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_collectivites) {
-        showError("API pywebview indisponible (collectivités).");
+        setResult("API pywebview indisponible (collectivit?s).", false);
         return;
       }
 
-      setResult("Recherche en cours...");
+      setCollectLoading(true);
+      setResult("");
       const user = await ensureCredentials();
       const pwd = cachedPassword;
       if (!user || !pwd) {
-        setResult("Connexion annulée (identifiants manquants).");
+        setCollectLoading(false);
+        setResult("Connexion annul?e (identifiants manquants).");
         return;
       }
 
@@ -1127,30 +1273,28 @@
         if (response?.ok === "true") {
           currentRows = response.data || [];
           renderTable(currentRows);
-          setResult(response.message || "Résultat disponible.", true);
+          setResult(response.message || "R?sultat disponible.", true);
         } else {
           currentRows = [];
           renderTable(currentRows);
-          setResult("");
-          showError(response?.message || "Aucun résultat.");
+          setResult(response?.message || "Aucune collectivit? trouv?e.", false);
         }
       } catch (err) {
         currentRows = [];
         renderTable(currentRows);
-        setResult("");
+        setResult("Erreur pendant la recherche.", false);
         showError("Erreur pendant la recherche : " + err);
+      } finally {
+        setCollectLoading(false);
       }
     });
 
         btnOk?.addEventListener("click", async () => {
-      if (!tableBody) return;
-      const rows = Array.from(tableBody.querySelectorAll("tr"));
-      const sel = rows.findIndex((r) => r.classList.contains("row-selected"));
-      if (sel === -1) {
+      if (selectedRowIndex === null || selectedRowIndex === undefined) {
         window.alert("S?lectionnez une collectivit? dans la liste.");
         return;
       }
-      const selected = currentRows[sel];
+      const selected = currentRows[selectedRowIndex];
       await openCollectivite(selected);
     });
 
@@ -1172,6 +1316,8 @@
         if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
       }
       if (searchInput) searchInput.value = "";
+      collectPage = 1;
+      hasSearched = false;
       currentRows = [];
       renderTable(currentRows);
       setResult("", false);
@@ -1214,6 +1360,38 @@
     assureFilterSelect?.addEventListener("change", scheduleAssuresReload);
     assureTriSelect?.addEventListener("change", scheduleAssuresReload);
 
+    collectPrev?.addEventListener("click", () => {
+      if (collectPage > 1) {
+        collectPage -= 1;
+        renderTable(currentRows);
+      }
+    });
+
+    collectNext?.addEventListener("click", () => {
+      const total = currentRows.length;
+      const pageCount = Math.max(1, Math.ceil(total / collectPageSize));
+      if (collectPage < pageCount) {
+        collectPage += 1;
+        renderTable(currentRows);
+      }
+    });
+
+    assuresPrev?.addEventListener("click", () => {
+      if (assuresPage > 1) {
+        assuresPage -= 1;
+        renderAssuresPage();
+      }
+    });
+
+    assuresNext?.addEventListener("click", () => {
+      const total = currentAssuresRows.length;
+      const pageCount = Math.max(1, Math.ceil(total / assuresPageSize));
+      if (assuresPage < pageCount) {
+        assuresPage += 1;
+        renderAssuresPage();
+      }
+    });
+
 
     backResultsButton?.addEventListener("click", () => {
       toggleDetails(false);
@@ -1245,6 +1423,79 @@
       });
     }
 
+    function initUserMenu() {
+      const trigger = document.getElementById("user-menu-trigger");
+      const panel = document.getElementById("user-menu-panel");
+      const logoutBtn = document.getElementById("user-logout");
+      const nameEl = document.getElementById("user-name");
+      const serviceEl = document.getElementById("user-service");
+      const emailEl = document.getElementById("user-email");
+      const labelEl = document.getElementById("user-trigger-label");
+      if (!trigger || !panel) return;
+
+      const closeMenu = () => panel.classList.add("hidden");
+
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        panel.classList.toggle("hidden");
+      });
+
+      panel.addEventListener("click", (event) => event.stopPropagation());
+      document.addEventListener("click", () => closeMenu());
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          try {
+            if (window.pywebview?.api?.logout) {
+              await window.pywebview.api.logout();
+            }
+          } catch (_) {}
+          localStorage.removeItem("logged_user");
+          window.location.href = "login.html";
+        });
+      }
+
+      const applyUser = (data) => {
+        if (!data) return;
+        const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
+        const email = data.email || "Utilisateur";
+        const service = data.service || "";
+        if (nameEl) nameEl.textContent = fullName || "Utilisateur";
+        if (serviceEl) serviceEl.textContent = service ? `Service : ${service}` : "";
+        if (emailEl) emailEl.textContent = email;
+        if (labelEl) labelEl.textContent = service ? `${email} - ${service}` : email;
+      };
+
+      const cached = localStorage.getItem("logged_user");
+      if (cached) {
+        try { applyUser(JSON.parse(cached)); } catch (_) {}
+      }
+
+      const loadUserFromApi = () => {
+        if (!window.pywebview?.api?.get_logged_user) return;
+        window.pywebview.api.get_logged_user().then((resp) => {
+          if (resp?.data) applyUser(resp.data);
+        });
+      };
+
+      loadUserFromApi();
+      window.addEventListener("pywebviewready", loadUserFromApi);
+    }
+
+    const toolbarForward = document.querySelector('.toolbar-nav[aria-label="Avancer"]');
+    if (toolbarForward) {
+      toolbarForward.removeAttribute("onclick");
+      toolbarForward.addEventListener("click", async () => {
+        if (detailsSection && detailsSection.hidden && selectedData?.numero) {
+          await openCollectivite(selectedData);
+          return;
+        }
+        history.forward();
+      });
+    }
+
+    initThemeToggle();
+    initUserMenu();
     renderTable(currentRows);
   </script>
 </body>

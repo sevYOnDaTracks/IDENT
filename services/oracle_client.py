@@ -46,6 +46,49 @@ class OracleClient:
         except Exception as exc:  # noqa: BLE001
             return str(exc)
 
+    def query_user_login(self, username: str, password: str, email: str, user_password: str) -> Dict[str, object]:
+        """Vérifie un utilisateur applicatif par email + mot de passe."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                usr.user_id,
+                usr.prenom,
+                usr.nom,
+                usr.email,
+                usr.mot_de_passe,
+                usr.service
+            FROM USER_IDENT usr
+            WHERE TRIM(LOWER(usr.email)) = TRIM(LOWER(:identifier))
+        """
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"identifier": email})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        stored_pwd = (row[4] or "").strip()
+        provided_pwd = (user_password or "").strip()
+        if stored_pwd != provided_pwd:
+            return {"data": None, "error": None}
+
+        data = {
+            "user_id": row[0],
+            "prenoms": row[1],
+            "nom": row[2],
+            "email": row[3],
+            "service": row[5],
+        }
+        return {"data": data, "error": None}
+
     def query_assures(
         self,
         username: str,
@@ -130,7 +173,7 @@ class OracleClient:
         denom1: str,
         code_postal: str,
     ) -> Dict[str, object]:
-        """Recherche des collectivites par numero / denom1 / code postal (prefixes, insensible Ã  la casse)."""
+        """Recherche des collectivites par numero / denom1 / code postal (prefixes, insensible à la casse)."""
         try:
             import oracledb
         except Exception as exc:
@@ -150,7 +193,11 @@ class OracleClient:
                 cl.cl_adrvil
             FROM AT_CL#COLLECTIVITE cl
             WHERE (:num_pattern IS NULL OR UPPER(cl.cl_id) LIKE UPPER(:num_pattern))
-              AND (:denom_pattern IS NULL OR UPPER(cl.cl_denom1) LIKE UPPER(:denom_pattern))
+              AND (
+                :denom_pattern IS NULL
+                OR UPPER(cl.cl_denom1) LIKE UPPER(:denom_pattern)
+                OR UPPER(cl.cl_adrvil) LIKE UPPER(:denom_pattern)
+              )
               AND (:cp_pattern IS NULL OR UPPER(cl.cl_adrcp) LIKE UPPER(:cp_pattern))
             ORDER BY cl.cl_id
         """

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -13,16 +13,40 @@
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="toolbar-left">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+      <div class="toolbar-right">
         <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 11l9-7 9 7"></path>
             <path d="M9 22V12h6v10"></path>
           </svg>
         </a>
-      </div>
-      <div class="toolbar-right">
-        <img class="toolbar-logo" src="../images/Logo Securité Social.png" alt="Logo S&#233;curit&#233; Sociale">
-        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-nav" type="button" aria-label="Avancer" title="Avancer" onclick="history.forward()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">&#127769;</span>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="button outline user-trigger" type="button" id="user-menu-trigger">
+            <span id="user-trigger-label">Utilisateur</span>
+          </button>
+          <div class="user-dropdown hidden" id="user-menu-panel">
+            <div class="user-actions">
+             <!-- <a class="user-link" href="user_info.html">Mes infos</a> -->
+              <button class="button ghost user-logout" type="button" id="user-logout">D&#233;connexion</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -35,25 +59,147 @@
     <div class="card home-layout">
       <div class="home-hero">
         <div class="home-badge">IDENT &#8226; SIED V1.0</div>
-        <h1 class="home-title">Bienvenue</h1>
+        <h1 class="home-title" id="home-welcome">Bienvenue</h1>
         <p class="home-subtitle">Choisissez un module pour continuer.</p>
       </div>
 
       <div class="home-grid">
         <a class="home-card" href="assures.html">
-          <div class="home-card-title">Assur&#233;s</div>
-          <p class="home-card-text">Recherche, situations, adresses et export.</p>
+          <div class="home-card-head">
+            <span class="home-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+              </svg>
+            </span>
+            <div>
+              <div class="home-card-title">Assur&#233;s</div>
+              <p class="home-card-text">Recherche, situations, adresses et export.</p>
+            </div>
+          </div>
+          <span class="home-card-cta">Acc&#233;der</span>
         </a>
         <a class="home-card" href="collectivites.html">
-          <div class="home-card-title">Collectivit&#233;s</div>
-          <p class="home-card-text">Identification, responsables, assur&#233;s li&#233;s.</p>
+          <div class="home-card-head">
+            <span class="home-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                <path d="M8 7h2M8 11h2M8 15h2M14 7h2M14 11h2M14 15h2"></path>
+              </svg>
+            </span>
+            <div>
+              <div class="home-card-title">Collectivit&#233;s</div>
+              <p class="home-card-text">Identification, responsables, assur&#233;s li&#233;s.</p>
+            </div>
+          </div>
+          <span class="home-card-cta">Acc&#233;der</span>
         </a>
         <a class="home-card" href="referentiel.html">
-          <div class="home-card-title">R&#233;f&#233;rentiel</div>
-          <p class="home-card-text">Acc&#232;s aux tables de r&#233;f&#233;rence.</p>
+          <div class="home-card-head">
+            <span class="home-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 5.5c2-1 4-1 6 0v13c-2-1-4-1-6 0z"></path>
+                <path d="M20 5.5c-2-1-4-1-6 0v13c2-1 4-1 6 0z"></path>
+              </svg>
+            </span>
+            <div>
+              <div class="home-card-title">R&#233;f&#233;rentiel</div>
+              <p class="home-card-text">Acc&#232;s aux tables de r&#233;f&#233;rence.</p>
+            </div>
+          </div>
+          <span class="home-card-cta">Acc&#233;der</span>
         </a>
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
+  <script>
+    (function () {
+      const themeToggle = document.getElementById("theme-toggle");
+      const welcomeTitle = document.getElementById("home-welcome");
+      const toast = document.getElementById("toast");
+      const userTrigger = document.getElementById("user-menu-trigger");
+      const userPanel = document.getElementById("user-menu-panel");
+      const userName = document.getElementById("user-name");
+      const userService = document.getElementById("user-service");
+      const userEmail = document.getElementById("user-email");
+      const userLogout = document.getElementById("user-logout");
+      const userLabel = document.getElementById("user-trigger-label");
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") document.body.dataset.theme = "dark";
+      if (themeToggle) {
+        const sync = () => {
+          const isDark = document.body.dataset.theme === "dark";
+          const icon = themeToggle.querySelector(".icon");
+          if (icon) icon.textContent = isDark ? "\u2600" : "\uD83C\uDF19";
+        };
+        sync();
+        themeToggle.addEventListener("click", () => {
+          const isDark = document.body.dataset.theme === "dark";
+          document.body.dataset.theme = isDark ? "" : "dark";
+          localStorage.setItem("theme", isDark ? "light" : "dark");
+          sync();
+          if (toast) {
+            toast.textContent = isDark ? "Mode clair activé." : "Mode sombre activé.";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2000);
+          }
+        });
+      }
+
+      if (userTrigger && userPanel) {
+        const closeMenu = () => userPanel.classList.add("hidden");
+        userTrigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          userPanel.classList.toggle("hidden");
+        });
+        userPanel.addEventListener("click", (event) => event.stopPropagation());
+        document.addEventListener("click", () => closeMenu());
+      }
+
+      if (userLogout) {
+        userLogout.addEventListener("click", async () => {
+          try {
+            if (window.pywebview?.api?.logout) {
+              await window.pywebview.api.logout();
+            }
+          } catch (_) {}
+          localStorage.removeItem("logged_user");
+          window.location.href = "login.html";
+        });
+      }
+
+      const applyUser = (data) => {
+        if (!data) return;
+        const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
+        const email = data.email || "Utilisateur";
+        const service = data.service || "";
+        if (userName) userName.textContent = fullName || "Utilisateur";
+        if (userService) userService.textContent = service ? `Service : ${service}` : "";
+        if (userEmail) userEmail.textContent = email;
+        if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email;
+        if (welcomeTitle) {
+          const prenoms = (data.prenoms || "").trim();
+          welcomeTitle.textContent = prenoms ? `Bienvenue ${prenoms}` : "Bienvenue";
+        }
+      };
+
+      const cached = localStorage.getItem("logged_user");
+      if (cached) {
+        try { applyUser(JSON.parse(cached)); } catch (_) {}
+      }
+
+      const loadUserFromApi = () => {
+        if (!window.pywebview?.api?.get_logged_user) return;
+        window.pywebview.api.get_logged_user().then((resp) => {
+          if (resp?.data) applyUser(resp.data);
+        });
+      };
+
+      loadUserFromApi();
+      window.addEventListener("pywebviewready", loadUserFromApi);
+    })();
+  </script>
 </body>
 </html>

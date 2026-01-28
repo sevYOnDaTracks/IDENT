@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Référentiel - IDENT</title>
+  <title>Mes informations - IDENT</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="toolbar-left">
-        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo Securite Sociale">
         <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
       </div>
       <div class="toolbar-right">
@@ -47,8 +47,8 @@
               <div class="user-meta" id="user-email">-</div>
             </div>
             <div class="user-actions">
-             <!-- <a class="user-link" href="user_info.html">Mes infos</a> -->
-              <button class="button ghost user-logout" type="button" id="user-logout">D&#233;connexion</button>
+              <a class="user-link" href="user_info.html">Mes infos</a>
+              <button class="button ghost user-logout" type="button" id="user-logout">Deconnexion</button>
             </div>
           </div>
         </div>
@@ -57,19 +57,26 @@
   </div>
 
   <div class="grid">
-    <div class="card">
-      <div class="actions" style="justify-content: space-between; margin-bottom: 8px;">
-        <a class="button ghost" href="home.html">Accueil</a>
+    <div class="details">
+      <h1 class="title">Mes informations</h1>
+      <p class="subtitle">Informations de l'utilisateur connecte.</p>
+
+      <div id="user-info-empty" class="result hidden">Utilisateur non connecte.</div>
+
+      <div class="info-grid" id="user-info-grid">
+        <div class="info-row"><div class="info-label">Nom</div><div class="info-value" id="info-nom">-</div></div>
+        <div class="info-row"><div class="info-label">Prenom</div><div class="info-value" id="info-prenom">-</div></div>
+        <div class="info-row"><div class="info-label">Email</div><div class="info-value" id="info-email">-</div></div>
+        <div class="info-row"><div class="info-label">Service</div><div class="info-value" id="info-service">-</div></div>
       </div>
-      <h1 class="title">Référentiel</h1>
-      <p class="subtitle">Section à venir.</p>
     </div>
   </div>
+
   <script>
     const themeToggle = document.getElementById("theme-toggle");
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark") document.body.dataset.theme = "dark";
     if (themeToggle) {
-      const stored = localStorage.getItem("theme");
-      if (stored === "dark") document.body.dataset.theme = "dark";
       const sync = () => {
         const isDark = document.body.dataset.theme === "dark";
         const icon = themeToggle.querySelector(".icon");
@@ -114,15 +121,27 @@
       });
     }
 
+    const infoNom = document.getElementById("info-nom");
+    const infoPrenom = document.getElementById("info-prenom");
+    const infoEmail = document.getElementById("info-email");
+    const infoService = document.getElementById("info-service");
+    const infoGrid = document.getElementById("user-info-grid");
+    const infoEmpty = document.getElementById("user-info-empty");
+
     const applyUser = (data) => {
-      if (!data) return;
+      if (!data) return false;
       const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
-      const email = data.email || "Utilisateur";
+      const email = data.email || "";
       const service = data.service || "";
+      if (infoNom) infoNom.textContent = data.nom || "-";
+      if (infoPrenom) infoPrenom.textContent = data.prenoms || "-";
+      if (infoEmail) infoEmail.textContent = email || "-";
+      if (infoService) infoService.textContent = service || "-";
       if (userName) userName.textContent = fullName || "Utilisateur";
       if (userService) userService.textContent = service ? `Service : ${service}` : "";
       if (userEmail) userEmail.textContent = email;
-      if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email;
+      if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email || "Utilisateur";
+      return true;
     };
 
     const cached = localStorage.getItem("logged_user");
@@ -133,7 +152,11 @@
     const loadUserFromApi = () => {
       if (!window.pywebview?.api?.get_logged_user) return;
       window.pywebview.api.get_logged_user().then((resp) => {
-        if (resp?.data) applyUser(resp.data);
+        const ok = applyUser(resp?.data);
+        if (!ok) {
+          if (infoEmpty) infoEmpty.classList.remove("hidden");
+          if (infoGrid) infoGrid.classList.add("hidden");
+        }
       });
     };
 

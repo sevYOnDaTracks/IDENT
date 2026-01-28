@@ -1,0 +1,107 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDENT - Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/style.css">
+</head>
+<body class="login-body">
+  <div class="login-wrap">
+    <div class="login-logos">
+      <img class="login-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+      <img class="login-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+    </div>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="badge">IDENT - SIED V1.0</div>
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">🌙</span>
+        </button>
+      </div>
+      <h1 class="title">Connexion</h1>
+      <p class="subtitle">Connectez-vous avec votre email et votre mot de passe.</p>
+
+      <form id="login-form" class="form login-form">
+        <div class="field">
+          <label class="form-label" for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" placeholder="ex : prenom.nom@domaine.fr" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label class="form-label" for="login-password">Mot de passe</label>
+          <input id="login-password" name="password" type="password" placeholder="********" autocomplete="off" required>
+        </div>
+        <div class="actions login-actions">
+          <button class="button primary" type="submit">Accéder</button>
+        </div>
+      </form>
+
+      <div id="login-result" class="result hidden" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const emailInput = document.getElementById("login-email");
+    const passwordInput = document.getElementById("login-password");
+    const resultBox = document.getElementById("login-result");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    if (themeToggle) {
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") document.body.dataset.theme = "dark";
+      const sync = () => {
+        const isDark = document.body.dataset.theme === "dark";
+        const icon = themeToggle.querySelector(".icon");
+        if (icon) icon.textContent = isDark ? "☀" : "🌙";
+      };
+      sync();
+      themeToggle.addEventListener("click", () => {
+        const isDark = document.body.dataset.theme === "dark";
+        document.body.dataset.theme = isDark ? "" : "dark";
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+        sync();
+      });
+    }
+
+    function setResult(message, success = false) {
+      const text = message || "";
+      resultBox.textContent = text;
+      resultBox.classList.toggle("success", !!success);
+      resultBox.classList.toggle("hidden", text.length === 0);
+    }
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (emailInput?.value || "").trim();
+      const password = (passwordInput?.value || "").trim();
+      if (!email || !password) {
+        setResult("Email et mot de passe requis.", false);
+        return;
+      }
+      if (!window.pywebview?.api?.login) {
+        setResult("API pywebview indisponible.", false);
+        return;
+      }
+      setResult("Connexion en cours...");
+      try {
+        const resp = await window.pywebview.api.login(email, password);
+        if (resp?.ok === "true") {
+          setResult("Connexion réussie.", true);
+          if (resp?.data) {
+            localStorage.setItem("logged_user", JSON.stringify(resp.data));
+          }
+          window.location.href = "home.html";
+        } else {
+          setResult(resp?.message || "Connexion impossible.", false);
+        }
+      } catch (err) {
+        setResult("Erreur lors de la connexion.", false);
+      }
+    });
+  </script>
+</body>
+</html>
