@@ -621,7 +621,14 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": "Societes recuperees.", "data": result["data"]}
 
-    def export_assure(self, username: str, password: str, nir: str):
+    def export_assure(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+        export_mode: str = "choose",
+        target_folder: str | None = None,
+    ):
         nir_value = (nir or "").strip()
         if not nir_value:
             return {"ok": "false", "message": "NIR manquant pour l'export."}
@@ -646,14 +653,62 @@ class Api:
 
         if not self.window:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
-        dialog_result = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=safe_name)
-        if not dialog_result:
-            return {"ok": "false", "message": "Export annule."}
 
-        path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
-        path = str(path)
-        if not path.lower().endswith(".xlsx"):
-            path = f"{path}.xlsx"
+        def resolve_export_dir(service: str, target_folder: str | None):
+            base_dir = Path(r"\\sbureautique\\SIED\\dpartage\\IDENT")
+            mapping = {
+                "JURIDIQUE": "IDENT_JUR",
+                "AFFILIATION": "IDENT_AFF",
+                "PCI": "IDENT_PCI",
+                "RETRAITE": "IDENT_RET",
+                "SIED": "IDENT_SIED",
+                "AFF": "IDENT_AFF",
+                "JUR": "IDENT_JUR",
+                "RET": "IDENT_RET",
+            }
+            folder = None
+            if target_folder:
+                key = target_folder.strip().upper()
+                folder = mapping.get(key, key)
+            else:
+                folder = mapping.get((service or "").strip().upper())
+            if not folder:
+                return None
+            return base_dir / folder
+
+        def ensure_unique_path(path: Path) -> Path:
+            if not path.exists():
+                return path
+            stem = path.stem
+            suffix = path.suffix
+            idx = 1
+            while True:
+                candidate = path.with_name(f"{stem} ({idx}){suffix}")
+                if not candidate.exists():
+                    return candidate
+                idx += 1
+
+        export_mode = (export_mode or "choose").strip().lower()
+        target_folder = target_folder or None
+
+        if export_mode == "auto":
+            service = (self._logged_user or {}).get("service") if self._logged_user else ""
+            dest_dir = resolve_export_dir(service, target_folder)
+            if not dest_dir:
+                return {"ok": "false", "message": "Service inconnu pour l'export automatique."}
+            try:
+                dest_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as exc:  # noqa: BLE001
+                return {"ok": "false", "message": f"Echec creation dossier export : {exc}"}
+            path = ensure_unique_path(dest_dir / safe_name)
+        else:
+            dialog_result = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=safe_name)
+            if not dialog_result:
+                return {"ok": "false", "message": "Export annule."}
+            path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
+            path = str(path)
+            if not path.lower().endswith(".xlsx"):
+                path = f"{path}.xlsx"
         def safe_data(result, empty):
             if result.get("error"):
                 return empty
@@ -687,10 +742,17 @@ class Api:
         except Exception as exc:  # noqa: BLE001
             return {"ok": "false", "message": f"Echec de sauvegarde : {exc}"}
 
-    def export_collectivite(self, username: str, password: str, collect_id: str):
+    def export_collectivite(
+        self,
+        username: str,
+        password: str,
+        collect_id: str,
+        export_mode: str = "choose",
+        target_folder: str | None = None,
+    ):
         collect_value = (collect_id or "").strip()
         if not collect_value:
-            return {"ok": "false", "message": "Identifiant collectivité manquant pour l'export."}
+            return {"ok": "false", "message": "Identifiant collectivite manquant pour l'export."}
 
         user, pwd = self._resolve_credentials(username, password)
         if not user or not pwd:
@@ -717,18 +779,68 @@ class Api:
 
         denom1 = identification.get("denom1") or "Collectivite"
         base_name = f"{collect_value} - {denom1}".strip()
-        safe_name = "".join(c if c not in '\\/:*?"<>|' else "_" for c in base_name) + ".xlsx"
+        safe_name = "".join(c if c not in '\/:*?"<>|' else "_" for c in base_name) + ".xlsx"
 
         if not self.window:
-            return {"ok": "false", "message": "Fenêtre pywebview indisponible pour ouvrir la boîte de dialogue."}
-        dialog_result = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=safe_name)
-        if not dialog_result:
-            return {"ok": "false", "message": "Export annulé."}
+            return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
 
-        path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
-        path = str(path)
-        if not path.lower().endswith(".xlsx"):
-            path = f"{path}.xlsx"
+        def resolve_export_dir(service: str, target: str | None):
+            base_dir = Path(r"\sbureautique\SIED\dpartage\IDENT")
+            mapping = {
+                "JURIDIQUE": "IDENT_JUR",
+                "AFFILIATION": "IDENT_AFF",
+                "PCI": "IDENT_PCI",
+                "RETRAITE": "IDENT_RET",
+                "SIED": "IDENT_SIED",
+                "AFF": "IDENT_AFF",
+                "JUR": "IDENT_JUR",
+                "RET": "IDENT_RET",
+            }
+            folder = None
+            if target:
+                key = target.strip().upper()
+                folder = mapping.get(key, key)
+            else:
+                folder = mapping.get((service or "").strip().upper())
+            if not folder:
+                return None
+            return base_dir / folder
+
+        def ensure_unique_path(path: Path) -> Path:
+            if not path.exists():
+                return path
+            stem = path.stem
+            suffix = path.suffix
+            idx = 1
+            while True:
+                candidate = path.with_name(f"{stem} ({idx}){suffix}")
+                if not candidate.exists():
+                    return candidate
+                idx += 1
+
+        export_mode = (export_mode or "choose").strip().lower()
+        target_folder = target_folder or None
+
+        if export_mode == "auto":
+            service = (self._logged_user or {}).get("service") if self._logged_user else ""
+            dest_dir = resolve_export_dir(service, target_folder)
+            if not dest_dir:
+                return {"ok": "false", "message": "Service inconnu pour l'export automatique."}
+            try:
+                dest_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as exc:  # noqa: BLE001
+                return {"ok": "false", "message": f"Echec creation dossier export : {exc}"}
+            path = ensure_unique_path(dest_dir / safe_name)
+        else:
+            dialog_result = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=safe_name)
+            if not dialog_result:
+                return {"ok": "false", "message": "Export annule."}
+
+            path = dialog_result[0] if isinstance(dialog_result, (list, tuple)) else dialog_result
+            path = str(path)
+            if not path.lower().endswith(".xlsx"):
+                path = f"{path}.xlsx"
+
         wb = build_collectivite_workbook(
             collect_value,
             identification,
@@ -748,7 +860,6 @@ class Api:
             return {"ok": "true", "message": f"Export reussi : {path}"}
         except Exception as exc:  # noqa: BLE001
             return {"ok": "false", "message": f"Echec de sauvegarde : {exc}"}
-
 
 
 

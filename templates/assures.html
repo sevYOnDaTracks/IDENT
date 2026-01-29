@@ -454,6 +454,70 @@
     loadUserFromApi();
     window.addEventListener("pywebviewready", loadUserFromApi);
 
+    const exportFolderMap = {
+      AFF: "IDENT_AFF",
+      AFFILIATION: "IDENT_AFF",
+      JUR: "IDENT_JUR",
+      JURIDIQUE: "IDENT_JUR",
+      PCI: "IDENT_PCI",
+      RET: "IDENT_RET",
+      RETRAITE: "IDENT_RET",
+      SIED: "IDENT_SIED",
+      IDENT_AFF: "IDENT_AFF",
+      IDENT_JUR: "IDENT_JUR",
+      IDENT_PCI: "IDENT_PCI",
+      IDENT_RET: "IDENT_RET",
+      IDENT_SIED: "IDENT_SIED",
+    };
+
+    const getUserService = () => {
+      const cachedUser = localStorage.getItem("logged_user");
+      if (!cachedUser) return "";
+      try {
+        const data = JSON.parse(cachedUser);
+        return (data?.service || "").trim();
+      } catch (_) {
+        return "";
+      }
+    };
+
+    const normalizeExportFolder = (value) => {
+      if (!value) return null;
+      const key = value.trim().toUpperCase();
+      if (exportFolderMap[key]) return exportFolderMap[key];
+      if (key.startsWith("IDENT_")) return key;
+      return null;
+    };
+
+    const chooseExportOptions = () => {
+      const service = getUserService().toUpperCase();
+      const mappedService = normalizeExportFolder(service);
+      if (!service || !mappedService) {
+        return { mode: "choose" };
+      }
+      if (service === "SIED") {
+        const choice = window.prompt(
+          "Choisir dossier : AFF, PCI, JUR, RET, SIED ou PERSO",
+          "SIED"
+        );
+        if (!choice) return null;
+        const key = choice.trim().toUpperCase();
+        if (key === "PERSO" || key === "PERSONNEL") {
+          return { mode: "choose" };
+        }
+        const folder = normalizeExportFolder(key);
+        if (!folder) {
+          window.alert("Choix invalide.");
+          return null;
+        }
+        return { mode: "auto", folder };
+      }
+      const ok = window.confirm(
+        "Exporter dans le dossier de votre service ?\nOK = dossier service\nAnnuler = choisir un emplacement"
+      );
+      return ok ? { mode: "auto" } : { mode: "choose" };
+    };
+
     const assureForm = document.getElementById("assure-form");
     const assureSearch = document.getElementById("assure-search");
     const assureTriSelect = document.getElementById("assure-tri-select");
@@ -952,12 +1016,20 @@
         showError("API pywebview non disponible pour l'export.");
         return;
       }
+      const exportOptions = chooseExportOptions();
+      if (!exportOptions) return;
       const user = await ensureCredentials();
       const pwd = cachedPassword;
       if (!user || !pwd) return;
       setResultMessage("Export en cours...");
       try {
-        const response = await window.pywebview.api.export_assure(user, pwd, selectedAssure?.nir || lastNirValue);
+        const response = await window.pywebview.api.export_assure(
+          user,
+          pwd,
+          selectedAssure?.nir || lastNirValue,
+          exportOptions.mode,
+          exportOptions.folder || ""
+        );
         if (response?.ok === "true") {
           setResultMessage(response.message || "Export réussi.", true);
         } else {
