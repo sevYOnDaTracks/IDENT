@@ -129,6 +129,7 @@
             <div class="details-title" id="coll-title">-</div>
             <div class="details-sub" id="coll-sub">-</div>
             <div class="details-sub" id="coll-culte">Culte : -</div>
+            <div id="collect-export-status" class="result hidden" aria-live="polite"></div>
           </div>
           <div class="actions">
             <button class="button outline" type="button" id="btn-export-collect-header">Exporter en Excel</button>
@@ -496,6 +497,15 @@
       try { window.alert(msg); } catch (_) {}
     };
 
+    const collectExportStatus = document.getElementById("collect-export-status");
+    const setCollectExportStatus = (message, success = false) => {
+      if (!collectExportStatus) return;
+      const text = message || "";
+      collectExportStatus.textContent = text;
+      collectExportStatus.classList.toggle("success", !!success);
+      collectExportStatus.classList.toggle("hidden", text.length === 0);
+    };
+
     const exportFolderMap = {
       AFF: "IDENT_AFF",
       AFFILIATION: "IDENT_AFF",
@@ -557,7 +567,7 @@
       const ok = window.confirm(
         "Exporter dans le dossier de votre service ?\nOK = dossier service\nAnnuler = choisir un emplacement"
       );
-      return ok ? { mode: "auto" } : { mode: "choose" };
+      return ok ? { mode: "auto", folder: mappedService } : { mode: "choose" };
     };
 
     function showToast(message) {
@@ -840,6 +850,7 @@
         el?.classList.toggle("hidden", !show);
       });
       collectTitle?.classList.toggle("hidden", !show);
+      if (show) setCollectExportStatus("");
       if (show) setCollectLoading(false);
       if (backResultsButton) backResultsButton.hidden = show;
     }
@@ -980,6 +991,7 @@
       const pwd = cachedPassword;
       if (!user || !pwd) return;
       setExportResult("Préparation de l'export...");
+      setCollectExportStatus("Export en cours...");
       try {
         const resp = await window.pywebview.api.export_collectivite(
           user,
@@ -990,18 +1002,23 @@
         );
         if (resp?.ok === "true") {
           setExportResult(resp.message || "Export réussi.", true);
-          showToast("Collectivité modifiée avec succès âœ…");
+          setCollectExportStatus(resp.message || "Export réussi.", true);
+          showToast(resp.message || "Export réussi.");
+          try { window.alert(resp.message || "Export réussi."); } catch (_) {}
         } else {
           setExportResult(resp?.message || "Export échoué.", false);
+          setCollectExportStatus(resp?.message || "Export échoué.", false);
         }
       } catch (err) {
-        setExportResult(`Erreur export : ${err}`, false);
+        const message = `Erreur export : ${err}`;
+        setExportResult(message, false);
+        setCollectExportStatus(message, false);
       }
     }
 
     async function openCollectivite(selected) {
       if (!selected || !selected.numero) {
-        window.alert("Num?ro de collectivit? manquant.");
+        window.alert("Numéro de collectivité manquant.");
         return;
       }
       selectedData = selected;

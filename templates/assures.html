@@ -515,7 +515,7 @@
       const ok = window.confirm(
         "Exporter dans le dossier de votre service ?\nOK = dossier service\nAnnuler = choisir un emplacement"
       );
-      return ok ? { mode: "auto" } : { mode: "choose" };
+      return ok ? { mode: "auto", folder: mappedService } : { mode: "choose" };
     };
 
     const assureForm = document.getElementById("assure-form");

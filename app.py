@@ -637,7 +637,7 @@ class Api:
         if not user or not pwd:
             return {"ok": "false", "message": "Identifiants manquants pour l'export."}
 
-        result = self.client.query_assures(user, pwd, nir_value)
+        result = self.client.query_assures(user, pwd, nir_value, "", "")
         if result["error"]:
             return {"ok": "false", "message": f"Echec de recuperation : {result['error']}"}
 
@@ -655,7 +655,7 @@ class Api:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
 
         def resolve_export_dir(service: str, target_folder: str | None):
-            base_dir = Path(r"\\sbureautique\\SIED\\dpartage\\IDENT")
+            base_dir = Path(r"\\sbureautique\SIED\dpartage\IDENT")
             mapping = {
                 "JURIDIQUE": "IDENT_JUR",
                 "AFFILIATION": "IDENT_AFF",
@@ -785,7 +785,7 @@ class Api:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
 
         def resolve_export_dir(service: str, target: str | None):
-            base_dir = Path(r"\sbureautique\SIED\dpartage\IDENT")
+            base_dir = Path(r"\\sbureautique\SIED\dpartage\IDENT")
             mapping = {
                 "JURIDIQUE": "IDENT_JUR",
                 "AFFILIATION": "IDENT_AFF",
