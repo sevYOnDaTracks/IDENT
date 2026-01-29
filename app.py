@@ -654,7 +654,31 @@ class Api:
         path = str(path)
         if not path.lower().endswith(".xlsx"):
             path = f"{path}.xlsx"
-        wb = build_assure_workbook(data)
+        def safe_data(result, empty):
+            if result.get("error"):
+                return empty
+            return result.get("data") or empty
+
+        situation_maladie = safe_data(self.client.query_assure_situation_maladie_current(user, pwd, nir_value), [])
+        situation_vieillesse = safe_data(self.client.query_assure_situation_vieillesse_current(user, pwd, nir_value), [])
+        historique_maladie = safe_data(self.client.query_assure_historique_situation_maladie(user, pwd, nir_value), [])
+        collectivites_maladie = safe_data(self.client.query_assure_collectivites_maladie(user, pwd, nir_value), [])
+        historique_vieillesse = safe_data(self.client.query_assure_historique_situation_vieillesse(user, pwd, nir_value), [])
+        collectivites_vieillesse = safe_data(self.client.query_assure_collectivites_vieillesse(user, pwd, nir_value), [])
+        adresse = safe_data(self.client.query_assure_adresse(user, pwd, nir_value), {})
+        ayants_droit = safe_data(self.client.query_assure_ayants_droit(user, pwd, nir_value), [])
+
+        wb = build_assure_workbook(
+            first,
+            situation_maladie[0] if situation_maladie else None,
+            situation_vieillesse[0] if situation_vieillesse else None,
+            historique_maladie,
+            collectivites_maladie,
+            historique_vieillesse,
+            collectivites_vieillesse,
+            adresse,
+            ayants_droit,
+        )
         try:
             wb.save(path)
             if not Path(path).exists():

@@ -1650,56 +1650,273 @@ class OracleClient:
         return {"data": data, "error": None}
 
 
-def build_assure_workbook(data: List[Dict[str, object]]):
-    """Construit un classeur Excel pour les assurés."""
+def build_assure_workbook(
+    info: Dict[str, object],
+    situation_maladie: Optional[Dict[str, object]],
+    situation_vieillesse: Optional[Dict[str, object]],
+    historique_maladie: List[Dict[str, object]],
+    collectivites_maladie: List[Dict[str, object]],
+    historique_vieillesse: List[Dict[str, object]],
+    collectivites_vieillesse: List[Dict[str, object]],
+    adresse: Optional[Dict[str, object]],
+    ayants_droit: List[Dict[str, object]],
+):
+    """Construit un classeur Excel pour un assure (par onglet)."""
     from openpyxl import Workbook
+
+    def _safe(value: object) -> str:
+        if value is None or value == "":
+            return "-"
+        return str(value)
+
+    def _append_section(ws, title: str, rows: List[Tuple[str, object]]) -> None:
+        ws.append([title])
+        ws.append(["Champ", "Valeur"])
+        for label, val in rows:
+            ws.append([label, _safe(val)])
+        ws.append([])
+
+    def _append_table(ws, title: str, headers: List[str], rows: List[List[object]]) -> None:
+        ws.append([title])
+        ws.append(headers)
+        if not rows:
+            ws.append(["-"] * len(headers))
+        else:
+            for row in rows:
+                ws.append([_safe(v) for v in row])
+        ws.append([])
 
     wb = Workbook()
     ws_info = wb.active
     ws_info.title = "Infos personnels"
-    headers = [
-        "NIR",
-        "Nom usage",
-        "Prénom usage",
-        "Date naissance",
-        "Sexe",
-        "Email",
-        "Pays nationalité",
-        "Date décès",
-        "Type contrat individu",
-        "Numéro adhérent",
-        "Raison sociale",
-        "Date effet contrat",
-        "Date conditions contrat",
-    ]
-    ws_info.append(headers)
-    for item in data:
-        ws_info.append(
-            [
-                item.get("nir"),
-                item.get("nom_usage"),
-                item.get("prenom_usage"),
-                item.get("date_naissance"),
-                item.get("sexe"),
-                item.get("email"),
-                item.get("pays_nationalite"),
-                item.get("date_deces"),
-                item.get("type_contrat_individu"),
-                item.get("numero_adherent"),
-                item.get("raison_sociale"),
-                item.get("date_effet_contrat"),
-                item.get("date_conditions_contrat"),
-            ]
-        )
+    _append_section(
+        ws_info,
+        "Identification",
+        [
+            ("NIR", info.get("nir")),
+            ("Nom usage", info.get("nom_usage")),
+            ("Prenoms", info.get("prenom_usage")),
+            ("Date naissance", info.get("date_naissance")),
+            ("Civilite", info.get("civilite")),
+            ("Nom usuel", info.get("nom_usuel")),
+            ("Date certification RNIAM", info.get("date_certif_rniam")),
+            ("Collectivite maladie", info.get("collectivite_maladie")),
+            ("Collectivite vieillesse", info.get("collectivite_vieillesse")),
+            ("Code postal naissance", info.get("code_postal")),
+            ("Commune naissance", info.get("commune")),
+            ("Pays naissance", info.get("pays_naissance")),
+            ("Type nationalite", info.get("type_nationalite")),
+            ("Pays nationalite 1", info.get("pays1")),
+            ("Pays nationalite 2", info.get("pays2")),
+            ("Date naturalisation", info.get("date_naturalisation")),
+            ("Entree en vie religieuse", info.get("date_entree_vie_religieuse")),
+            ("Cessation vie religieuse", info.get("date_cessation_vie_religieuse")),
+            ("Date fin visa", info.get("date_fin_visa")),
+            ("Date MAJ", info.get("date_maj")),
+        ],
+    )
 
-    for title in ["CSG", "RDS", "Assurance maladie", "Retraite"]:
-        ws = wb.create_sheet(title)
-        ws.append([title])
-        ws.append(["Données à venir"])
+    ws_situ = wb.create_sheet("Situations")
+    _append_table(
+        ws_situ,
+        "Situation maladie (en cours)",
+        [
+            "Code situation",
+            "Nature 1",
+            "Nature 2",
+            "Date nature 2",
+            "Date condition",
+            "Date declaration",
+            "Date effet",
+            "Date MAJ situation",
+            "Date MAJ",
+        ],
+        [
+            [
+                (situation_maladie or {}).get("code_situation"),
+                (situation_maladie or {}).get("code_nature1"),
+                (situation_maladie or {}).get("code_nature2"),
+                (situation_maladie or {}).get("date_nature2"),
+                (situation_maladie or {}).get("date_conditions"),
+                (situation_maladie or {}).get("date_declaration"),
+                (situation_maladie or {}).get("date_effet"),
+                (situation_maladie or {}).get("date_maj_situation"),
+                (situation_maladie or {}).get("date_maj"),
+            ]
+            if situation_maladie
+            else []
+        ],
+    )
+    _append_table(
+        ws_situ,
+        "Situation vieillesse (en cours)",
+        [
+            "Code situation",
+            "Nature 1",
+            "Nature 2",
+            "Date nature 2",
+            "Date condition",
+            "Date declaration",
+            "Date effet",
+            "Date MAJ situation",
+            "Date MAJ",
+        ],
+        [
+            [
+                (situation_vieillesse or {}).get("code_situation"),
+                (situation_vieillesse or {}).get("code_nature1"),
+                (situation_vieillesse or {}).get("code_nature2"),
+                (situation_vieillesse or {}).get("date_nature2"),
+                (situation_vieillesse or {}).get("date_conditions"),
+                (situation_vieillesse or {}).get("date_declaration"),
+                (situation_vieillesse or {}).get("date_effet"),
+                (situation_vieillesse or {}).get("date_maj_situation"),
+                (situation_vieillesse or {}).get("date_maj"),
+            ]
+            if situation_vieillesse
+            else []
+        ],
+    )
+
+    ws_mal = wb.create_sheet("Maladie")
+    _append_table(
+        ws_mal,
+        "Historique des situations maladie",
+        [
+            "Code situation",
+            "Code nature 1",
+            "Code nature 2",
+            "Date nature 2",
+            "Date condition",
+            "Date declaration",
+            "Date effet",
+            "Date MAJ situation",
+            "Date MAJ",
+        ],
+        [
+            [
+                r.get("code_situation"),
+                r.get("code_nature1"),
+                r.get("code_nature2"),
+                r.get("date_nature2"),
+                r.get("date_conditions"),
+                r.get("date_declaration"),
+                r.get("date_effet"),
+                r.get("date_maj_situation"),
+                r.get("date_maj"),
+            ]
+            for r in (historique_maladie or [])
+        ],
+    )
+    _append_table(
+        ws_mal,
+        "Historique des collectivites maladie",
+        ["No collectivite", "Date effet", "Date MAJ", "Etat actuel"],
+        [
+            [
+                r.get("collectivite"),
+                r.get("date_effet"),
+                r.get("date_maj"),
+                r.get("etat_actuel"),
+            ]
+            for r in (collectivites_maladie or [])
+        ],
+    )
+
+    ws_vie = wb.create_sheet("Vieillesse")
+    _append_table(
+        ws_vie,
+        "Historique des situations vieillesse",
+        [
+            "Code situation",
+            "Code nature 1",
+            "Code nature 2",
+            "Date nature 2",
+            "Date condition",
+            "Date declaration",
+            "Date effet",
+            "Date MAJ situation",
+            "Date MAJ",
+        ],
+        [
+            [
+                r.get("code_situation"),
+                r.get("code_nature1"),
+                r.get("code_nature2"),
+                r.get("date_nature2"),
+                r.get("date_conditions"),
+                r.get("date_declaration"),
+                r.get("date_effet"),
+                r.get("date_maj_situation"),
+                r.get("date_maj"),
+            ]
+            for r in (historique_vieillesse or [])
+        ],
+    )
+    _append_table(
+        ws_vie,
+        "Historique des collectivites vieillesse",
+        ["No collectivite", "Date effet", "Date MAJ", "Etat actuel"],
+        [
+            [
+                r.get("collectivite"),
+                r.get("date_effet"),
+                r.get("date_maj"),
+                r.get("etat_actuel"),
+            ]
+            for r in (collectivites_vieillesse or [])
+        ],
+    )
+
+    ws_addr = wb.create_sheet("Adresse")
+    adresse = adresse or {}
+    _append_section(
+        ws_addr,
+        "Adresse",
+        [
+            ("Ligne 1", adresse.get("ligne1")),
+            ("Ligne 2", adresse.get("ligne2")),
+            ("Ligne 3", adresse.get("ligne3")),
+            ("Ligne 4", adresse.get("ligne4")),
+            ("Code postal", adresse.get("code_postal")),
+            ("Ville", adresse.get("ville")),
+            ("Pays", adresse.get("pays")),
+        ],
+    )
+    _append_section(
+        ws_addr,
+        "Coordonnees",
+        [
+            ("Email", adresse.get("email")),
+            ("Telephone 1", adresse.get("tel1")),
+            ("Telephone 2", adresse.get("tel2")),
+            ("Telephone 3", adresse.get("tel3")),
+            ("Telecopie 1", adresse.get("fax1")),
+            ("Telecopie 2", adresse.get("fax2")),
+            ("Telecopie 3", adresse.get("fax3")),
+            ("Nombre lettres info", adresse.get("nb_lettres")),
+            ("NPAI", adresse.get("npai")),
+            ("Date MAJ", adresse.get("date_maj")),
+        ],
+    )
+
+    ws_ay = wb.create_sheet("Ayants droit")
+    ws_ay.append(["Rang", "Nom", "Nom usuel", "Prenoms", "Date naissance"])
+    if not ayants_droit:
+        ws_ay.append(["-"] * 5)
+    else:
+        for r in ayants_droit:
+            ws_ay.append(
+                [
+                    _safe(r.get("rang")),
+                    _safe(r.get("nom")),
+                    _safe(r.get("nom_usuel")),
+                    _safe(r.get("prenoms")),
+                    _safe(r.get("date_naissance")),
+                ]
+            )
 
     return wb
-
-
 def build_collectivite_workbook(
     collect_id: str,
     identification: Optional[Dict[str, object]],
