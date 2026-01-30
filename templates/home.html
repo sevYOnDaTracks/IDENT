@@ -16,6 +16,12 @@
         <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
         <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
       </div>
+      <div class="toolbar-center">
+        <form id="global-search-form" class="toolbar-search" autocomplete="off">
+          <input id="global-search-input" type="text" placeholder="Rechercher un assuré ou une collectivité..." aria-label="Recherche globale">
+          <div id="global-search-suggest" class="toolbar-suggest hidden"></div>
+        </form>
+      </div>
       <div class="toolbar-right">
         <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -23,7 +29,7 @@
             <path d="M9 22V12h6v10"></path>
           </svg>
         </a>
-        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M15 18l-6-6 6-6"></path>
           </svg>
@@ -131,6 +137,9 @@
       const userEmail = document.getElementById("user-email");
       const userLogout = document.getElementById("user-logout");
       const userLabel = document.getElementById("user-trigger-label");
+      const globalForm = document.getElementById("global-search-form");
+      const globalInput = document.getElementById("global-search-input");
+      const globalSuggest = document.getElementById("global-search-suggest");
       const stored = localStorage.getItem("theme");
       if (stored === "dark") document.body.dataset.theme = "dark";
       if (themeToggle) {
@@ -175,6 +184,18 @@
         });
       }
 
+      const toolbarBack = document.querySelector('.toolbar-nav[aria-label="Retour"]');
+      if (toolbarBack) {
+        toolbarBack.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (toast) {
+            toast.textContent = "Retour désactivé sur l'accueil.";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2000);
+          }
+        });
+      }
+
       const applyUser = (data) => {
         if (!data) return;
         const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
@@ -204,6 +225,126 @@
 
       loadUserFromApi();
       window.addEventListener("pywebviewready", loadUserFromApi);
+
+      const goToAssure = (nni) => {
+        const raw = String(nni || "").trim();
+        if (!raw) return;
+        const normalized = raw.replace(/\D/g, "") || raw;
+        try {
+          localStorage.setItem("assure_nni_target", normalized);
+        } catch (_) {}
+        window.location.href = `assures.html?nir=${encodeURIComponent(normalized)}&from=global`;
+      };
+
+      const goToCollect = (numero) => {
+        const raw = String(numero || "").trim();
+        if (!raw) return;
+        try {
+          localStorage.setItem("collect_id_target", raw);
+        } catch (_) {}
+        window.location.href = `collectivites.html?collect=${encodeURIComponent(raw)}&from=global`;
+      };
+
+      const clearSuggest = () => {
+        if (!globalSuggest) return;
+        globalSuggest.innerHTML = "";
+        globalSuggest.classList.add("hidden");
+      };
+
+      const renderSuggest = (assures, collectivites) => {
+        if (!globalSuggest) return;
+        globalSuggest.innerHTML = "";
+        const buildSection = (title, rows, onClick, formatter) => {
+          const section = document.createElement("div");
+          section.className = "suggest-section";
+          const heading = document.createElement("div");
+          heading.className = "suggest-title";
+          heading.textContent = title;
+          section.appendChild(heading);
+          if (!rows.length) {
+            const empty = document.createElement("div");
+            empty.className = "suggest-empty";
+            empty.textContent = "Aucun résultat";
+            section.appendChild(empty);
+          } else {
+            rows.forEach((r) => {
+              const item = document.createElement("button");
+              item.type = "button";
+              item.className = "suggest-item";
+              item.innerHTML = formatter(r);
+              item.addEventListener("click", () => onClick(r));
+              section.appendChild(item);
+            });
+          }
+          return section;
+        };
+        const assuresSection = buildSection(
+          "Assurés",
+          assures,
+          (r) => goToAssure(r.nir),
+          (r) => `<strong>${r.nom_usage || "-"} ${r.prenom_usage || ""}</strong><span>${r.nir || "-"}</span>`
+        );
+        const collectSection = buildSection(
+          "Collectivités",
+          collectivites,
+          (r) => goToCollect(r.numero),
+          (r) => `<strong>${r.denom1 || "-"}</strong><span>${r.numero || "-"}</span>`
+        );
+        globalSuggest.appendChild(assuresSection);
+        globalSuggest.appendChild(collectSection);
+        globalSuggest.classList.toggle("hidden", !assures.length && !collectivites.length);
+      };
+
+      let suggestTimer;
+      const fetchSuggest = async () => {
+        const query = (globalInput?.value || "").trim();
+        if (query.length < 2) {
+          clearSuggest();
+          return;
+        }
+        if (!window.pywebview?.api?.search_global) {
+          clearSuggest();
+          return;
+        }
+        try {
+          const resp = await window.pywebview.api.search_global("", "", query, 8);
+          if (resp?.ok !== "true") {
+            clearSuggest();
+            return;
+          }
+          const assures = (resp.data?.assures || []).slice(0, 5);
+          const collectivites = (resp.data?.collectivites || []).slice(0, 5);
+          renderSuggest(assures, collectivites);
+        } catch (_) {
+          clearSuggest();
+        }
+      };
+
+      globalInput?.addEventListener("input", () => {
+        clearTimeout(suggestTimer);
+        suggestTimer = setTimeout(fetchSuggest, 250);
+      });
+
+      globalInput?.addEventListener("focus", () => {
+        if ((globalInput.value || "").trim().length >= 2) {
+          fetchSuggest();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!globalSuggest || !globalForm) return;
+        if (!globalForm.contains(event.target)) {
+          clearSuggest();
+        }
+      });
+
+      globalForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const query = (globalInput?.value || "").trim();
+        if (!query) return;
+        clearSuggest();
+        window.location.href = `search_results.html?q=${encodeURIComponent(query)}`;
+      });
     })();
   </script>
 </body>

@@ -23,12 +23,12 @@
         </button>
       </div>
       <h1 class="title">Connexion</h1>
-      <p class="subtitle">Connectez-vous avec votre email et votre mot de passe.</p>
+      <p class="subtitle">Connectez-vous avec votre identifiant et votre mot de passe.</p>
 
       <form id="login-form" class="form login-form">
         <div class="field">
-          <label class="form-label" for="login-email">Email</label>
-          <input id="login-email" name="email" type="email" placeholder="ex : prenom.nom@cavimac.fr" autocomplete="off" required>
+          <label class="form-label" for="login-identifier">Identifiant</label>
+          <input id="login-identifier" name="identifier" type="text" placeholder="ex : TITI" autocomplete="off" required>
         </div>
         <div class="field">
           <label class="form-label" for="login-password">Mot de passe</label>
@@ -45,7 +45,7 @@
 
   <script>
     const form = document.getElementById("login-form");
-    const emailInput = document.getElementById("login-email");
+    const identifierInput = document.getElementById("login-identifier");
     const passwordInput = document.getElementById("login-password");
     const resultBox = document.getElementById("login-result");
     const themeToggle = document.getElementById("theme-toggle");
@@ -76,10 +76,10 @@
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = (emailInput?.value || "").trim();
+      const identifier = (identifierInput?.value || "").trim();
       const password = (passwordInput?.value || "").trim();
-      if (!email || !password) {
-        setResult("Email et mot de passe requis.", false);
+      if (!identifier || !password) {
+        setResult("Identifiant et mot de passe requis.", false);
         return;
       }
       if (!window.pywebview?.api?.login) {
@@ -88,7 +88,7 @@
       }
       setResult("Connexion en cours...");
       try {
-        const resp = await window.pywebview.api.login(email, password);
+        const resp = await window.pywebview.api.login(identifier, password);
         if (resp?.ok === "true") {
           setResult("Connexion réussie.", true);
           if (resp?.data) {

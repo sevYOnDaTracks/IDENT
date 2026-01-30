@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recherche globale - IDENT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="toolbar-left">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+      <div class="toolbar-center"></div>
+      <div class="toolbar-right">
+        <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+          </svg>
+        </a>
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-nav" type="button" aria-label="Avancer" title="Avancer" onclick="history.forward()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">&#127769;</span>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="button outline user-trigger" type="button" id="user-menu-trigger">
+            <span id="user-trigger-label">Utilisateur</span>
+          </button>
+          <div class="user-dropdown hidden" id="user-menu-panel">
+            <div class="user-actions">
+              <div class="user-info">
+                <div class="user-name" id="user-name">-</div>
+                <div class="user-meta" id="user-service">-</div>
+                <div class="user-meta" id="user-email">-</div>
+              </div>
+              <button class="button ghost user-logout" type="button" id="user-logout">D&#233;connexion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="details">
+      <h1 class="title">Recherche globale</h1>
+      <p class="subtitle" id="global-query-label">Résultats pour : -</p>
+
+      <div id="global-loader" class="loader hidden">Recherche en cours...</div>
+      <div id="global-result" class="result hidden" aria-live="polite"></div>
+
+      <div class="info-section">Assurés</div>
+      <div class="table-wrapper">
+        <table class="data-table" id="global-assures-table">
+          <thead>
+            <tr>
+              <th>NNI</th>
+              <th>Nom</th>
+              <th>Prénoms</th>
+              <th>Date de naissance</th>
+              <th>Civilité</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="info-section" style="margin-top: 16px;">Collectivités</div>
+      <div class="table-wrapper">
+        <table class="data-table" id="global-collect-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Dénomination 1</th>
+              <th>Dénomination 2</th>
+              <th>Code postal</th>
+              <th>Ville</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const themeToggle = document.getElementById("theme-toggle");
+    const userTrigger = document.getElementById("user-menu-trigger");
+    const userPanel = document.getElementById("user-menu-panel");
+    const userName = document.getElementById("user-name");
+    const userService = document.getElementById("user-service");
+    const userEmail = document.getElementById("user-email");
+    const userLogout = document.getElementById("user-logout");
+    const userLabel = document.getElementById("user-trigger-label");
+
+    const queryLabel = document.getElementById("global-query-label");
+    const resultBox = document.getElementById("global-result");
+    const loader = document.getElementById("global-loader");
+    const assuresBody = document.querySelector("#global-assures-table tbody");
+    const collectBody = document.querySelector("#global-collect-table tbody");
+
+    if (themeToggle) {
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") document.body.dataset.theme = "dark";
+      const sync = () => {
+        const isDark = document.body.dataset.theme === "dark";
+        const icon = themeToggle.querySelector(".icon");
+        if (icon) icon.textContent = isDark ? "\u2600" : "\uD83C\uDF19";
+      };
+      sync();
+      themeToggle.addEventListener("click", () => {
+        const isDark = document.body.dataset.theme === "dark";
+        document.body.dataset.theme = isDark ? "" : "dark";
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+        sync();
+      });
+    }
+
+    if (userTrigger && userPanel) {
+      const closeMenu = () => userPanel.classList.add("hidden");
+      userTrigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        userPanel.classList.toggle("hidden");
+      });
+      userPanel.addEventListener("click", (event) => event.stopPropagation());
+      document.addEventListener("click", () => closeMenu());
+    }
+
+    if (userLogout) {
+      userLogout.addEventListener("click", async () => {
+        try {
+          if (window.pywebview?.api?.logout) {
+            await window.pywebview.api.logout();
+          }
+        } catch (_) {}
+        localStorage.removeItem("logged_user");
+        window.location.href = "login.html";
+      });
+    }
+
+    const applyUser = (data) => {
+      if (!data) return;
+      const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
+      const email = data.email || "Utilisateur";
+      const service = data.service || "";
+      if (userName) userName.textContent = fullName || "Utilisateur";
+      if (userService) userService.textContent = service ? `Service : ${service}` : "";
+      if (userEmail) userEmail.textContent = email;
+      if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email;
+    };
+
+    const cached = localStorage.getItem("logged_user");
+    if (cached) {
+      try { applyUser(JSON.parse(cached)); } catch (_) {}
+    }
+
+    const loadUserFromApi = () => {
+      if (!window.pywebview?.api?.get_logged_user) return;
+      window.pywebview.api.get_logged_user().then((resp) => {
+        if (resp?.data) applyUser(resp.data);
+      });
+    };
+    loadUserFromApi();
+    window.addEventListener("pywebviewready", loadUserFromApi);
+
+    const setLoader = (show, message = "Recherche en cours...") => {
+      if (!loader) return;
+      loader.textContent = message;
+      loader.classList.toggle("hidden", !show);
+    };
+
+    const setResult = (text, success = false) => {
+      if (!resultBox) return;
+      resultBox.textContent = text || "";
+      resultBox.classList.toggle("success", !!success);
+      resultBox.classList.toggle("hidden", !text);
+    };
+
+    const goToAssure = (nni) => {
+      const raw = String(nni || "").trim();
+      if (!raw) return;
+      const normalized = raw.replace(/\D/g, "") || raw;
+      try {
+        localStorage.setItem("assure_nni_target", normalized);
+      } catch (_) {}
+      window.location.href = `assures.html?nir=${encodeURIComponent(normalized)}&from=global`;
+    };
+
+    const goToCollect = (numero) => {
+      const raw = String(numero || "").trim();
+      if (!raw) return;
+      try {
+        localStorage.setItem("collect_id_target", raw);
+      } catch (_) {}
+      window.location.href = `collectivites.html?collect=${encodeURIComponent(raw)}&from=global`;
+    };
+
+    const renderAssures = (rows) => {
+      if (!assuresBody) return;
+      assuresBody.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6" style="text-align:center;">-</td>`;
+        assuresBody.appendChild(tr);
+        return;
+      }
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.nir || "-"}</td>
+          <td>${r.nom_usage || "-"}</td>
+          <td>${r.prenom_usage || "-"}</td>
+          <td>${r.date_naissance || "-"}</td>
+          <td>${r.civilite || "-"}</td>
+          <td><button class="button outline" type="button">Consulter</button></td>
+        `;
+        tr.querySelector("button")?.addEventListener("click", () => goToAssure(r.nir));
+        tr.addEventListener("dblclick", () => goToAssure(r.nir));
+        assuresBody.appendChild(tr);
+      });
+    };
+
+    const renderCollect = (rows) => {
+      if (!collectBody) return;
+      collectBody.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6" style="text-align:center;">-</td>`;
+        collectBody.appendChild(tr);
+        return;
+      }
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.numero || "-"}</td>
+          <td>${r.denom1 || "-"}</td>
+          <td>${r.denom2 || "-"}</td>
+          <td>${r.cp || "-"}</td>
+          <td>${r.ville || "-"}</td>
+          <td><button class="button outline" type="button">Consulter</button></td>
+        `;
+        tr.querySelector("button")?.addEventListener("click", () => goToCollect(r.numero));
+        tr.addEventListener("dblclick", () => goToCollect(r.numero));
+        collectBody.appendChild(tr);
+      });
+    };
+
+    async function loadResults() {
+      const params = new URLSearchParams(window.location.search || "");
+      const q = (params.get("q") || "").trim();
+      if (queryLabel) queryLabel.textContent = q ? `Résultats pour : ${q}` : "Résultats pour : -";
+      if (!q) {
+        setResult("Recherche vide.");
+        renderAssures([]);
+        renderCollect([]);
+        return;
+      }
+      if (!window.pywebview?.api?.search_global) {
+        setResult("API pywebview indisponible.");
+        return;
+      }
+      setLoader(true);
+      try {
+        const resp = await window.pywebview.api.search_global("", "", q);
+        if (resp?.ok === "true") {
+          renderAssures(resp?.data?.assures || []);
+          renderCollect(resp?.data?.collectivites || []);
+          setResult(resp?.message || "Recherche globale terminée.", true);
+        } else {
+          setResult(resp?.message || "Aucun résultat.");
+          renderAssures([]);
+          renderCollect([]);
+        }
+      } catch (err) {
+        setResult("Erreur lors de la recherche.");
+        renderAssures([]);
+        renderCollect([]);
+      } finally {
+        setLoader(false);
+      }
+    }
+
+    if (window.pywebview && window.pywebview.api) {
+      loadResults();
+    } else {
+      document.addEventListener("pywebviewready", loadResults);
+    }
+  </script>
+</body>
+</html>

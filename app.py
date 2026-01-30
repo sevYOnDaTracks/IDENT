@@ -64,13 +64,13 @@ class Api:
         self._cached_password = ORACLE_APP_PASSWORD
         return {"ok": "true"}
 
-    def login(self, email: str, password: str):
-        email_value = (email or "").strip()
+    def login(self, identifier: str, password: str):
+        identifier_value = (identifier or "").strip()
         pwd_value = (password or "").strip()
-        if not email_value or not pwd_value:
-            return {"ok": "false", "message": "Email et mot de passe requis."}
+        if not identifier_value or not pwd_value:
+            return {"ok": "false", "message": "Identifiant et mot de passe requis."}
 
-        result = self.client.query_user_login(ORACLE_APP_USER, ORACLE_APP_PASSWORD, email_value, pwd_value)
+        result = self.client.query_user_login(ORACLE_APP_USER, ORACLE_APP_PASSWORD, identifier_value, pwd_value)
         if result["error"]:
             return {"ok": "false", "message": f"Echec de connexion : {result['error']}"}
         if not result["data"]:
@@ -120,6 +120,64 @@ class Api:
         self._cached_user = user
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} assure(s) trouve(s).", "data": data}
+
+    def search_global(self, username: str, password: str, query: str, limit: int = 50):
+        raw_query = (query or "").strip()
+        if not raw_query:
+            return {"ok": "false", "message": "Recherche vide.", "data": {"assures": [], "collectivites": []}}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": {"assures": [], "collectivites": []}}
+
+        def parse_assure(q: str):
+            if q.isdigit():
+                return {"nir": q, "nom": "", "prenom": ""}
+            parts = q.split()
+            if len(parts) >= 2:
+                return {"nir": "", "nom": parts[0], "prenom": " ".join(parts[1:])}
+            return {"nir": "", "nom": q, "prenom": ""}
+
+        def parse_collect(q: str):
+            if q.isdigit():
+                if len(q) == 5:
+                    return {"numero": "", "denom": "", "cp": q}
+                return {"numero": q, "denom": "", "cp": ""}
+            return {"numero": "", "denom": q, "cp": ""}
+
+        assure_filters = parse_assure(raw_query)
+        collect_filters = parse_collect(raw_query)
+
+        assures_result = self.client.query_assures(
+            user,
+            pwd,
+            assure_filters["nir"],
+            assure_filters["nom"],
+            assure_filters["prenom"],
+            order_by="nom",
+        )
+        collectivites_result = self.client.query_collectivites(
+            user,
+            pwd,
+            collect_filters["numero"],
+            collect_filters["denom"],
+            collect_filters["cp"],
+        )
+
+        assures = assures_result["data"] if not assures_result.get("error") else []
+        collectivites = collectivites_result["data"] if not collectivites_result.get("error") else []
+
+        if limit:
+            assures = assures[:limit]
+            collectivites = collectivites[:limit]
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {
+            "ok": "true",
+            "message": "Recherche globale terminée.",
+            "data": {"assures": assures, "collectivites": collectivites},
+        }
 
     def fetch_assure_situations_maladie(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
@@ -281,6 +339,41 @@ class Api:
         self._cached_user = user
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} ayant(s) droit trouve(s).", "data": data}
+
+    def fetch_assure_arpege_summary(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_assure_arpege_summary(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Synthese ARPEGE recuperee.", "data": result["data"]}
+
+    def fetch_assure_arpege_detail(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_arpege_detail(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} ligne(s) ARPEGE.", "data": data}
 
     def fetch_collectivites(self, username: str, password: str, numero: str, denom1: str, code_postal: str):
         numero_value = (numero or "").strip()
@@ -722,6 +815,14 @@ class Api:
         collectivites_vieillesse = safe_data(self.client.query_assure_collectivites_vieillesse(user, pwd, nir_value), [])
         adresse = safe_data(self.client.query_assure_adresse(user, pwd, nir_value), {})
         ayants_droit = safe_data(self.client.query_assure_ayants_droit(user, pwd, nir_value), [])
+        service_name = ((self._logged_user or {}).get("service") or "").strip().upper()
+        include_arpege = service_name in {"RETRAITE", "SIED", "RET"}
+        if include_arpege:
+            arpege_summary = safe_data(self.client.query_assure_arpege_summary(user, pwd, nir_value), {})
+            arpege_detail = safe_data(self.client.query_assure_arpege_detail(user, pwd, nir_value), [])
+        else:
+            arpege_summary = None
+            arpege_detail = []
 
         wb = build_assure_workbook(
             first,
@@ -733,6 +834,9 @@ class Api:
             collectivites_vieillesse,
             adresse,
             ayants_droit,
+            arpege_summary,
+            arpege_detail,
+            include_arpege,
         )
         try:
             wb.save(path)

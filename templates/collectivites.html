@@ -295,14 +295,15 @@
                     <th>Date fin sit. mal.</th>
                     <th>Num. coll maladie en cours</th>
                     <th>Code sit. vieil.</th>
-                    <th>Date effet sit. vieil.</th>
-                    <th>Date fin sit. vieil.</th>
-                    <th>Num. coll vieil.</th>
-                    <th>Type adresse</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+                      <th>Date effet sit. vieil.</th>
+                      <th>Date fin sit. vieil.</th>
+                      <th>Num. coll vieil.</th>
+                      <th>Type adresse</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
             </div>
             <div class="pagination" id="assures-pagination">
               <span class="pagination-info">Affichage : <span id="assures-range">0</span> sur <span id="assures-total">0</span> résultats</span>
@@ -714,40 +715,28 @@
     function renderAssuresPage() {
       if (!assuresTableBody) return;
       assuresTableBody.innerHTML = "";
-      if (!currentAssuresRows.length) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="12" style="text-align:center;">-</td>`;
-        assuresTableBody.appendChild(tr);
-        updateAssuresPagination(0, 0, 0, 1);
-        return;
-      }
+        if (!currentAssuresRows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="13" style="text-align:center;">-</td>`;
+          assuresTableBody.appendChild(tr);
+          updateAssuresPagination(0, 0, 0, 1);
+          return;
+        }
       const { slice, start, end, pageCount } = getAssuresPageSlice(currentAssuresRows);
-      slice.forEach((r) => {
-        const tr = document.createElement("tr");
-        tr.dataset.nni = r.nni || "";
-        tr.innerHTML = `
-          <td>${r.nom || "-"}</td>
-          <td>${r.prenoms || "-"}</td>
-          <td>${r.nni || "-"}</td>
-          <td>${r.code_maladie || "-"}</td>
-          <td>${r.date_effet_maladie || "-"}</td>
-          <td>${r.date_fin_maladie || "-"}</td>
-          <td>${r.num_coll_maladie || "-"}</td>
-          <td>${r.code_vieillesse || "-"}</td>
-          <td>${r.date_effet_vieillesse || "-"}</td>
-          <td>${r.date_fin_vieillesse || "-"}</td>
-          <td>${r.num_coll_vieillesse || "-"}</td>
-          <td>${r.type_adresse || "-"}</td>
-        `;
-        tr.addEventListener("dblclick", async () => {
-          if (!r.nni) {
+        const openAssureFromRow = async (row) => {
+          if (!row?.nni) {
             window.alert("NNI manquant pour ouvrir l'assure.");
             return;
           }
-          const rawNni = String(r.nni);
+          const rawNni = String(row.nni);
           const normalized = rawNni.replace(/\D/g, "");
           const nniForSearch = normalized || rawNni;
           const nir = encodeURIComponent(nniForSearch);
+          try {
+            localStorage.setItem("assure_nni_target", nniForSearch);
+          } catch (_) {
+            /* ignore storage errors */
+          }
           try {
             window.name = JSON.stringify({ assureNni: nniForSearch });
           } catch (_) {
@@ -760,10 +749,43 @@
               /* ignore api errors */
             }
           }
-          window.location.href = `assures.html?nir=${nir}`;
+          window.location.href = `assures.html?nir=${nir}&from=collectivite`;
+        };
+
+        slice.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.dataset.nni = r.nni || "";
+          tr.innerHTML = `
+            <td>${r.nom || "-"}</td>
+            <td>${r.prenoms || "-"}</td>
+          <td>${r.nni || "-"}</td>
+          <td>${r.code_maladie || "-"}</td>
+          <td>${r.date_effet_maladie || "-"}</td>
+          <td>${r.date_fin_maladie || "-"}</td>
+          <td>${r.num_coll_maladie || "-"}</td>
+          <td>${r.code_vieillesse || "-"}</td>
+            <td>${r.date_effet_vieillesse || "-"}</td>
+            <td>${r.date_fin_vieillesse || "-"}</td>
+            <td>${r.num_coll_vieillesse || "-"}</td>
+            <td>${r.type_adresse || "-"}</td>
+          `;
+          tr.addEventListener("dblclick", async () => {
+            await openAssureFromRow(r);
+          });
+          const actionsTd = document.createElement("td");
+          actionsTd.style.whiteSpace = "nowrap";
+          const btnConsult = document.createElement("button");
+          btnConsult.className = "button outline";
+          btnConsult.type = "button";
+          btnConsult.textContent = "Consulter";
+          btnConsult.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await openAssureFromRow(r);
+          });
+          actionsTd.appendChild(btnConsult);
+          tr.appendChild(actionsTd);
+          assuresTableBody.appendChild(tr);
         });
-        assuresTableBody.appendChild(tr);
-      });
       updateAssuresPagination(currentAssuresRows.length, start, end, pageCount);
     }
 
@@ -921,19 +943,7 @@
           e.stopPropagation();
           await openCollectivite(r);
         });
-        const btnExport = document.createElement("button");
-        btnExport.className = "button ghost";
-        btnExport.type = "button";
-        btnExport.style.marginLeft = "6px";
-        btnExport.textContent = "Exporter";
-        btnExport.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const exportOptions = chooseExportOptions();
-          if (!exportOptions) return;
-          exportCollectivite(r.numero || "", exportOptions.mode, exportOptions.folder);
-        });
         actionsTd.appendChild(btnView);
-        actionsTd.appendChild(btnExport);
         tr.appendChild(actionsTd);
         tr.addEventListener("click", () => {
           selectedRowIndex = absoluteIndex;
@@ -1587,21 +1597,58 @@
       window.addEventListener("pywebviewready", loadUserFromApi);
     }
 
-    const toolbarForward = document.querySelector('.toolbar-nav[aria-label="Avancer"]');
-    if (toolbarForward) {
-      toolbarForward.removeAttribute("onclick");
-      toolbarForward.addEventListener("click", async () => {
-        if (detailsSection && detailsSection.hidden && selectedData?.numero) {
-          await openCollectivite(selectedData);
+      const toolbarForward = document.querySelector('.toolbar-nav[aria-label="Avancer"]');
+      if (toolbarForward) {
+        toolbarForward.removeAttribute("onclick");
+        toolbarForward.addEventListener("click", async () => {
+          if (detailsSection && detailsSection.hidden && selectedData?.numero) {
+            await openCollectivite(selectedData);
+            return;
+          }
+          history.forward();
+        });
+      }
+
+      let collectBootstrapAttempts = 0;
+      async function bootstrapCollectFromQuery() {
+        const params = new URLSearchParams(window.location.search || "");
+        let collectId = params.get("collect");
+        if (!collectId) {
+          try {
+            const stored = localStorage.getItem("collect_id_target");
+            if (stored) {
+              collectId = stored;
+              localStorage.removeItem("collect_id_target");
+            }
+          } catch (_) {
+            /* ignore storage errors */
+          }
+        }
+        if (!collectId) return;
+        const numero = String(collectId).trim();
+        if (!numero) return;
+        if (searchInput) searchInput.value = numero;
+        toggleList(false);
+        setCollectLoading(true);
+        if (!window.pywebview?.api?.fetch_collectivite_identification) {
+          if (collectBootstrapAttempts < 10) {
+            collectBootstrapAttempts += 1;
+            setTimeout(bootstrapCollectFromQuery, 250);
+          }
           return;
         }
-        history.forward();
-      });
-    }
+        await openCollectivite({ numero });
+        setCollectLoading(false);
+      }
 
-    initThemeToggle();
-    initUserMenu();
-    renderTable(currentRows);
-  </script>
-</body>
-</html>
+      initThemeToggle();
+      initUserMenu();
+      renderTable(currentRows);
+      if (window.pywebview && window.pywebview.api) {
+        bootstrapCollectFromQuery();
+      } else {
+        window.addEventListener("pywebviewready", bootstrapCollectFromQuery);
+      }
+    </script>
+  </body>
+  </html>

@@ -8,6 +8,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../static/style.css">
+  <script>
+    (function () {
+      try {
+        const params = new URLSearchParams(window.location.search || "");
+        const hasParam = params.get("nir") || params.get("from") === "collectivite";
+        const hasName = !!window.name;
+        const hasStored = !!localStorage.getItem("assure_nni_target");
+        if (hasParam || hasName || hasStored) {
+          document.documentElement.classList.add("assure-autoload");
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="toolbar">
@@ -83,6 +96,7 @@
         </div>
       </form>
 
+      <div id="assure-loader" class="loader hidden" aria-live="polite">Chargement en cours...</div>
       <div id="nir-result" class="result hidden" aria-live="polite"></div>
 
       <div class="table-wrapper" id="assure-table-wrapper">
@@ -124,6 +138,7 @@
         <button class="tab" data-tab="vieillesse">Vieillesse</button>
         <button class="tab" data-tab="rco">RCO</button>
         <button class="tab" data-tab="csg">CSG</button>
+        <button class="tab hidden" data-tab="arpege">ARPEGE</button>
         <button class="tab" data-tab="adresse">Adresse</button>
         <button class="tab" data-tab="ayantdroit">Ayant droit</button>
       </div>
@@ -283,6 +298,37 @@
             </div>
           </div>
         </div>
+        <div class="tab-panel hidden" data-tab="arpege">
+          <div class="table-title">Synthese ARPEGE</div>
+          <div id="arpege-summary" class="info-grid two-col"></div>
+          <div class="table-title">Detail par annee</div>
+          <table class="data-table" id="table-arpege">
+            <thead>
+              <tr>
+                <th>Année</th>
+                <th>TriVal</th>
+                <th>TriCot</th>
+                <th>TriAss</th>
+                <th>Jan</th>
+                <th>Fev</th>
+                <th>Mar</th>
+                <th>Avr</th>
+                <th>Mai</th>
+                <th>Jui</th>
+                <th>Jul</th>
+                <th>Aou</th>
+                <th>Sep</th>
+                <th>Oct</th>
+                <th>Nov</th>
+                <th>Dec</th>
+                <th>Date MAJ</th>
+                <th>TriRach</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="hint">TriVal = trimestres valides, TriCot = trimestres cotises, TriAss = trimestres assimiles, TriRach = trimestres rachetes.</p>
+        </div>
         <div class="tab-panel" data-tab="adresse">
           <div class="info-section">Adresse de l'assuré</div>
           <div class="info-grid two-max">
@@ -369,6 +415,7 @@
                 <th>Nom</th>
                 <th>Prénoms</th>
                 <th>Date de naissance</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -448,6 +495,7 @@
       if (!window.pywebview?.api?.get_logged_user) return;
       window.pywebview.api.get_logged_user().then((resp) => {
         if (resp?.data) applyUser(resp.data);
+        updateArpegeVisibility();
       });
     };
 
@@ -480,6 +528,23 @@
         return "";
       }
     };
+
+    const isArpegeAllowed = () => {
+      const service = (getUserService() || "").trim().toUpperCase();
+      return service === "RETRAITE" || service === "SIED" || service === "RET";
+    };
+
+    function updateArpegeVisibility() {
+      const allowed = isArpegeAllowed();
+      if (arpegeTab) arpegeTab.classList.toggle("hidden", !allowed);
+      if (arpegePanel) arpegePanel.classList.toggle("hidden", !allowed);
+      if (!allowed) {
+        const activeArpege = document.querySelector('.tab.active[data-tab="arpege"]');
+        if (activeArpege) {
+          setActiveTab("infos");
+        }
+      }
+    }
 
     const normalizeExportFolder = (value) => {
       if (!value) return null;
@@ -535,6 +600,7 @@
     const exportButton = document.getElementById("btn-export");
     const assureFullname = document.getElementById("assure-fullname");
     const assureMeta = document.getElementById("assure-meta");
+    const assureLoader = document.getElementById("assure-loader");
     const infoList = document.getElementById("info-list");
     const situationGrid = document.getElementById("situation-grid");
     const tableSitMaladie = document.querySelector("#table-sit-maladie tbody");
@@ -547,6 +613,10 @@
     const tableSitCsg = document.querySelector("#table-sit-csg tbody");
     const tableCollectCsg = document.querySelector("#table-collect-csg tbody");
     const tableAyantDroit = document.querySelector("#table-ayantdroit tbody");
+    const arpegeTab = document.querySelector('.tab[data-tab="arpege"]');
+    const arpegePanel = document.querySelector('.tab-panel[data-tab="arpege"]');
+    const arpegeSummary = document.getElementById("arpege-summary");
+    const tableArpege = document.querySelector("#table-arpege tbody");
     const addrFields = {
       type: document.getElementById("addr-type"),
       line1: document.getElementById("addr-line1"),
@@ -566,6 +636,7 @@
       dateMaj: document.getElementById("addr-date-maj"),
       npai: document.getElementById("addr-npai"),
     };
+    updateArpegeVisibility();
     const tabs = document.querySelectorAll("#assure-details .tab");
     const panels = document.querySelectorAll("#assure-details .tab-panel");
     let assureData = [];
@@ -577,6 +648,9 @@
     let cachedUser = null;
     let cachedPassword = null;
     let hasSearched = false;
+    const assureParams = new URLSearchParams(window.location.search || "");
+    const fromCollectivite = assureParams.get("from") === "collectivite";
+    let bootstrapAttempts = 0;
 
     const showError = (message) => {
       try {
@@ -591,6 +665,15 @@
       nirResult.textContent = text || "";
       nirResult.classList.toggle("success", !!success);
       nirResult.classList.toggle("hidden", !text);
+    };
+
+    const setLoader = (show, message = "Chargement en cours...") => {
+      if (!assureLoader) return;
+      assureLoader.textContent = message;
+      assureLoader.classList.toggle("hidden", !show);
+      if (!show) {
+        document.documentElement.classList.remove("assure-autoload");
+      }
     };
 
     window.addEventListener("unhandledrejection", (event) => {
@@ -617,10 +700,12 @@
 
       if (!searchValue) {
         setResultMessage("Renseignez un critère de recherche.");
+        setLoader(false);
         return;
       }
 
       setResultMessage("Recherche en cours...");
+      setLoader(false);
 
       if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_assure) {
         setResultMessage("API pywebview non disponible.");
@@ -920,6 +1005,30 @@
       }
     }
 
+    async function loadArpege(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!isArpegeAllowed()) return;
+      if (!window.pywebview?.api?.fetch_assure_arpege_summary || !window.pywebview?.api?.fetch_assure_arpege_detail) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const [sumResp, detResp] = await Promise.all([
+          window.pywebview.api.fetch_assure_arpege_summary(user, pwd, nirValue),
+          window.pywebview.api.fetch_assure_arpege_detail(user, pwd, nirValue),
+        ]);
+        if (selectedAssure?.nir !== nirValue) return;
+        selectedAssure.arpege_summary = sumResp?.data || null;
+        selectedAssure.arpege_details = detResp?.data || [];
+        renderArpegeDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
     function openAssureByIndex(idx) {
       selectedAssure = assureData[idx];
       if (!selectedAssure) return;
@@ -933,6 +1042,7 @@
       renderCsgDetails();
       renderAdresseDetails();
       renderAyantDroitDetails();
+      renderArpegeDetails();
       toggleDetails(true);
       toggleList(false);
       if (assureSearch) assureSearch.value = "";
@@ -942,6 +1052,75 @@
       loadVieillesseHistorique(selectedAssure.nir);
       loadAssureAdresse(selectedAssure.nir);
       loadAyantsDroit(selectedAssure.nir);
+      loadArpege(selectedAssure.nir);
+    }
+
+    async function openAssureByNniDirect(nniValue) {
+      const raw = (nniValue || "").toString().trim();
+      if (!raw) {
+        window.alert("NNI manquant pour ouvrir l'assure.");
+        return;
+      }
+      const normalized = raw.replace(/\D/g, "");
+      const nir = normalized || raw;
+      setLoader(true, "Chargement de l'assuré...");
+      toggleList(false);
+      if (!window.pywebview?.api?.fetch_assure) {
+        setLoader(false);
+        showError("API pywebview non disponible.");
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) {
+          setLoader(false);
+          showError("Identifiants manquants.");
+          return;
+        }
+        const response = await window.pywebview.api.fetch_assure(user, pwd, nir, "", "", "nir");
+        if (response?.ok === "true") {
+          const data = response.data || [];
+          const match = data.find((a) => {
+            const value = String(a.nir || "").replace(/\D/g, "");
+            return value && value === String(nir);
+          }) || data[0];
+          if (!match) {
+            setLoader(false);
+            showError("Assuré introuvable.");
+            return;
+          }
+          selectedAssure = match;
+          lastNirValue = match.nir || nir;
+          updateAssureHeader();
+          renderInfoDetails();
+          renderSituationDetails();
+          renderMaladieDetails();
+          renderVieillesseDetails();
+          renderRcoDetails();
+          renderCsgDetails();
+          renderAdresseDetails();
+          renderAyantDroitDetails();
+          renderArpegeDetails();
+          loadMaladieSituations(match.nir);
+          loadCurrentSituations(match.nir);
+          loadMaladieHistorique(match.nir);
+          loadVieillesseHistorique(match.nir);
+          loadAssureAdresse(match.nir);
+          loadAyantsDroit(match.nir);
+          loadArpege(match.nir);
+          setActiveTab("infos");
+          toggleDetails(true);
+          toggleSearchArea(true);
+          setLoader(false);
+        } else {
+          setLoader(false);
+          showError(response?.message || "Assuré introuvable.");
+        }
+      } catch (error) {
+        setLoader(false);
+        showError("Erreur pendant la recherche : " + error);
+      }
     }
 
     function toggleDetails(show) {
@@ -971,6 +1150,10 @@
         renderAssureTable(assureData);
       }
       if (backResultsButton) backResultsButton.hidden = show;
+      if (show) {
+        setLoader(false);
+        document.documentElement.classList.remove("assure-autoload");
+      }
     }
 
     backResultsButton?.addEventListener("click", () => {
@@ -982,6 +1165,11 @@
     if (toolbarBack) {
       toolbarBack.removeAttribute("onclick");
       toolbarBack.addEventListener("click", (e) => {
+        if (fromCollectivite) {
+          e.preventDefault();
+          history.back();
+          return;
+        }
         if (detailsSection && !detailsSection.hidden) {
           e.preventDefault();
           e.stopImmediatePropagation();
@@ -1424,19 +1612,101 @@
         const rows = selectedAssure?.ayants_droit || [];
         if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
+          tr.innerHTML = `<td colspan="5" style="text-align:center;">-</td>`;
           tableAyantDroit.appendChild(tr);
         } else {
           rows.forEach((r) => {
             const tr = document.createElement("tr");
             const nom = r.nom_usuel || r.nom || "-";
+            const hasNni = !!(r.nni || "").toString().trim();
             tr.innerHTML = `
               <td>${r.rang || "-"}</td>
               <td>${nom}</td>
               <td>${r.prenoms || "-"}</td>
               <td>${r.date_naissance || "-"}</td>
+              <td></td>
             `;
+            const actionTd = tr.querySelector("td:last-child");
+            if (actionTd) {
+              const btn = document.createElement("button");
+              btn.className = "button outline";
+              btn.type = "button";
+              btn.textContent = "Consulter";
+              btn.disabled = !hasNni;
+              btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                if (!hasNni) {
+                  window.alert("NNI manquant pour ouvrir l'assure.");
+                  return;
+                }
+                await openAssureByNniDirect(r.nni);
+              });
+              actionTd.appendChild(btn);
+            }
+            tr.addEventListener("dblclick", async () => {
+              if (!hasNni) return;
+              await openAssureByNniDirect(r.nni);
+            });
             tableAyantDroit.appendChild(tr);
+          });
+        }
+      }
+    }
+
+    function renderArpegeDetails() {
+      if (!isArpegeAllowed()) return;
+      if (arpegeSummary) {
+        arpegeSummary.innerHTML = "";
+        const summary = selectedAssure?.arpege_summary || {};
+        const items = [
+          { label: "TVAL < 1936", value: summary.tval_av36 },
+          { label: "TVAL 1936-1979", value: summary.tval_36_79 },
+          { label: "TVAL 1979-1997", value: summary.tval_79_97 },
+          { label: "Trimestres majores", value: summary.tmaj },
+          { label: "Date MAJ", value: summary.date_maj },
+        ];
+        items.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "info-row";
+          row.innerHTML = `
+            <div class="info-label">${item.label}</div>
+            <div class="info-value">${item.value ?? "-"}</div>
+          `;
+          arpegeSummary.appendChild(row);
+        });
+      }
+
+      if (tableArpege) {
+        tableArpege.innerHTML = "";
+        const rows = selectedAssure?.arpege_details || [];
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="18" style="text-align:center;">-</td>`;
+          tableArpege.appendChild(tr);
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.annee ?? "-"}</td>
+              <td>${r.trival ?? "-"}</td>
+              <td>${r.tricot ?? "-"}</td>
+              <td>${r.triass ?? "-"}</td>
+              <td>${r.jan ?? "-"}</td>
+              <td>${r.fev ?? "-"}</td>
+              <td>${r.mar ?? "-"}</td>
+              <td>${r.avr ?? "-"}</td>
+              <td>${r.mai ?? "-"}</td>
+              <td>${r.jui ?? "-"}</td>
+              <td>${r.jul ?? "-"}</td>
+              <td>${r.aou ?? "-"}</td>
+              <td>${r.sep ?? "-"}</td>
+              <td>${r.oct ?? "-"}</td>
+              <td>${r.nov ?? "-"}</td>
+              <td>${r.dec ?? "-"}</td>
+              <td>${r.date_maj ?? "-"}</td>
+              <td>${r.trirach ?? "-"}</td>
+            `;
+            tableArpege.appendChild(tr);
           });
         }
       }
@@ -1495,14 +1765,31 @@
           }
         }
       }
+      if (!nir) {
+        try {
+          const stored = localStorage.getItem("assure_nni_target");
+          if (stored) {
+            nir = stored;
+            localStorage.removeItem("assure_nni_target");
+          }
+        } catch (_) {
+          /* ignore storage errors */
+        }
+      }
       if (!nir) return;
+      toggleList(false);
+      setLoader(true, "Chargement en cours...");
       const normalizedNir = String(nir).replace(/\D/g, "");
       const nirToSearch = normalizedNir || String(nir);
       nir = nirToSearch;
       if (assureSearch) assureSearch.value = nir;
       if (assureTriSelect) assureTriSelect.value = "nir";
       if (!window.pywebview?.api?.fetch_assure) {
-        setResultMessage("API pywebview non disponible.");
+        if (bootstrapAttempts < 10) {
+          bootstrapAttempts += 1;
+          setTimeout(bootstrapFromQuery, 250);
+        }
+        setLoader(true, "Chargement en cours...");
         return;
       }
 
@@ -1539,18 +1826,22 @@
             renderCsgDetails();
             renderAdresseDetails();
             renderAyantDroitDetails();
+            renderArpegeDetails();
             loadMaladieSituations(match.nir);
             loadCurrentSituations(match.nir);
             loadMaladieHistorique(match.nir);
             loadVieillesseHistorique(match.nir);
             loadAssureAdresse(match.nir);
             loadAyantsDroit(match.nir);
+            loadArpege(match.nir);
             setActiveTab("infos");
             toggleDetails(true);
             toggleSearchArea(true);
+            setLoader(false);
           } else {
             toggleDetails(false);
             toggleSearchArea(false);
+            setLoader(false);
           }
         } else {
           hasSearched = true;
@@ -1564,6 +1855,7 @@
           renderAssureTable(assureData);
           toggleDetails(false);
           toggleSearchArea(false);
+          setLoader(false);
         }
       } catch (error) {
         hasSearched = true;
@@ -1577,6 +1869,7 @@
         renderAssureTable(assureData);
         toggleDetails(false);
         toggleSearchArea(false);
+        setLoader(false);
       }
     }
 
@@ -1585,9 +1878,7 @@
     } else {
       document.addEventListener("pywebviewready", bootstrapFromQuery);
       setTimeout(() => {
-        if (!window.pywebview?.api) {
-          bootstrapFromQuery();
-        }
+        bootstrapFromQuery();
       }, 500);
     }
   </script>

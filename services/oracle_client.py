@@ -46,8 +46,8 @@ class OracleClient:
         except Exception as exc:  # noqa: BLE001
             return str(exc)
 
-    def query_user_login(self, username: str, password: str, email: str, user_password: str) -> Dict[str, object]:
-        """Vérifie un utilisateur applicatif par email + mot de passe."""
+    def query_user_login(self, username: str, password: str, identifier: str, user_password: str) -> Dict[str, object]:
+        """Vérifie un utilisateur applicatif par identifiant + mot de passe."""
         try:
             import oracledb
         except Exception as exc:
@@ -60,14 +60,15 @@ class OracleClient:
                 usr.nom,
                 usr.email,
                 usr.mot_de_passe,
-                usr.service
+                usr.service,
+                usr.identifiant
             FROM USER_IDENT usr
-            WHERE TRIM(LOWER(usr.email)) = TRIM(LOWER(:identifier))
+            WHERE TRIM(UPPER(usr.identifiant)) = TRIM(UPPER(:identifier))
         """
         try:
             with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql, {"identifier": email})
+                    cursor.execute(sql, {"identifier": identifier})
                     row = cursor.fetchone()
         except Exception as exc:  # noqa: BLE001
             return {"data": None, "error": str(exc)}
@@ -86,6 +87,7 @@ class OracleClient:
             "nom": row[2],
             "email": row[3],
             "service": row[5],
+            "identifiant": row[6],
         }
         return {"data": data, "error": None}
 
@@ -697,6 +699,7 @@ class OracleClient:
         sql = """
             SELECT
                 ay.ay_noord,
+                ay.ay_nni,
                 ay.ay_nompat,
                 ay.ay_nomusuel,
                 ay.ay_prenoms,
@@ -721,10 +724,129 @@ class OracleClient:
             data.append(
                 {
                     "rang": row[0],
-                    "nom": row[1],
-                    "nom_usuel": row[2],
-                    "prenoms": row[3],
-                    "date_naissance": _format_date(row[4]),
+                    "nni": row[1],
+                    "nom": row[2],
+                    "nom_usuel": row[3],
+                    "prenoms": row[4],
+                    "date_naissance": _format_date(row[5]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_arpege_summary(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne la synthese ARPEGE d'un assure (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                a.ccg_tvalav36,
+                a.ccg_tvalav79,
+                a.ccg_tval7997,
+                a.ccg_tmajo,
+                a.ccg_dtmaj
+            FROM AT_CCG#CAR_CAV_GEN a
+            LEFT JOIN AT_AS#ASSURE b
+              ON a.ccgas_id = b.as_id
+            WHERE b.as_nni = :nir
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "tval_av36": row[0],
+            "tval_36_79": row[1],
+            "tval_79_97": row[2],
+            "tmaj": row[3],
+            "date_maj": _format_date(row[4]),
+        }
+        return {"data": data, "error": None}
+
+    def query_assure_arpege_detail(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne le detail ARPEGE par annee (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                cca.cca_annee,
+                cca.cca_trival,
+                cca.cca_tricot,
+                cca.cca_triass,
+                cca.cca_jan,
+                cca.cca_fev,
+                cca.cca_mar,
+                cca.cca_avr,
+                cca.cca_mai,
+                cca.cca_jui,
+                cca.cca_jul,
+                cca.cca_aou,
+                cca.cca_sep,
+                cca.cca_oct,
+                cca.cca_nov,
+                cca.cca_dec,
+                cca.cca_dtmaj,
+                cca.cca_trirach
+            FROM AT_CCA#CAR_CAV_COT cca
+            JOIN AT_AS#ASSURE a
+              ON a.as_id = cca.ccaas_id
+            WHERE a.as_nni = :nir
+            ORDER BY cca.cca_annee
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "annee": row[0],
+                    "trival": row[1],
+                    "tricot": row[2],
+                    "triass": row[3],
+                    "jan": row[4],
+                    "fev": row[5],
+                    "mar": row[6],
+                    "avr": row[7],
+                    "mai": row[8],
+                    "jui": row[9],
+                    "jul": row[10],
+                    "aou": row[11],
+                    "sep": row[12],
+                    "oct": row[13],
+                    "nov": row[14],
+                    "dec": row[15],
+                    "date_maj": _format_date(row[16]),
+                    "trirach": row[17],
                 }
             )
         return {"data": data, "error": None}
@@ -1660,6 +1782,9 @@ def build_assure_workbook(
     collectivites_vieillesse: List[Dict[str, object]],
     adresse: Optional[Dict[str, object]],
     ayants_droit: List[Dict[str, object]],
+    arpege_summary: Optional[Dict[str, object]],
+    arpege_details: List[Dict[str, object]],
+    include_arpege: bool = True,
 ):
     """Construit un classeur Excel pour un assure (par onglet)."""
     from openpyxl import Workbook
@@ -1915,6 +2040,67 @@ def build_assure_workbook(
                     _safe(r.get("date_naissance")),
                 ]
             )
+
+    if include_arpege:
+        ws_arp = wb.create_sheet("ARPEGE")
+        _append_section(
+            ws_arp,
+            "Synthese ARPEGE",
+            [
+                ("TVAL < 1936", (arpege_summary or {}).get("tval_av36")),
+                ("TVAL 1936-1979", (arpege_summary or {}).get("tval_36_79")),
+                ("TVAL 1979-1997", (arpege_summary or {}).get("tval_79_97")),
+                ("Trimestres majores", (arpege_summary or {}).get("tmaj")),
+                ("Date MAJ", (arpege_summary or {}).get("date_maj")),
+            ],
+        )
+        _append_table(
+            ws_arp,
+            "Detail par annee",
+            [
+                "Annee",
+                "TriVal",
+                "TriCot",
+                "TriAss",
+                "Jan",
+                "Fev",
+                "Mar",
+                "Avr",
+                "Mai",
+                "Jui",
+                "Jul",
+                "Aou",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+                "Date MAJ",
+                "TriRach",
+            ],
+            [
+                [
+                    r.get("annee"),
+                    r.get("trival"),
+                    r.get("tricot"),
+                    r.get("triass"),
+                    r.get("jan"),
+                    r.get("fev"),
+                    r.get("mar"),
+                    r.get("avr"),
+                    r.get("mai"),
+                    r.get("jui"),
+                    r.get("jul"),
+                    r.get("aou"),
+                    r.get("sep"),
+                    r.get("oct"),
+                    r.get("nov"),
+                    r.get("dec"),
+                    r.get("date_maj"),
+                    r.get("trirach"),
+                ]
+                for r in (arpege_details or [])
+            ],
+        )
 
     return wb
 def build_collectivite_workbook(
