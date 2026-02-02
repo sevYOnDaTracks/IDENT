@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../static/style.css">
 </head>
-<body>
+<body class="home-page">
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="toolbar-left">
@@ -69,8 +69,8 @@
   <div class="grid">
     <div class="card home-layout">
       <div class="home-hero">
-        <div class="home-badge">IDENT &#8226;V1.0</div>
-        <h3 class="home-title" id="home-welcome">Bienvenue</h3>
+        <div class="home-badge">IDENT &#8226;V1.0</div><br><br>
+     <!--   <h3 class="home-title" id="home-welcome">Bienvenue</h3> -->
         <p class="home-subtitle">Choisissez un module pour continuer.</p>
       </div>
 
@@ -123,6 +123,10 @@
       </div>
     </div>
   </div>
+
+  <footer class="app-footer">
+    IDENT * V1 - Développé par le SIED - 02/2026
+  </footer>
 
   <div id="toast" class="toast"></div>
   <script>
@@ -216,6 +220,24 @@
         try { applyUser(JSON.parse(cached)); } catch (_) {}
       }
 
+      const resetNavigationState = async () => {
+        try { localStorage.removeItem("assure_nni_target"); } catch (_) {}
+        try { localStorage.removeItem("collect_id_target"); } catch (_) {}
+        try { window.name = ""; } catch (_) {}
+        if (window.pywebview?.api) {
+          try {
+            if (window.pywebview.api.set_selected_assure_nni) {
+              await window.pywebview.api.set_selected_assure_nni("");
+            }
+          } catch (_) {}
+          try {
+            if (window.pywebview.api.set_selected_collectivite) {
+              await window.pywebview.api.set_selected_collectivite(null);
+            }
+          } catch (_) {}
+        }
+      };
+
       const loadUserFromApi = () => {
         if (!window.pywebview?.api?.get_logged_user) return;
         window.pywebview.api.get_logged_user().then((resp) => {
@@ -223,6 +245,8 @@
         });
       };
 
+      resetNavigationState();
+      window.addEventListener("pywebviewready", resetNavigationState);
       loadUserFromApi();
       window.addEventListener("pywebviewready", loadUserFromApi);
 

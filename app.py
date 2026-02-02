@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import traceback
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -21,6 +22,78 @@ def _bootstrap_site_packages() -> None:
 
 
 _bootstrap_site_packages()
+
+
+def _hide_console_window() -> None:
+    """Hide the console window for PyInstaller console builds on Windows."""
+    if sys.platform != "win32":
+        return
+    if not getattr(sys, "frozen", False):
+        return
+    try:
+        import ctypes
+
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
+    except Exception:
+        return
+
+
+def _resource_base_dir() -> Path:
+    """Return base directory for bundled resources."""
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            base = Path(meipass)
+            if (base / "templates").exists():
+                return base
+        if (exe_dir / "templates").exists():
+            return exe_dir
+        if meipass:
+            return Path(meipass)
+        return exe_dir
+    return Path(__file__).parent
+
+
+def _resource_path(*parts: str) -> Path:
+    return _resource_base_dir().joinpath(*parts)
+
+
+def _write_startup_log(error: BaseException) -> None:
+    """Write startup errors to a local log file for debugging frozen builds."""
+    try:
+        if getattr(sys, "frozen", False):
+            root = Path(sys.executable).parent
+        else:
+            root = Path(__file__).parent
+        log_path = root / "startup_error.log"
+        log_path.write_text(
+            "".join(traceback.format_exception(type(error), error, error.__traceback__)),
+            encoding="utf-8",
+        )
+    except Exception:
+        return
+
+
+def _show_startup_error(error: BaseException) -> None:
+    """Show a Windows message box for startup errors in frozen builds."""
+    if sys.platform != "win32":
+        return
+    if not getattr(sys, "frozen", False):
+        return
+    try:
+        import ctypes
+
+        msg = (
+            "L'application n'a pas pu demarrer.\n"
+            "Un journal a ete cree: startup_error.log\n\n"
+            f"{error}"
+        )
+        ctypes.windll.user32.MessageBoxW(0, msg, "Erreur au demarrage", 0x10)
+    except Exception:
+        return
 
 ##############################################################################################
 # L ' API CONSTITUE LES REQUETES ET LES DATA RECUPERER DANS LA DATABASE ET AFFICHE A L'ECRAN #
@@ -974,26 +1047,31 @@ class Api:
 
 def main() -> None:
     """Launch a native window that renders the local HTML/CSS UI."""
-    root = Path(__file__).parent
-    html_path = root / "templates" / "login.html"
-    if not html_path.exists():
-        raise FileNotFoundError(f"HTML file not found: {html_path}")
+    _hide_console_window()
+    try:
+        html_path = _resource_path("templates", "login.html")
+        if not html_path.exists():
+            raise FileNotFoundError(f"HTML file not found: {html_path}")
 
-    dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
-    instant_client_dir = Path(r"C:\Program Files\Oracle\instantclient_23_8")
-    client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir if instant_client_dir.exists() else None)
-    api = Api(client=client)
+        dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
+        instant_client_dir = Path(r"C:\Program Files\Oracle\instantclient_23_8")
+        client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir if instant_client_dir.exists() else None)
+        api = Api(client=client)
 
-    window = webview.create_window(
-        "IDENT - SIED V1.0",
-        html_path.as_uri(),
-        width=1280,
-        height=720,
-        resizable=True,
-        js_api=api,
-    )
-    api.set_window(window)
-    webview.start()
+        window = webview.create_window(
+            "IDENT - SIED V1.0",
+            html_path.as_uri(),
+            width=1280,
+            height=720,
+            resizable=True,
+            js_api=api,
+        )
+        api.set_window(window)
+        webview.start()
+    except Exception as exc:  # noqa: BLE001
+        _write_startup_log(exc)
+        _show_startup_error(exc)
+        raise
 
 
 if __name__ == "__main__":

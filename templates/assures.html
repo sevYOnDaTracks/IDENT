@@ -12,9 +12,11 @@
     (function () {
       try {
         const params = new URLSearchParams(window.location.search || "");
-        const hasParam = params.get("nir") || params.get("from") === "collectivite";
-        const hasName = !!window.name;
-        const hasStored = !!localStorage.getItem("assure_nni_target");
+        const from = params.get("from");
+        const allowAuto = from === "collectivite" || from === "global" || !!params.get("nir");
+        const hasParam = params.get("nir") || allowAuto;
+        const hasName = !!window.name && allowAuto;
+        const hasStored = allowAuto && !!localStorage.getItem("assure_nni_target");
         if (hasParam || hasName || hasStored) {
           document.documentElement.classList.add("assure-autoload");
         }
@@ -649,7 +651,27 @@
     let cachedPassword = null;
     let hasSearched = false;
     const assureParams = new URLSearchParams(window.location.search || "");
-    const fromCollectivite = assureParams.get("from") === "collectivite";
+    const fromValue = assureParams.get("from") || "";
+    const fromCollectivite = fromValue === "collectivite";
+    const fromGlobal = fromValue === "global";
+    const hasNirParam = !!assureParams.get("nir");
+    const allowAutoLoad = fromCollectivite || fromGlobal || hasNirParam;
+
+    function clearAssureAutoTarget() {
+      try {
+        localStorage.removeItem("assure_nni_target");
+      } catch (_) {
+        /* ignore storage errors */
+      }
+      try {
+        window.name = "";
+      } catch (_) {
+        /* ignore */
+      }
+      if (window.pywebview?.api?.set_selected_assure_nni) {
+        window.pywebview.api.set_selected_assure_nni("");
+      }
+    }
     let bootstrapAttempts = 0;
 
     const showError = (message) => {
@@ -1167,6 +1189,15 @@
       toolbarBack.addEventListener("click", (e) => {
         if (fromCollectivite) {
           e.preventDefault();
+          try {
+            const collectTarget = localStorage.getItem("collect_id_target");
+            if (collectTarget) {
+              window.location.href = `collectivites.html?collect=${encodeURIComponent(collectTarget)}&from=assures`;
+              return;
+            }
+          } catch (_) {
+            /* ignore */
+          }
           history.back();
           return;
         }
@@ -1738,8 +1769,13 @@
       toggleList(!hide);
     }
 
+    if (!allowAutoLoad) {
+      clearAssureAutoTarget();
+    }
+
     async function bootstrapFromQuery() {
       const params = new URLSearchParams(window.location.search || "");
+      if (!allowAutoLoad) return;
       let nir = params.get("nir");
       if (!nir && window.pywebview?.api?.get_selected_assure_nni) {
         try {
@@ -1751,7 +1787,7 @@
           /* ignore api errors */
         }
       }
-      if (!nir) {
+      if (!nir && (params.get("from") === "collectivite" || params.get("from") === "global")) {
         const rawName = window.name || "";
         if (rawName) {
           try {

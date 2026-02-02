@@ -737,6 +737,13 @@
           } catch (_) {
             /* ignore storage errors */
           }
+          if (selectedData?.numero) {
+            try {
+              localStorage.setItem("collect_id_target", String(selectedData.numero));
+            } catch (_) {
+              /* ignore storage errors */
+            }
+          }
           try {
             window.name = JSON.stringify({ assureNni: nniForSearch });
           } catch (_) {
