@@ -14,7 +14,20 @@ class OracleClient:
     def __init__(self, dsn: str, instant_client_dir: Optional[Path] = None) -> None:
         self.dsn = dsn
         self.instant_client_dir = instant_client_dir
+        self.oracle_client_init_error: Optional[str] = None
         self._init_oracle_client()
+
+    def _format_oracle_error(self, exc: BaseException) -> str:
+        msg = str(exc)
+        if "DPY-3010" in msg:
+            extra = (
+                "Ce serveur Oracle n'est pas supporte par python-oracledb en mode THIN.\n"
+                "Solution: utiliser le mode THICK avec Oracle Instant Client (installe ou embarque avec l'application)."
+            )
+            if self.oracle_client_init_error:
+                extra = f"{extra}\n\nErreur Oracle Instant Client:\n{self.oracle_client_init_error}"
+            return f"{msg}\n\n{extra}"
+        return msg
 
     def _init_oracle_client(self) -> None:
         """Initialise l'instant client Oracle si présent (optionnel)."""
@@ -26,9 +39,9 @@ class OracleClient:
         if self.instant_client_dir and self.instant_client_dir.exists():
             try:
                 oracledb.init_oracle_client(lib_dir=str(self.instant_client_dir))
-            except Exception:
-                # Si l'initialisation échoue, on laisse le mode thin prendre le relais.
-                pass
+            except Exception as exc:  # noqa: BLE001
+                # Keep running, but remember the error to help troubleshooting.
+                self.oracle_client_init_error = str(exc)
 
     def test_connection(self, username: str, password: str) -> Optional[str]:
         """Retourne None si OK, sinon le message d'erreur."""
@@ -44,7 +57,7 @@ class OracleClient:
                     cursor.fetchone()
             return None
         except Exception as exc:  # noqa: BLE001
-            return str(exc)
+            return self._format_oracle_error(exc)
 
     def query_user_login(self, username: str, password: str, identifier: str, user_password: str) -> Dict[str, object]:
         """Vérifie un utilisateur applicatif par identifiant + mot de passe."""
@@ -71,7 +84,7 @@ class OracleClient:
                     cursor.execute(sql, {"identifier": identifier})
                     row = cursor.fetchone()
         except Exception as exc:  # noqa: BLE001
-            return {"data": None, "error": str(exc)}
+            return {"data": None, "error": self._format_oracle_error(exc)}
 
         if not row:
             return {"data": None, "error": None}

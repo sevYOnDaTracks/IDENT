@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import traceback
+import os
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -59,6 +60,38 @@ def _resource_base_dir() -> Path:
 
 def _resource_path(*parts: str) -> Path:
     return _resource_base_dir().joinpath(*parts)
+
+
+def _find_instant_client_dir() -> Optional[Path]:
+    """
+    Try to locate Oracle Instant Client for python-oracledb thick mode.
+
+    Why: some Oracle server versions are not supported in thin mode (DPY-3010),
+    so we need thick mode on machines that don't have a local Oracle client installed.
+    """
+    env = (os.environ.get("IDENT_INSTANTCLIENT_DIR") or os.environ.get("ORACLE_INSTANTCLIENT_DIR") or "").strip()
+    candidates: list[Path] = []
+    if env:
+        candidates.append(Path(env))
+
+    # Bundled next to the EXE / inside PyInstaller onefile extraction.
+    candidates.append(_resource_path("instantclient_23_8"))
+    candidates.append(_resource_path("instantclient"))
+
+    # Common local install.
+    candidates.append(Path(r"C:\Program Files\Oracle\instantclient_23_8"))
+
+    # Network share used internally (same as run_ident.bat).
+    candidates.append(Path(r"\\Sbureautique\sied\ndpartage\Dépendance\instantclient_23_8"))
+
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except Exception:
+            # UNC path checks can fail (offline); ignore and continue.
+            continue
+    return None
 
 
 def _write_startup_log(error: BaseException) -> None:
@@ -956,7 +989,7 @@ class Api:
 
         denom1 = identification.get("denom1") or "Collectivite"
         base_name = f"{collect_value} - {denom1}".strip()
-        safe_name = "".join(c if c not in '\/:*?"<>|' else "_" for c in base_name) + ".xlsx"
+        safe_name = "".join(c if c not in r'\/:*?"<>|' else "_" for c in base_name) + ".xlsx"
 
         if not self.window:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
@@ -1054,8 +1087,8 @@ def main() -> None:
             raise FileNotFoundError(f"HTML file not found: {html_path}")
 
         dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
-        instant_client_dir = Path(r"C:\Program Files\Oracle\instantclient_23_8")
-        client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir if instant_client_dir.exists() else None)
+        instant_client_dir = _find_instant_client_dir()
+        client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir)
         api = Api(client=client)
 
         window = webview.create_window(

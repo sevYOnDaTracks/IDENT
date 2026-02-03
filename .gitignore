@@ -7,6 +7,10 @@ __pycache__/
 # Virtual env
 .venv/
 
+# PyInstaller
+build/
+dist/
+
 # OS / tooling
 .DS_Store
 Thumbs.db
