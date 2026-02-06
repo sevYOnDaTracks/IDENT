@@ -24,6 +24,7 @@
       </div>
       <h1 class="title">Connexion</h1>
       <p class="subtitle">Connectez-vous avec votre identifiant et votre mot de passe.</p>
+    <!-- <div id="oracle-status" class="hint">Oracle : -</div> --> 
 
       <form id="login-form" class="form login-form">
         <div class="field">
@@ -49,6 +50,7 @@
     const passwordInput = document.getElementById("login-password");
     const resultBox = document.getElementById("login-result");
     const themeToggle = document.getElementById("theme-toggle");
+    const oracleStatus = document.getElementById("oracle-status");
 
     if (themeToggle) {
       const stored = localStorage.getItem("theme");
@@ -73,6 +75,37 @@
       resultBox.classList.toggle("success", !!success);
       resultBox.classList.toggle("hidden", text.length === 0);
     }
+
+    async function loadOracleStatus() {
+      if (!oracleStatus) return;
+      if (!window.pywebview?.api?.oracle_diagnostics) {
+        oracleStatus.textContent = "Oracle : diagnostic indisponible.";
+        return;
+      }
+      try {
+        const d = await window.pywebview.api.oracle_diagnostics();
+        if (d?.ok !== "true") {
+          oracleStatus.textContent = "Oracle : erreur diagnostic.";
+          return;
+        }
+        const mode = (d.mode || "unknown").toUpperCase();
+        const v = d.client_version ? ` (client ${d.client_version})` : "";
+        oracleStatus.textContent = `Oracle : ${mode}${v}`;
+        if (d.oracle_config_dir) {
+          oracleStatus.textContent += " - sqlnet: OK";
+        }
+        if (d.dsn) {
+          oracleStatus.textContent += ` - dsn: ${d.dsn}`;
+        }
+        if (d.instant_client_error) {
+          oracleStatus.textContent += " - Instant Client: erreur";
+        }
+      } catch (_) {
+        oracleStatus.textContent = "Oracle : erreur diagnostic.";
+      }
+    }
+
+    loadOracleStatus();
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();

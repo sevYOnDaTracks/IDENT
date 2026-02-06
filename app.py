@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import traceback
 import os
+import json
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -12,6 +13,7 @@ from services.oracle_client import OracleClient, build_assure_workbook, build_co
 
 ORACLE_APP_USER = "ASCOT"
 ORACLE_APP_PASSWORD = "ASCOT"
+DEFAULT_DSN = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
 
 
 def _bootstrap_site_packages() -> None:
@@ -62,7 +64,36 @@ def _resource_path(*parts: str) -> Path:
     return _resource_base_dir().joinpath(*parts)
 
 
-def _find_instant_client_dir() -> Optional[Path]:
+def _load_runtime_config() -> dict:
+    """
+    Load optional runtime config from a JSON file next to the executable.
+
+    This is the safest way to make the app "portable" across environments
+    (DNS/IP/Service changes) without rebuilding.
+    """
+    candidates: list[Path] = []
+    try:
+        exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).parent
+        candidates.append(exe_dir / "config.json")
+    except Exception:
+        pass
+    # Also allow running from a working directory that has the config.
+    try:
+        candidates.append(Path.cwd() / "config.json")
+    except Exception:
+        pass
+
+    for cfg in candidates:
+        try:
+            if cfg.exists():
+                return json.loads(cfg.read_text(encoding="utf-8"))
+        except Exception:
+            # If config is present but invalid, ignore and fallback to defaults.
+            continue
+    return {}
+
+
+def _find_instant_client_dir(preferred: Optional[str | Path] = None) -> Optional[Path]:
     """
     Try to locate Oracle Instant Client for python-oracledb thick mode.
 
@@ -71,6 +102,8 @@ def _find_instant_client_dir() -> Optional[Path]:
     """
     env = (os.environ.get("IDENT_INSTANTCLIENT_DIR") or os.environ.get("ORACLE_INSTANTCLIENT_DIR") or "").strip()
     candidates: list[Path] = []
+    if preferred:
+        candidates.append(Path(preferred))
     if env:
         candidates.append(Path(env))
 
@@ -94,6 +127,33 @@ def _find_instant_client_dir() -> Optional[Path]:
     return None
 
 
+def _find_oracle_config_dir(preferred: Optional[str | Path] = None) -> Optional[Path]:
+    """
+    Locate an Oracle network config directory (sqlnet.ora, tnsnames.ora).
+
+    Why: in PyInstaller onefile, implicit Oracle client defaults can trigger auth negotiation issues
+    (e.g. ORA-28041) if sqlnet.ora isn't found. We ship a minimal sqlnet.ora to force
+    SQLNET.AUTHENTICATION_SERVICES=(NONE).
+    """
+    env = (os.environ.get("IDENT_TNS_ADMIN") or os.environ.get("TNS_ADMIN") or "").strip()
+    candidates: list[Path] = []
+    if preferred:
+        candidates.append(Path(preferred))
+    if env:
+        candidates.append(Path(env))
+
+    # Bundled next to EXE / inside onefile extraction.
+    candidates.append(_resource_path("oracle_net"))
+
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except Exception:
+            continue
+    return None
+
+
 def _write_startup_log(error: BaseException) -> None:
     """Write startup errors to a local log file for debugging frozen builds."""
     try:
@@ -106,6 +166,39 @@ def _write_startup_log(error: BaseException) -> None:
             "".join(traceback.format_exception(type(error), error, error.__traceback__)),
             encoding="utf-8",
         )
+    except Exception:
+        return
+
+
+def _prepare_instant_client_windows(instant_client_dir: Optional[Path]) -> None:
+    """
+    Ensure Windows can resolve Instant Client DLL dependencies.
+
+    On some corporate PCs, OCI/SSL DLL loading fails unless the Instant Client directory is
+    explicitly added to the DLL search path (similar to prefixing PATH).
+    """
+    if not instant_client_dir:
+        return
+    if sys.platform != "win32":
+        return
+
+    try:
+        ic = str(instant_client_dir.resolve())
+    except Exception:
+        ic = str(instant_client_dir)
+
+    # Best option on modern Python/Windows.
+    try:
+        if hasattr(os, "add_dll_directory"):
+            os.add_dll_directory(ic)  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
+    # Fallback / extra safety: prefix PATH for this process.
+    try:
+        current = os.environ.get("PATH", "")
+        if ic.lower() not in current.lower().split(";"):
+            os.environ["PATH"] = f"{ic};{current}"
     except Exception:
         return
 
@@ -146,6 +239,13 @@ class Api:
 
     def set_window(self, window: webview.Window) -> None:
         self.window = window
+
+    def oracle_diagnostics(self) -> dict:
+        """Expose Oracle client diagnostics to the UI (thin/thick, instant client, etc.)."""
+        try:
+            return self.client.diagnostics()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": "false", "message": str(exc)}
 
     def _resolve_credentials(self, username: Optional[str], password: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
         user = username or self._cached_user
@@ -375,6 +475,24 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} collectivite(s) maladie trouvee(s).", "data": data}
 
+    def fetch_assure_renouvellement_maladie(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_renouvellement_regime_particulier_maladie(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} renouvellement(s) maladie trouve(s).", "data": data}
+
     def fetch_assure_historique_situation_vieillesse(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
         if not nir_value:
@@ -411,6 +529,60 @@ class Api:
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} collectivite(s) vieillesse trouvee(s).", "data": data}
 
+    def fetch_assure_historique_situation_rco(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_historique_situation_rco(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} historique(s) RCO trouve(s).", "data": data}
+
+    def fetch_assure_collectivites_rco(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_collectivites_rco(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} collectivite(s) RCO trouvee(s).", "data": data}
+
+    def fetch_assure_collectivites_csg(self, username: str, password: str, nir: str):
+        nir_value = (nir or "").strip()
+        if not nir_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_assure_collectivites_csg(user, pwd, nir_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result["data"] or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} collectivite(s) CSG trouvee(s).", "data": data}
+
     def fetch_assure_adresse(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
         if not nir_value:
@@ -445,6 +617,42 @@ class Api:
         self._cached_user = user
         self._cached_password = pwd
         return {"ok": "true", "message": f"{len(data)} ayant(s) droit trouve(s).", "data": data}
+
+    def fetch_ayant_droit_identification(self, username: str, password: str, assure_nir: str, ayant_nir: str):
+        assure_value = (assure_nir or "").strip()
+        ayant_value = (ayant_nir or "").strip()
+        if not assure_value or not ayant_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": None}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        result = self.client.query_ayant_droit_identification(user, pwd, assure_value, ayant_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": None}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": "Identification ayant droit récupérée.", "data": result["data"]}
+
+    def fetch_ayant_droit_jod_history(self, username: str, password: str, assure_nir: str, ayant_nir: str):
+        assure_value = (assure_nir or "").strip()
+        ayant_value = (ayant_nir or "").strip()
+        if not assure_value or not ayant_value:
+            return {"ok": "false", "message": "NIR manquant.", "data": []}
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.query_ayant_droit_jod_history(user, pwd, assure_value, ayant_value)
+        if result["error"]:
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(result['data'] or [])} ligne(s) JOD.", "data": result["data"] or []}
 
     def fetch_assure_arpege_summary(self, username: str, password: str, nir: str):
         nir_value = (nir or "").strip()
@@ -1086,9 +1294,17 @@ def main() -> None:
         if not html_path.exists():
             raise FileNotFoundError(f"HTML file not found: {html_path}")
 
-        dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
-        instant_client_dir = _find_instant_client_dir()
-        client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir)
+        cfg = _load_runtime_config()
+        dsn = (cfg.get("dsn") or DEFAULT_DSN).strip()
+        instant_client_dir = _find_instant_client_dir(cfg.get("instant_client_dir"))
+        _prepare_instant_client_windows(instant_client_dir)
+        oracle_config_dir = _find_oracle_config_dir(cfg.get("oracle_config_dir"))
+        # Ensure Oracle client picks up sqlnet.ora (helps onefile builds).
+        if oracle_config_dir:
+            os.environ["TNS_ADMIN"] = str(oracle_config_dir)
+            os.environ["IDENT_TNS_ADMIN"] = str(oracle_config_dir)
+
+        client = OracleClient(dsn=dsn, instant_client_dir=instant_client_dir, oracle_config_dir=oracle_config_dir)
         api = Api(client=client)
 
         window = webview.create_window(

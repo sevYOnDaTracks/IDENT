@@ -1,0 +1,5 @@
+# Minimal Oracle Net config for desktop builds (PyInstaller).
+# Forces classic user/password authentication and avoids implicit NTS/SSO negotiation.
+SQLNET.AUTHENTICATION_SERVICES = (NONE)
+DIAG_ADR_ENABLED = OFF
+

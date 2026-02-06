@@ -134,15 +134,15 @@
           </div>
         </div>
       <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="infos">Infos personnels</button>
+        <button class="tab active" data-tab="infos">Identification</button>
         <button class="tab" data-tab="situations">Situations</button>
         <button class="tab" data-tab="maladie">Maladie</button>
         <button class="tab" data-tab="vieillesse">Vieillesse</button>
         <button class="tab" data-tab="rco">RCO</button>
         <button class="tab" data-tab="csg">CSG</button>
-        <button class="tab hidden" data-tab="arpege">ARPEGE</button>
         <button class="tab" data-tab="adresse">Adresse</button>
         <button class="tab" data-tab="ayantdroit">Ayant droit</button>
+        <button class="tab hidden" data-tab="arpege">ARPEGE</button>
       </div>
       <div class="tab-panels">
         <div class="tab-panel active" data-tab="infos">
@@ -334,7 +334,7 @@
         <div class="tab-panel" data-tab="adresse">
           <div class="info-section">Adresse de l'assuré</div>
           <div class="info-grid two-max">
-            <div class="info-row">
+            <div class="info-row span-all">
               <div class="info-label">Type adresse</div>
               <div class="info-value" id="addr-type">-</div>
             </div>
@@ -425,6 +425,147 @@
         </div>
       </div>
     </div>
+    </div>
+  </div>
+
+  <!-- Ayant droit details modal -->
+  <div class="modal-overlay hidden" id="ayantdroit-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ayantdroit-modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="ayantdroit-modal-title">Ayant droit</div>
+        <button class="icon-button" type="button" id="ayantdroit-modal-close" aria-label="Fermer">×</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="tab active" type="button" data-ayantdroit-tab="identification">Identification</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-panel active" data-ayantdroit-panel="identification">
+          <div class="table-title">Identification</div>
+          <div class="info-grid">
+            <div class="info-row span-all">
+              <div class="info-label">NNI assuré</div>
+              <div class="info-value" id="ayantdroit-nni-assure">-</div>
+            </div>
+            <div class="info-row span-all">
+              <div class="info-label">NNI ayant droit</div>
+              <div class="info-value" id="ayantdroit-nni">-</div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-label">Rang</div>
+              <div class="info-value" id="ayantdroit-rang">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Sexe</div>
+              <div class="info-value">
+                <span class="check-chip" id="ayantdroit-sexe-h">☐ Homme</span>
+                <span class="check-chip" id="ayantdroit-sexe-f" style="margin-left:10px;">☐ Femme</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-label">Nom patronymique</div>
+              <div class="info-value" id="ayantdroit-nompat">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Nom usuel</div>
+              <div class="info-value" id="ayantdroit-nomusuel">-</div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-label">Prénoms</div>
+              <div class="info-value" id="ayantdroit-prenoms">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Date de naissance</div>
+              <div class="info-value" id="ayantdroit-dtnais">-</div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-label">Âge</div>
+              <div class="info-value" id="ayantdroit-age">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Date MAJ</div>
+              <div class="info-value" id="ayantdroit-dtmaj">-</div>
+            </div>
+          </div>
+
+          <div class="table-title" style="margin-top:12px;">Lieu de naissance</div>
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-label">Code commune</div>
+              <div class="info-value" id="ayantdroit-codcomnais">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Commune</div>
+              <div class="info-value" id="ayantdroit-commnais">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Rang naissance</div>
+              <div class="info-value" id="ayantdroit-rgnais">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Pays</div>
+              <div class="info-value" id="ayantdroit-paysnais">-</div>
+            </div>
+          </div>
+
+          <div class="table-title" style="margin-top:12px;">Nationalité</div>
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-label">Type nationalité</div>
+              <div class="info-value" id="ayantdroit-tn">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Pays nationalité</div>
+              <div class="info-value" id="ayantdroit-paysnat">-</div>
+            </div>
+          </div>
+
+          <div class="table-title" style="margin-top:12px;">Dates</div>
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-label">1ère inscription</div>
+              <div class="info-value" id="ayantdroit-dtinscr">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Certif RNIAM</div>
+              <div class="info-value" id="ayantdroit-dtrniam">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Date décès</div>
+              <div class="info-value" id="ayantdroit-dtdeces">-</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">—</div>
+              <div class="info-value">—</div>
+            </div>
+          </div>
+
+          <div class="table-title" style="margin-top:12px;">Historique des situations Justificatifs d’Ouverture des Droits</div>
+          <table class="data-table" id="table-ayantdroit-jod">
+            <thead>
+              <tr>
+                <th>Situation JOD</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Date MAJ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="modal-actions">
+          <!--  <button class="button" type="button" id="ayantdroit-open-assure" disabled>Ouvrir fiche assuré</button> -->
+            <button class="button outline" type="button" id="ayantdroit-close-bottom">Fermer</button>
+          </div>
+         <!-- <div class="hint" style="margin-top:8px;">Adresse + autres onglets : encore partiellement fictifs (requêtes SQL à venir).</div> -->
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -944,13 +1085,28 @@
         const user = await ensureCredentials();
         const pwd = cachedPassword;
         if (!user || !pwd) return;
-        const [situResp, collResp] = await Promise.all([
+        const promises = [
           window.pywebview.api.fetch_assure_historique_situation_maladie(user, pwd, nirValue),
           window.pywebview.api.fetch_assure_collectivites_maladie(user, pwd, nirValue),
-        ]);
+        ];
+        const hasRenouv = !!window.pywebview?.api?.fetch_assure_renouvellement_maladie;
+        if (hasRenouv) {
+          promises.push(window.pywebview.api.fetch_assure_renouvellement_maladie(user, pwd, nirValue));
+        }
+        const [situResp, collResp, renouvResp] = await Promise.all(promises);
         if (selectedAssure?.nir !== nirValue) return;
         selectedAssure.situations_maladie = situResp?.data || [];
         selectedAssure.collectivites_maladie = collResp?.data || [];
+        if (hasRenouv) {
+          const r = renouvResp?.data?.[0] || {};
+          selectedAssure.date_effet_dernier_renouvellement = r.date_effet_dernier_renouvellement || null;
+          selectedAssure.date_envoi_renouvellement = r.date_envoi_renouvellement || null;
+          selectedAssure.date_retour_renouvellement = r.date_retour_renouvellement || null;
+        } else {
+          selectedAssure.date_effet_dernier_renouvellement = null;
+          selectedAssure.date_envoi_renouvellement = null;
+          selectedAssure.date_retour_renouvellement = null;
+        }
         renderMaladieDetails();
       } catch (_) {
         // ignore errors
@@ -975,6 +1131,48 @@
         selectedAssure.situations_vieillesse = situResp?.data || [];
         selectedAssure.collectivites_vieillesse = collResp?.data || [];
         renderVieillesseDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    async function loadRcoHistorique(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_historique_situation_rco || !window.pywebview?.api?.fetch_assure_collectivites_rco) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const [situResp, collResp] = await Promise.all([
+          window.pywebview.api.fetch_assure_historique_situation_rco(user, pwd, nirValue),
+          window.pywebview.api.fetch_assure_collectivites_rco(user, pwd, nirValue),
+        ]);
+        if (selectedAssure?.nir !== nirValue) return;
+        selectedAssure.situations_rco = situResp?.data || [];
+        selectedAssure.collectivites_rco = collResp?.data || [];
+        renderRcoDetails();
+      } catch (_) {
+        // ignore errors
+      }
+    }
+
+    async function loadCsgCollectivites(nir) {
+      const nirValue = (nir || "").trim();
+      if (!nirValue) return;
+      if (!window.pywebview?.api?.fetch_assure_collectivites_csg) {
+        return;
+      }
+      try {
+        const user = await ensureCredentials();
+        const pwd = cachedPassword;
+        if (!user || !pwd) return;
+        const resp = await window.pywebview.api.fetch_assure_collectivites_csg(user, pwd, nirValue);
+        if (selectedAssure?.nir !== nirValue) return;
+        selectedAssure.collectivites_csg = resp?.data || [];
+        renderCsgDetails();
       } catch (_) {
         // ignore errors
       }
@@ -1072,6 +1270,8 @@
       loadCurrentSituations(selectedAssure.nir);
       loadMaladieHistorique(selectedAssure.nir);
       loadVieillesseHistorique(selectedAssure.nir);
+      loadRcoHistorique(selectedAssure.nir);
+      loadCsgCollectivites(selectedAssure.nir);
       loadAssureAdresse(selectedAssure.nir);
       loadAyantsDroit(selectedAssure.nir);
       loadArpege(selectedAssure.nir);
@@ -1128,6 +1328,8 @@
           loadCurrentSituations(match.nir);
           loadMaladieHistorique(match.nir);
           loadVieillesseHistorique(match.nir);
+          loadRcoHistorique(match.nir);
+          loadCsgCollectivites(match.nir);
           loadAssureAdresse(match.nir);
           loadAyantsDroit(match.nir);
           loadArpege(match.nir);
@@ -1513,102 +1715,94 @@
     }
 
     function renderRcoDetails() {
-      const sampleSit = [
-        {
-          code_situation: "-",
-          date_conditions: "-",
-          date_declaration: "-",
-          date_effet: "-",
-          date_maj_situation: "-",
-          date_maj: "-",
-        },
-      ];
-
-      const sampleCollect = [
-        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
-        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "21/11/2002", etat_actuel: "OUVERTE" },
-      ];
-
       if (tableSitRco) {
         tableSitRco.innerHTML = "";
-        const rows = selectedAssure?.situations_rco || sampleSit;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.situations_rco || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.code_situation || "-"}</td>
-            <td>${r.date_conditions || "-"}</td>
-            <td>${r.date_declaration || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj_situation || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="6" style="text-align:center;">-</td>`;
           tableSitRco.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.code_situation || "-"}</td>
+              <td>${r.date_conditions || "-"}</td>
+              <td>${r.date_declaration || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj_situation || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSitRco.appendChild(tr);
+          });
+        }
       }
 
       if (tableCollectRco) {
         tableCollectRco.innerHTML = "";
-        const rows = selectedAssure?.collectivites_rco || sampleCollect;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.collectivites_rco || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.collectivite || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-            <td>${r.etat_actuel || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
           tableCollectRco.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.collectivite || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+              <td>${r.etat_actuel || "-"}</td>
+            `;
+            tableCollectRco.appendChild(tr);
+          });
+        }
       }
     }
 
     function renderCsgDetails() {
-      const sampleSit = [
-        {
-          code_situation: "-",
-          date_conditions: "-",
-          date_declaration: "-",
-          date_effet: "-",
-          date_maj_situation: "-",
-          date_maj: "-",
-        },
-      ];
-
-      const sampleCollect = [
-        { collectivite: "8.299", date_effet: "01/01/1993", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
-        { collectivite: "2.271", date_effet: "01/01/1920", date_maj: "20/01/1993", etat_actuel: "OUVERTE" },
-      ];
-
       if (tableSitCsg) {
         tableSitCsg.innerHTML = "";
-        const rows = selectedAssure?.situations_csg || sampleSit;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.situations_csg || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.code_situation || "-"}</td>
-            <td>${r.date_conditions || "-"}</td>
-            <td>${r.date_declaration || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj_situation || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="6" style="text-align:center;">-</td>`;
           tableSitCsg.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.code_situation || "-"}</td>
+              <td>${r.date_conditions || "-"}</td>
+              <td>${r.date_declaration || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj_situation || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+            `;
+            tableSitCsg.appendChild(tr);
+          });
+        }
       }
 
       if (tableCollectCsg) {
         tableCollectCsg.innerHTML = "";
-        const rows = selectedAssure?.collectivites_csg || sampleCollect;
-        rows.forEach((r) => {
+        const rows = selectedAssure?.collectivites_csg || [];
+        if (!rows.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.collectivite || "-"}</td>
-            <td>${r.date_effet || "-"}</td>
-            <td>${r.date_maj || "-"}</td>
-            <td>${r.etat_actuel || "-"}</td>
-          `;
+          tr.innerHTML = `<td colspan="4" style="text-align:center;">-</td>`;
           tableCollectCsg.appendChild(tr);
-        });
+        } else {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.collectivite || "-"}</td>
+              <td>${r.date_effet || "-"}</td>
+              <td>${r.date_maj || "-"}</td>
+              <td>${r.etat_actuel || "-"}</td>
+            `;
+            tableCollectCsg.appendChild(tr);
+          });
+        }
       }
     }
 
@@ -1617,6 +1811,14 @@
       const a = selectedAssure || {};
       const setVal = (el, val) => {
         if (el) el.textContent = val || "-";
+      };
+      const toBool = (val) => {
+        if (val === true) return true;
+        if (val === false) return false;
+        if (val == null) return false;
+        const s = String(val).trim().toLowerCase();
+        if (!s) return false;
+        return ["1", "y", "yes", "o", "oui", "true", "t", "vrai"].includes(s);
       };
       setVal(addrFields.type, a.addr_type);
       setVal(addrFields.line1, a.addr_l1);
@@ -1634,8 +1836,222 @@
       setVal(addrFields.domFax, a.addr_dom_fax);
       setVal(addrFields.nbLettres, a.addr_nb_lettres);
       setVal(addrFields.dateMaj, a.addr_date_maj);
-      setVal(addrFields.npai, a.addr_npai);
+      if (addrFields.npai) {
+        // NPAI is a boolean: show an unchecked/checked box.
+        addrFields.npai.textContent = toBool(a.addr_npai) ? "\u2611" : "\u2610";
+      }
     }
+
+    // Ayant droit modal (uses current table data + placeholders; will be completed when SQL is provided).
+    const adModalOverlay = document.getElementById("ayantdroit-modal-overlay");
+    const adModalClose = document.getElementById("ayantdroit-modal-close");
+    const adModalCloseBottom = document.getElementById("ayantdroit-close-bottom");
+    const adModalTitle = document.getElementById("ayantdroit-modal-title");
+    const adOpenAssureBtn = document.getElementById("ayantdroit-open-assure");
+
+    const adFields = {
+      nniAssure: document.getElementById("ayantdroit-nni-assure"),
+      nni: document.getElementById("ayantdroit-nni"),
+      rang: document.getElementById("ayantdroit-rang"),
+      sexeH: document.getElementById("ayantdroit-sexe-h"),
+      sexeF: document.getElementById("ayantdroit-sexe-f"),
+      nompat: document.getElementById("ayantdroit-nompat"),
+      nomusuel: document.getElementById("ayantdroit-nomusuel"),
+      prenoms: document.getElementById("ayantdroit-prenoms"),
+      dtnais: document.getElementById("ayantdroit-dtnais"),
+      age: document.getElementById("ayantdroit-age"),
+      dtmaj: document.getElementById("ayantdroit-dtmaj"),
+      codcomnais: document.getElementById("ayantdroit-codcomnais"),
+      commnais: document.getElementById("ayantdroit-commnais"),
+      rgnais: document.getElementById("ayantdroit-rgnais"),
+      paysnais: document.getElementById("ayantdroit-paysnais"),
+      tn: document.getElementById("ayantdroit-tn"),
+      paysnat: document.getElementById("ayantdroit-paysnat"),
+      dtdeces: document.getElementById("ayantdroit-dtdeces"),
+      dtrniam: document.getElementById("ayantdroit-dtrniam"),
+      dtinscr: document.getElementById("ayantdroit-dtinscr"),
+    };
+
+    const adJodBody = document.querySelector("#table-ayantdroit-jod tbody");
+
+    function parseDateFR(s) {
+      const v = (s || "").trim();
+      const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+      if (!m) return null;
+      const d = Number(m[1]);
+      const mo = Number(m[2]);
+      const y = Number(m[3]);
+      const dt = new Date(y, mo - 1, d);
+      if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+      return dt;
+    }
+
+    function computeAge(dateFR) {
+      const dt = parseDateFR(dateFR);
+      if (!dt) return "-";
+      const now = new Date();
+      let age = now.getFullYear() - dt.getFullYear();
+      const m = now.getMonth() - dt.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dt.getDate())) age -= 1;
+      return String(age);
+    }
+
+    function setText(el, val) {
+      if (!el) return;
+      const v = val == null ? "" : String(val).trim();
+      el.textContent = v ? v : "-";
+    }
+
+    function switchAyantDroitTab(tabId) {
+      document.querySelectorAll("[data-ayantdroit-tab]").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-ayantdroit-tab") === tabId);
+      });
+      document.querySelectorAll("[data-ayantdroit-panel]").forEach((panel) => {
+        panel.classList.toggle("active", panel.getAttribute("data-ayantdroit-panel") === tabId);
+      });
+    }
+
+    function closeAyantDroitModal() {
+      adModalOverlay?.classList.add("hidden");
+    }
+
+    function openAyantDroitModal(row) {
+      if (!adModalOverlay) return;
+
+      const nniAssure = selectedAssure?.nir || selectedAssure?.nni || "-";
+      const nniAd = (row?.nni || "").toString().trim();
+      const rang = row?.rang || "-";
+      const nompat = row?.nom || "-";
+      const nomusuel = row?.nom_usuel || "-";
+      const prenoms = row?.prenoms || "-";
+      const dtnais = row?.date_naissance || "-";
+
+      // Adresse onglet: volontairement vide (requete SQL a venir).
+
+      setText(adFields.nniAssure, nniAssure);
+      setText(adFields.nni, nniAd || "-");
+      setText(adFields.rang, rang);
+      if (adFields.sexeH) adFields.sexeH.textContent = "☐ Homme";
+      if (adFields.sexeF) adFields.sexeF.textContent = "☐ Femme";
+      setText(adFields.nompat, nompat);
+      setText(adFields.nomusuel, nomusuel);
+      setText(adFields.prenoms, prenoms);
+      setText(adFields.dtnais, dtnais);
+      setText(adFields.age, computeAge(dtnais));
+      setText(adFields.dtmaj, "-");
+      setText(adFields.codcomnais, "-");
+      setText(adFields.commnais, "-");
+      setText(adFields.rgnais, "-");
+      setText(adFields.paysnais, "-");
+      setText(adFields.tn, "-");
+      setText(adFields.paysnat, "-");
+      setText(adFields.dtdeces, "-");
+      setText(adFields.dtrniam, "-");
+      setText(adFields.dtinscr, "-");
+
+      if (adJodBody) {
+        adJodBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Chargement...</td></tr>`;
+      }
+
+      if (adModalTitle) {
+        const headerNom = nomusuel && nomusuel !== "-" ? nomusuel : nompat;
+        adModalTitle.textContent = `Ayant droit - Rang ${rang} - ${headerNom} ${prenoms}`.trim();
+      }
+
+      if (adOpenAssureBtn) {
+        adOpenAssureBtn.disabled = !nniAd;
+        adOpenAssureBtn.onclick = async () => {
+          if (!nniAd) return;
+          closeAyantDroitModal();
+          await openAssureByNniDirect(nniAd);
+        };
+      }
+
+      switchAyantDroitTab("identification");
+      adModalOverlay.classList.remove("hidden");
+
+      // Load real identification + JOD history (best effort).
+      (async () => {
+        if (!window.pywebview?.api?.fetch_ayant_droit_identification) return;
+        if (!nniAd || !nniAssure || nniAssure === "-") return;
+        try {
+          const user = await ensureCredentials();
+          const pwd = cachedPassword;
+          if (!user || !pwd) return;
+          const [idResp, jodResp] = await Promise.all([
+            window.pywebview.api.fetch_ayant_droit_identification(user, pwd, String(nniAssure), String(nniAd)),
+            window.pywebview.api.fetch_ayant_droit_jod_history(user, pwd, String(nniAssure), String(nniAd)),
+          ]);
+          if (adModalOverlay.classList.contains("hidden")) return;
+
+          const d = idResp?.data || null;
+          if (idResp?.ok === "true" && d) {
+            setText(adFields.nniAssure, d.nni_assure);
+            setText(adFields.nni, d.nni_ayant_droit);
+            setText(adFields.rang, d.rang_beneficiaire);
+            setText(adFields.nompat, d.nom_ayant_droit);
+            setText(adFields.nomusuel, d.nom_usuel_ayant_droit);
+            setText(adFields.prenoms, d.prenoms_ayant_droit);
+            setText(adFields.dtnais, d.date_naissance_ayant_droit);
+            setText(adFields.age, computeAge(d.date_naissance_ayant_droit));
+            setText(adFields.dtmaj, d.date_maj);
+            setText(adFields.codcomnais, d.code_commune_naissance);
+            setText(adFields.commnais, d.commune_de_naissance);
+            setText(adFields.rgnais, d.rang_naissance);
+            setText(adFields.paysnais, d.pays_de_naissance);
+            setText(adFields.tn, d.type_nationalite);
+            setText(adFields.paysnat, d.pays_nationalite);
+            setText(adFields.dtdeces, d.date_deces);
+            setText(adFields.dtrniam, d.date_certif_rniam);
+            setText(adFields.dtinscr, d.date_inscription);
+
+            const sexe = String(d.sexe_ayant_droit || "").trim();
+            if (adFields.sexeH) adFields.sexeH.textContent = sexe === "1" ? "☑ Homme" : "☐ Homme";
+            if (adFields.sexeF) adFields.sexeF.textContent = sexe === "2" ? "☑ Femme" : "☐ Femme";
+          } else {
+            if (adJodBody) adJodBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">-</td></tr>`;
+          }
+
+          if (adJodBody) {
+            const rows = (jodResp?.ok === "true" ? (jodResp.data || []) : []) || [];
+            adJodBody.innerHTML = "";
+            if (!rows.length) {
+              adJodBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">-</td></tr>`;
+            } else {
+              rows.forEach((r) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td>${r.situation_jod || "-"}</td>
+                  <td>${r.date_debut || "-"}</td>
+                  <td>${r.date_fin || "-"}</td>
+                  <td>${r.date_maj || "-"}</td>
+                `;
+                adJodBody.appendChild(tr);
+              });
+            }
+          }
+        } catch (_) {
+          if (adJodBody) adJodBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">-</td></tr>`;
+        }
+      })();
+    }
+
+    document.querySelectorAll("[data-ayantdroit-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-ayantdroit-tab");
+        if (id) switchAyantDroitTab(id);
+      });
+    });
+    adModalClose?.addEventListener("click", closeAyantDroitModal);
+    adModalCloseBottom?.addEventListener("click", closeAyantDroitModal);
+    adModalOverlay?.addEventListener("click", (e) => {
+      if (e.target === adModalOverlay) closeAyantDroitModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && adModalOverlay && !adModalOverlay.classList.contains("hidden")) {
+        closeAyantDroitModal();
+      }
+    });
 
     function renderAyantDroitDetails() {
       if (tableAyantDroit) {
@@ -1646,10 +2062,16 @@
           tr.innerHTML = `<td colspan="5" style="text-align:center;">-</td>`;
           tableAyantDroit.appendChild(tr);
         } else {
+          const isEmptyAyantDroitRow = (r) => {
+            if (!r || typeof r !== "object") return true;
+            const fields = [r.rang, r.nom, r.nom_usuel, r.prenoms, r.date_naissance, r.nni];
+            return fields.every((v) => !String(v || "").trim());
+          };
           rows.forEach((r) => {
             const tr = document.createElement("tr");
             const nom = r.nom_usuel || r.nom || "-";
             const hasNni = !!(r.nni || "").toString().trim();
+            const hasAnyData = !isEmptyAyantDroitRow(r);
             tr.innerHTML = `
               <td>${r.rang || "-"}</td>
               <td>${nom}</td>
@@ -1658,26 +2080,22 @@
               <td></td>
             `;
             const actionTd = tr.querySelector("td:last-child");
-            if (actionTd) {
+            if (actionTd && hasAnyData) {
               const btn = document.createElement("button");
               btn.className = "button outline";
               btn.type = "button";
               btn.textContent = "Consulter";
-              btn.disabled = !hasNni;
               btn.addEventListener("click", async (e) => {
                 e.stopPropagation();
-                if (!hasNni) {
-                  window.alert("NNI manquant pour ouvrir l'assure.");
-                  return;
-                }
-                await openAssureByNniDirect(r.nni);
+                openAyantDroitModal(r);
               });
               actionTd.appendChild(btn);
             }
-            tr.addEventListener("dblclick", async () => {
-              if (!hasNni) return;
-              await openAssureByNniDirect(r.nni);
-            });
+            if (hasAnyData) {
+              tr.addEventListener("dblclick", () => {
+                openAyantDroitModal(r);
+              });
+            }
             tableAyantDroit.appendChild(tr);
           });
         }
@@ -1864,12 +2282,14 @@
             renderAyantDroitDetails();
             renderArpegeDetails();
             loadMaladieSituations(match.nir);
-            loadCurrentSituations(match.nir);
-            loadMaladieHistorique(match.nir);
-            loadVieillesseHistorique(match.nir);
-            loadAssureAdresse(match.nir);
-            loadAyantsDroit(match.nir);
-            loadArpege(match.nir);
+          loadCurrentSituations(match.nir);
+          loadMaladieHistorique(match.nir);
+          loadVieillesseHistorique(match.nir);
+          loadRcoHistorique(match.nir);
+          loadCsgCollectivites(match.nir);
+          loadAssureAdresse(match.nir);
+          loadAyantsDroit(match.nir);
+          loadArpege(match.nir);
             setActiveTab("infos");
             toggleDetails(true);
             toggleSearchArea(true);

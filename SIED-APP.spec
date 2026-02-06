@@ -1,7 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('templates', 'templates'), ('static', 'static'), ('images', 'images'), ('\\\\Sbureautique\\sied\\ndpartage\\D\u00e9pendance\\instantclient_23_8', 'instantclient_23_8')]
+# NOTE: keep the UNC path unicode-safe (avoid mojibake on some code pages).
+datas = [
+    ('templates', 'templates'),
+    ('static', 'static'),
+    ('images', 'images'),
+    ('\\\\Sbureautique\\sied\\ndpartage\\Dépendance\\instantclient_23_8', 'instantclient_23_8'),
+    ('oracle_net', 'oracle_net'),
+]
 binaries = []
 hiddenimports = []
 tmp_ret = collect_all('oracledb')

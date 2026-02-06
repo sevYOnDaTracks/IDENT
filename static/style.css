@@ -992,6 +992,85 @@ body[data-theme="dark"] .tab.active {
   background: rgba(15, 28, 63, 0.03);
 }
 
+.info-row.span-all {
+  grid-column: 1 / -1;
+}
+
+/* Modal (Ayant droit details) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 12, 22, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 2000;
+}
+
+.modal {
+  width: min(980px, 100%);
+  max-height: min(86vh, 900px);
+  overflow: auto;
+  background: var(--card, #ffffff);
+  border: 1px solid rgba(10, 20, 40, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(12, 20, 45, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 10px 16px;
+  border-bottom: 1px solid rgba(10, 20, 40, 0.08);
+}
+
+.modal-title {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text, #0d1b3f);
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px 0 16px;
+}
+
+.modal-body {
+  padding: 14px 16px 16px 16px;
+}
+
+.modal-panel {
+  display: none;
+}
+
+.modal-panel.active {
+  display: block;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 20, 40, 0.12);
+  background: rgba(10, 20, 40, 0.03);
+  font-weight: 700;
+  color: var(--text, #0d1b3f);
+  white-space: nowrap;
+}
+
 .info-label {
   color: var(--muted);
   font-weight: 600;

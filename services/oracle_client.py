@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 
@@ -11,14 +12,40 @@ def _format_date(value):
 class OracleClient:
     """Client Oracle centralisé (initialisation + requêtes Assurés)."""
 
-    def __init__(self, dsn: str, instant_client_dir: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        dsn: str,
+        instant_client_dir: Optional[Path] = None,
+        oracle_config_dir: Optional[Path] = None,
+    ) -> None:
         self.dsn = dsn
         self.instant_client_dir = instant_client_dir
+        self.oracle_config_dir = oracle_config_dir
         self.oracle_client_init_error: Optional[str] = None
+        self.instant_client_dir_used: Optional[str] = None
+        self.oracle_config_dir_used: Optional[str] = None
         self._init_oracle_client()
 
     def _format_oracle_error(self, exc: BaseException) -> str:
         msg = str(exc)
+        if "ORA-28041" in msg:
+            extra = (
+                "ORA-28041 est souvent lie a une negotiation d'authentification (NTS/SSO) cote client.\n"
+                "Solution recommandee: fournir un sqlnet.ora minimal (SQLNET.AUTHENTICATION_SERVICES=(NONE))\n"
+                "et forcer son utilisation via TNS_ADMIN / config_dir (Instant Client en mode THICK)."
+            )
+            if self.oracle_config_dir_used or self.oracle_config_dir:
+                extra = f"{extra}\n\noracle_config_dir: {self.oracle_config_dir_used or str(self.oracle_config_dir)}"
+
+            try:
+                d = self.diagnostics()
+                mode = (d.get("mode") or "unknown").upper()
+                v = d.get("client_version")
+                dsn_hint = d.get("dsn")
+                extra = f"{extra}\nmode: {mode}{' - client ' + str(v) if v else ''}\ndsn: {dsn_hint}"
+            except Exception:
+                pass
+            return f"{msg}\n\n{extra}"
         if "DPY-3010" in msg:
             extra = (
                 "Ce serveur Oracle n'est pas supporte par python-oracledb en mode THIN.\n"
@@ -29,6 +56,42 @@ class OracleClient:
             return f"{msg}\n\n{extra}"
         return msg
 
+    def _write_oracle_error_log(self, exc: BaseException) -> None:
+        """
+        Write a local log file (next to EXE when frozen) for troubleshooting issues on other PCs.
+        Never logs credentials.
+        """
+        try:
+            import sys
+
+            if getattr(sys, "frozen", False):
+                root = Path(sys.executable).parent
+            else:
+                root = Path(__file__).resolve().parents[1]
+
+            log_path = root / "oracle_error.log"
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            diag = {}
+            try:
+                diag = self.diagnostics()
+            except Exception:
+                diag = {}
+
+            parts = [
+                f"[{ts}] Oracle connection error",
+                f"error: {type(exc).__name__}: {exc}",
+                f"mode: {diag.get('mode')}",
+                f"client_version: {diag.get('client_version')}",
+                f"instant_client_dir: {diag.get('instant_client_dir')}",
+                f"oracle_config_dir: {diag.get('oracle_config_dir')}",
+                f"dsn: {diag.get('dsn')}",
+                "",
+            ]
+            log_path.write_text("\n".join(parts), encoding="utf-8")
+        except Exception:
+            # Best-effort only.
+            return
+
     def _init_oracle_client(self) -> None:
         """Initialise l'instant client Oracle si présent (optionnel)."""
         try:
@@ -38,10 +101,48 @@ class OracleClient:
 
         if self.instant_client_dir and self.instant_client_dir.exists():
             try:
-                oracledb.init_oracle_client(lib_dir=str(self.instant_client_dir))
+                config_dir = None
+                if self.oracle_config_dir and self.oracle_config_dir.exists():
+                    config_dir = str(self.oracle_config_dir)
+
+                # config_dir is crucial for sqlnet.ora/tnsnames.ora resolution in frozen builds.
+                oracledb.init_oracle_client(lib_dir=str(self.instant_client_dir), config_dir=config_dir)
+                self.instant_client_dir_used = str(self.instant_client_dir)
+                self.oracle_config_dir_used = config_dir
             except Exception as exc:  # noqa: BLE001
                 # Keep running, but remember the error to help troubleshooting.
                 self.oracle_client_init_error = str(exc)
+
+    def diagnostics(self) -> Dict[str, object]:
+        """Return diagnostics about the Oracle driver mode for UI/troubleshooting."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"ok": "false", "mode": "unknown", "error": f"Module oracledb indisponible : {exc}"}
+
+        mode = "thin" if getattr(oracledb, "is_thin", lambda: True)() else "thick"
+        client_version = None
+        if mode == "thick":
+            try:
+                v = oracledb.clientversion()
+                client_version = ".".join(str(x) for x in v)
+            except Exception:
+                client_version = None
+
+        # Don't leak full DSN details; provide a short hint.
+        dsn_hint = self.dsn
+        if len(dsn_hint) > 120:
+            dsn_hint = dsn_hint[:117] + "..."
+
+        return {
+            "ok": "true",
+            "mode": mode,
+            "client_version": client_version,
+            "instant_client_dir": self.instant_client_dir_used or (str(self.instant_client_dir) if self.instant_client_dir else None),
+            "oracle_config_dir": self.oracle_config_dir_used or (str(self.oracle_config_dir) if self.oracle_config_dir else None),
+            "instant_client_error": self.oracle_client_init_error,
+            "dsn": dsn_hint,
+        }
 
     def test_connection(self, username: str, password: str) -> Optional[str]:
         """Retourne None si OK, sinon le message d'erreur."""
@@ -57,6 +158,7 @@ class OracleClient:
                     cursor.fetchone()
             return None
         except Exception as exc:  # noqa: BLE001
+            self._write_oracle_error_log(exc)
             return self._format_oracle_error(exc)
 
     def query_user_login(self, username: str, password: str, identifier: str, user_password: str) -> Dict[str, object]:
@@ -521,6 +623,50 @@ class OracleClient:
             )
         return {"data": data, "error": None}
 
+    def query_assure_renouvellement_regime_particulier_maladie(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne les dates de renouvellement du regime particulier (maladie) pour un NIR."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sm.sm_dtef_rnv,
+                sm.sm_dtenv_rnv,
+                sm.sm_dtret_rnv
+            FROM AT_AS#ASSURE a
+            JOIN AT_SM#ASS_SIT_CAM sm
+              ON sm.smas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY sm.sm_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    row = cursor.fetchone()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        if not row:
+            return {"data": [], "error": None}
+
+        data = [
+            {
+                "date_effet_dernier_renouvellement": _format_date(row[0]),
+                "date_envoi_renouvellement": _format_date(row[1]),
+                "date_retour_renouvellement": _format_date(row[2]),
+            }
+        ]
+        return {"data": data, "error": None}
+
     def query_assure_historique_situation_vieillesse(
         self,
         username: str,
@@ -604,6 +750,161 @@ class OracleClient:
               ON cs.cs_id = hc.hccs_id
             WHERE a.as_nni = :nir
               AND ac.acst_id = '2'
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "collectivite": row[0],
+                    "date_effet": _format_date(row[1]),
+                    "date_maj": _format_date(row[2]),
+                    "etat_actuel": row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_historique_situation_rco(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des situations RCO (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                sr.srcsa_id,
+                sr.src_dtcond,
+                sr.src_dtdecl,
+                sr.src_dtefdeb,
+                sr.src_dtnot,
+                sr.src_dtmaj
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_SRC#ASS_SIT_RCO sr
+              ON sr.srcas_id = a.as_id
+            WHERE a.as_nni = :nir
+            ORDER BY sr.src_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "code_situation": row[0],
+                    "date_conditions": _format_date(row[1]),
+                    "date_declaration": _format_date(row[2]),
+                    "date_effet": _format_date(row[3]),
+                    "date_maj_situation": _format_date(row[4]),
+                    "date_maj": _format_date(row[5]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_collectivites_rco(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """
+        Retourne l'historique des collectivites RCO (par NIR).
+
+        Note: selon le besoin fourni, ACST_ID = '2'.
+        """
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ac.accl_id,
+                ac.ac_dtefdeb,
+                ac.ac_dtmaj,
+                cs.cs_lib
+            FROM AT_AC#ASS_COL ac
+            JOIN AT_AS#ASSURE a
+              ON ac.acas_id = a.as_id
+            LEFT JOIN AT_HC#HIS_SIT_COL hc
+              ON hc.hccl_id = ac.accl_id
+             AND hc.hc_dtfin = TO_DATE('31123999', 'DDMMYYYY')
+            LEFT JOIN AT_CS#LIB_SIT_COL cs
+              ON cs.cs_id = hc.hccs_id
+            WHERE a.as_nni = :nir
+              AND ac.acst_id = '2'
+            ORDER BY ac.ac_dtefdeb DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"nir": nir})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "collectivite": row[0],
+                    "date_effet": _format_date(row[1]),
+                    "date_maj": _format_date(row[2]),
+                    "etat_actuel": row[3],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_assure_collectivites_csg(
+        self,
+        username: str,
+        password: str,
+        nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique des collectivites maladie pour l'onglet CSG (par NIR)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                ac.accl_id,
+                ac.ac_dtefdeb,
+                ac.ac_dtmaj,
+                cs.cs_lib
+            FROM AT_AC#ASS_COL ac
+            JOIN AT_AS#ASSURE a
+              ON ac.acas_id = a.as_id
+            LEFT JOIN AT_HC#HIS_SIT_COL hc
+              ON hc.hccl_id = ac.accl_id
+             AND hc.hc_dtfin = TO_DATE('31123999', 'DDMMYYYY')
+            LEFT JOIN AT_CS#LIB_SIT_COL cs
+              ON cs.cs_id = hc.hccs_id
+            WHERE a.as_nni = :nir
+              AND ac.acst_id = '1'
+            ORDER BY ac.ac_dtefdeb DESC
         """
 
         try:
@@ -742,6 +1043,152 @@ class OracleClient:
                     "nom_usuel": row[3],
                     "prenoms": row[4],
                     "date_naissance": _format_date(row[5]),
+                }
+            )
+        return {"data": data, "error": None}
+
+    def query_ayant_droit_identification(
+        self,
+        username: str,
+        password: str,
+        assure_nir: str,
+        ayant_nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'identification d'un ayant droit (par NIR assure + NIR ayant droit)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        sql_primary = """
+            SELECT
+                a.as_nni,
+                ay.ay_noord,
+                ay.ay_nni,
+                ay.ay_nompat,
+                ay.ay_nomusuel,
+                ay.ay_prenoms,
+                ay.ay_dtnais,
+                ay.ay_cdsexe,
+                ay.ay_dtmaj,
+                ay.ay_codcomnais,
+                ay.ay_naiscom,
+                ay.ay_rgnais,
+                pn.py_lib,
+                ay.ay_dtdeces,
+                ay.ay_dtrniam,
+                ay.ay_dtinscr,
+                tn.tn_lib,
+                pnational.py_lib,
+                ay.ay_id
+            FROM AT_AS#ASSURE a
+            LEFT JOIN AT_AY#AYANT_DROIT ay
+              ON ay.ayas_id = a.as_id
+            LEFT JOIN AT_PY#PAYS pn
+              ON ay.aypy_nais_id = pn.py_id
+            LEFT JOIN AT_PY#PAYS pnational
+              ON ay.aypy_natpays1_id = pnational.py_id
+            LEFT JOIN at_tn#type_national tn
+              ON ay.aytn_id = tn.tn_id
+            WHERE a.as_nni = :assure_nir
+              AND ay.ay_nni = :ayant_nir
+        """
+
+        sql_fallback = sql_primary.replace("ay.aypy_natpays1_id", "ay.aypy_nais_id")
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    try:
+                        cursor.execute(sql_primary, {"assure_nir": assure_nir, "ayant_nir": ayant_nir})
+                        row = cursor.fetchone()
+                    except Exception as exc:
+                        # Some schemas don't have AYPY_NATPAYS1_ID; fallback to the query provided by the user.
+                        if "ORA-00904" in str(exc) and "AYPY_NATPAYS1_ID" in str(exc).upper():
+                            cursor.execute(sql_fallback, {"assure_nir": assure_nir, "ayant_nir": ayant_nir})
+                            row = cursor.fetchone()
+                        else:
+                            raise
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": str(exc)}
+
+        if not row:
+            return {"data": None, "error": None}
+
+        data = {
+            "nni_assure": row[0],
+            "rang_beneficiaire": row[1],
+            "nni_ayant_droit": row[2],
+            "nom_ayant_droit": row[3],
+            "nom_usuel_ayant_droit": row[4],
+            "prenoms_ayant_droit": row[5],
+            "date_naissance_ayant_droit": _format_date(row[6]),
+            "sexe_ayant_droit": row[7],
+            "date_maj": _format_date(row[8]),
+            "code_commune_naissance": row[9],
+            "commune_de_naissance": row[10],
+            "rang_naissance": row[11],
+            "pays_de_naissance": row[12],
+            "date_deces": _format_date(row[13]),
+            "date_certif_rniam": _format_date(row[14]),
+            "date_inscription": _format_date(row[15]),
+            "type_nationalite": row[16],
+            "pays_nationalite": row[17],
+            "ayant_droit_id": row[18],
+        }
+        return {"data": data, "error": None}
+
+    def query_ayant_droit_jod_history(
+        self,
+        username: str,
+        password: str,
+        assure_nir: str,
+        ayant_nir: str,
+    ) -> Dict[str, object]:
+        """Retourne l'historique JOD d'un ayant droit (via AY_ID)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        # Resolve ay_id from NIRs.
+        id_resp = self.query_ayant_droit_identification(username, password, assure_nir, ayant_nir)
+        if id_resp.get("error"):
+            return {"data": [], "error": id_resp["error"]}
+        ad = id_resp.get("data") or {}
+        ay_id = ad.get("ayant_droit_id")
+        if not ay_id:
+            return {"data": [], "error": None}
+
+        sql = """
+            SELECT
+                j.jo_lib,
+                jod.jy_dtdjod,
+                jod.jy_dtfjod,
+                jod.jy_dtmaj
+            FROM AT_JY#JOD_AYT jod
+            LEFT JOIN AT_JO#COD_JOD j
+              ON jod.jyjo_id = j.jo_id
+            WHERE jod.jyay_id = :ay_id
+            ORDER BY jod.jy_dtdjod DESC
+        """
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {"ay_id": ay_id})
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": str(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "situation_jod": row[0],
+                    "date_debut": _format_date(row[1]),
+                    "date_fin": _format_date(row[2]),
+                    "date_maj": _format_date(row[3]),
                 }
             )
         return {"data": data, "error": None}

@@ -11,6 +11,11 @@ __pycache__/
 build/
 dist/
 
+# Local debug artifacts
+build_tmp_assures.js
+*-test.spec
+SIED-IDENT-test.spec
+
 # OS / tooling
 .DS_Store
 Thumbs.db
