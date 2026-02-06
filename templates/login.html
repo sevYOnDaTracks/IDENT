@@ -127,7 +127,8 @@
           if (resp?.data) {
             localStorage.setItem("logged_user", JSON.stringify(resp.data));
           }
-          window.location.href = "home.html";
+          // Replace so the login page is not reachable via the Back button after a successful login.
+          window.location.replace("home.html");
         } else {
           setResult(resp?.message || "Connexion impossible.", false);
         }

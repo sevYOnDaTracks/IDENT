@@ -531,11 +531,11 @@
           if (window.pywebview?.api?.logout) {
             await window.pywebview.api.logout();
           }
-        } catch (_) {}
-        localStorage.removeItem("logged_user");
-        window.location.href = "login.html";
-      });
-    }
+          } catch (_) {}
+          localStorage.removeItem("logged_user");
+          window.location.replace("login.html");
+        });
+      }
 
     const applyUser = (data) => {
       if (!data) return;

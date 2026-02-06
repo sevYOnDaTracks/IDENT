@@ -15,6 +15,7 @@ dist/
 build_tmp_assures.js
 *-test.spec
 SIED-IDENT-test.spec
+sqlnet.log
 
 # OS / tooling
 .DS_Store

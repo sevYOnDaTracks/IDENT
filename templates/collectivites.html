@@ -948,7 +948,7 @@
         btnView.textContent = "Consulter";
         btnView.addEventListener("click", async (e) => {
           e.stopPropagation();
-          await openCollectivite(r);
+          await openCollectivite(r, { pushHistory: true });
         });
         actionsTd.appendChild(btnView);
         tr.appendChild(actionsTd);
@@ -1033,26 +1033,32 @@
       }
     }
 
-    async function openCollectivite(selected) {
+    async function openCollectivite(selected, options = {}) {
       if (!selected || !selected.numero) {
         window.alert("Numéro de collectivité manquant.");
         return;
       }
       selectedData = selected;
+      const numero = String(selected.numero || "").trim();
+      const shouldPushHistory = options.pushHistory !== false && !!numero;
+      if (shouldPushHistory) {
+        collectEnsureListState();
+        collectPushDetailState(numero);
+      }
       applyIdentification(selected);
       renderTables();
       toggleList(false);
       toggleDetails(true);
       setActiveTab("ident");
-      await loadIdentification(selected.numero);
-      await loadAdresse(selected.numero);
-      await loadSituations(selected.numero);
-      await loadFusions(selected.numero);
-      await loadResponsable(selected.numero, "maladie");
-      await loadResponsable(selected.numero, "vieillesse");
-      await loadAssures(selected.numero);
-      await loadCommunautes(selected.numero);
-      await loadReferent(selected.numero);
+      await loadIdentification(numero);
+      await loadAdresse(numero);
+      await loadSituations(numero);
+      await loadFusions(numero);
+      await loadResponsable(numero, "maladie");
+      await loadResponsable(numero, "vieillesse");
+      await loadAssures(numero);
+      await loadCommunautes(numero);
+      await loadReferent(numero);
     }
 
     async function loadIdentification(numero) {
@@ -1515,35 +1521,100 @@
     });
 
 
-    backResultsButton?.addEventListener("click", () => {
+    function clearToolbarCollectivite() {
+      if (!toolbarCollectivite || !toolbarCollectiviteValue) return;
+      toolbarCollectivite.hidden = true;
+      toolbarCollectiviteValue.textContent = "-";
+      if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
+    }
+
+    // ---- History management (list/detail) so toolbar back/forward behave like a real website.
+    const COLLECT_HISTORY_PAGE = "collectivites";
+
+    function collectUrlList() {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("collect");
+      return url.pathname + (url.search ? url.search : "");
+    }
+
+    function collectUrlDetail(numero) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("collect", String(numero));
+      return url.pathname + (url.search ? url.search : "");
+    }
+
+    function collectEnsurePageState() {
+      const st = history.state;
+      if (st && st.page === COLLECT_HISTORY_PAGE) return;
+      history.replaceState({ page: COLLECT_HISTORY_PAGE, view: "list" }, "", collectUrlList());
+    }
+
+    function collectEnsureListState() {
+      const st = history.state;
+      if (st && st.page === COLLECT_HISTORY_PAGE && st.view === "list") return;
+      history.replaceState({ page: COLLECT_HISTORY_PAGE, view: "list" }, "", collectUrlList());
+    }
+
+    function collectReplaceDetailState(numero) {
+      const value = String(numero || "").trim();
+      if (!value) return;
+      history.replaceState(
+        { page: COLLECT_HISTORY_PAGE, view: "detail", numero: value, internal: false },
+        "",
+        collectUrlDetail(value)
+      );
+    }
+
+    function collectReplaceListState() {
+      history.replaceState({ page: COLLECT_HISTORY_PAGE, view: "list" }, "", collectUrlList());
+    }
+
+    function collectPushDetailState(numero) {
+      const value = String(numero || "").trim();
+      if (!value) return;
+      const curr = history.state;
+      if (curr && curr.page === COLLECT_HISTORY_PAGE && curr.view === "detail" && String(curr.numero || "") === value) return;
+      history.pushState(
+        { page: COLLECT_HISTORY_PAGE, view: "detail", numero: value, internal: true },
+        "",
+        collectUrlDetail(value)
+      );
+    }
+
+    function collectApplyListState() {
       toggleDetails(false);
       toggleList(true);
-      if (toolbarCollectivite && toolbarCollectiviteValue) {
-        toolbarCollectivite.hidden = true;
-        toolbarCollectiviteValue.textContent = "-";
-        if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
+      clearToolbarCollectivite();
+      setCollectLoading(false);
+    }
+
+    async function collectApplyDetailState(numero) {
+      const value = String(numero || "").trim();
+      if (!value) return;
+      await openCollectivite({ numero: value }, { pushHistory: false });
+    }
+
+    window.addEventListener("popstate", (event) => {
+      const st = event.state;
+      if (!st || st.page !== COLLECT_HISTORY_PAGE) return;
+      if (st.view === "list") {
+        collectApplyListState();
+        return;
+      }
+      if (st.view === "detail") {
+        collectApplyDetailState(st.numero).catch(() => {});
       }
     });
 
-    const toolbarBack = document.querySelector('.toolbar-nav[aria-label="Retour"]');
-    if (toolbarBack) {
-      toolbarBack.removeAttribute("onclick");
-      toolbarBack.addEventListener("click", (e) => {
-        if (detailsSection && !detailsSection.hidden) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          toggleDetails(false);
-          toggleList(true);
-          if (toolbarCollectivite && toolbarCollectiviteValue) {
-            toolbarCollectivite.hidden = true;
-            toolbarCollectiviteValue.textContent = "-";
-            if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
-          }
-          return;
-        }
+    backResultsButton?.addEventListener("click", () => {
+      const st = history.state;
+      if (st && st.page === COLLECT_HISTORY_PAGE && st.view === "detail" && st.internal) {
         history.back();
-      });
-    }
+        return;
+      }
+      collectReplaceListState();
+      collectApplyListState();
+    });
 
     function initUserMenu() {
       const trigger = document.getElementById("user-menu-trigger");
@@ -1573,7 +1644,7 @@
             }
           } catch (_) {}
           localStorage.removeItem("logged_user");
-          window.location.href = "login.html";
+          window.location.replace("login.html");
         });
       }
 
@@ -1604,18 +1675,6 @@
       window.addEventListener("pywebviewready", loadUserFromApi);
     }
 
-      const toolbarForward = document.querySelector('.toolbar-nav[aria-label="Avancer"]');
-      if (toolbarForward) {
-        toolbarForward.removeAttribute("onclick");
-        toolbarForward.addEventListener("click", async () => {
-          if (detailsSection && detailsSection.hidden && selectedData?.numero) {
-            await openCollectivite(selectedData);
-            return;
-          }
-          history.forward();
-        });
-      }
-
       let collectBootstrapAttempts = 0;
       async function bootstrapCollectFromQuery() {
         const params = new URLSearchParams(window.location.search || "");
@@ -1637,6 +1696,8 @@
         if (searchInput) searchInput.value = numero;
         toggleList(false);
         setCollectLoading(true);
+        // Auto-load entry point: keep a single "detail" history entry so Back returns to the previous page.
+        collectReplaceDetailState(numero);
         if (!window.pywebview?.api?.fetch_collectivite_identification) {
           if (collectBootstrapAttempts < 10) {
             collectBootstrapAttempts += 1;
@@ -1644,7 +1705,7 @@
           }
           return;
         }
-        await openCollectivite({ numero });
+        await openCollectivite({ numero }, { pushHistory: false });
         setCollectLoading(false);
       }
 

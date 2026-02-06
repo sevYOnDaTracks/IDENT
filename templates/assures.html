@@ -614,7 +614,7 @@
           }
         } catch (_) {}
         localStorage.removeItem("logged_user");
-        window.location.href = "login.html";
+        window.location.replace("login.html");
       });
     }
 
@@ -1249,9 +1249,15 @@
       }
     }
 
-    function openAssureByIndex(idx) {
+    function openAssureByIndex(idx, options = {}) {
       selectedAssure = assureData[idx];
       if (!selectedAssure) return;
+      const nir = (selectedAssure.nir || "").toString().trim();
+      const shouldPushHistory = options.pushHistory !== false && !!nir;
+      if (shouldPushHistory) {
+        assureEnsureListState();
+        assurePushDetailState(nir);
+      }
       lastNirValue = selectedAssure.nir || lastNirValue;
       updateAssureHeader();
       renderInfoDetails();
@@ -1265,7 +1271,6 @@
       renderArpegeDetails();
       toggleDetails(true);
       toggleList(false);
-      if (assureSearch) assureSearch.value = "";
       loadMaladieSituations(selectedAssure.nir);
       loadCurrentSituations(selectedAssure.nir);
       loadMaladieHistorique(selectedAssure.nir);
@@ -1277,7 +1282,7 @@
       loadArpege(selectedAssure.nir);
     }
 
-    async function openAssureByNniDirect(nniValue) {
+    async function openAssureByNniDirect(nniValue, options = {}) {
       const raw = (nniValue || "").toString().trim();
       if (!raw) {
         window.alert("NNI manquant pour ouvrir l'assure.");
@@ -1285,6 +1290,11 @@
       }
       const normalized = raw.replace(/\D/g, "");
       const nir = normalized || raw;
+      const shouldPushHistory = options.pushHistory !== false && !!nir;
+      if (shouldPushHistory) {
+        assureEnsurePageState();
+        assurePushDetailState(nir);
+      }
       setLoader(true, "Chargement de l'assuré...");
       toggleList(false);
       if (!window.pywebview?.api?.fetch_assure) {
@@ -1380,39 +1390,101 @@
       }
     }
 
-    backResultsButton?.addEventListener("click", () => {
+    // ---- History management (list/detail) so toolbar back/forward behave like a real website.
+    const ASSURE_HISTORY_PAGE = "assures";
+
+    function assureUrlList() {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("nir");
+      return url.pathname + (url.search ? url.search : "");
+    }
+
+    function assureUrlDetail(nir) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("nir", String(nir));
+      return url.pathname + (url.search ? url.search : "");
+    }
+
+    function assureEnsurePageState() {
+      const st = history.state;
+      if (st && st.page === ASSURE_HISTORY_PAGE) return;
+      history.replaceState({ page: ASSURE_HISTORY_PAGE, view: "list" }, "", assureUrlList());
+    }
+
+    function assureEnsureListState() {
+      const st = history.state;
+      if (st && st.page === ASSURE_HISTORY_PAGE && st.view === "list") return;
+      history.replaceState({ page: ASSURE_HISTORY_PAGE, view: "list" }, "", assureUrlList());
+    }
+
+    function assureReplaceDetailState(nir) {
+      const value = String(nir || "").trim();
+      if (!value) return;
+      history.replaceState(
+        { page: ASSURE_HISTORY_PAGE, view: "detail", nir: value, internal: false },
+        "",
+        assureUrlDetail(value)
+      );
+    }
+
+    function assureReplaceListState() {
+      history.replaceState({ page: ASSURE_HISTORY_PAGE, view: "list" }, "", assureUrlList());
+    }
+
+    function assurePushDetailState(nir) {
+      const value = String(nir || "").trim();
+      if (!value) return;
+      const curr = history.state;
+      if (curr && curr.page === ASSURE_HISTORY_PAGE && curr.view === "detail" && String(curr.nir || "") === value) return;
+      history.pushState(
+        { page: ASSURE_HISTORY_PAGE, view: "detail", nir: value, internal: true },
+        "",
+        assureUrlDetail(value)
+      );
+    }
+
+    function assureApplyListState() {
+      // Show the list and hide details without wiping the loaded rows.
       toggleDetails(false);
-      toggleList(true);
+      toggleSearchArea(false);
+      setLoader(false);
+      document.documentElement.classList.remove("assure-autoload");
+    }
+
+    async function assureApplyDetailState(nir) {
+      const value = String(nir || "").trim();
+      if (!value) return;
+
+      // If we already have the assure in the current list, reuse it. Otherwise fetch it.
+      const matchIdx = assureData.findIndex((a) => String(a?.nir || "").replace(/\D/g, "") === value.replace(/\D/g, ""));
+      if (matchIdx >= 0) {
+        openAssureByIndex(matchIdx, { pushHistory: false });
+        return;
+      }
+      await openAssureByNniDirect(value, { pushHistory: false });
+    }
+
+    window.addEventListener("popstate", (event) => {
+      const st = event.state;
+      if (!st || st.page !== ASSURE_HISTORY_PAGE) return;
+      if (st.view === "list") {
+        assureApplyListState();
+        return;
+      }
+      if (st.view === "detail") {
+        assureApplyDetailState(st.nir).catch(() => {});
+      }
     });
 
-    const toolbarBack = document.querySelector('.toolbar-nav[aria-label="Retour"]');
-    if (toolbarBack) {
-      toolbarBack.removeAttribute("onclick");
-      toolbarBack.addEventListener("click", (e) => {
-        if (fromCollectivite) {
-          e.preventDefault();
-          try {
-            const collectTarget = localStorage.getItem("collect_id_target");
-            if (collectTarget) {
-              window.location.href = `collectivites.html?collect=${encodeURIComponent(collectTarget)}&from=assures`;
-              return;
-            }
-          } catch (_) {
-            /* ignore */
-          }
-          history.back();
-          return;
-        }
-        if (detailsSection && !detailsSection.hidden) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          toggleDetails(false);
-          toggleList(true);
-          return;
-        }
+    backResultsButton?.addEventListener("click", () => {
+      const st = history.state;
+      if (st && st.page === ASSURE_HISTORY_PAGE && st.view === "detail" && st.internal) {
         history.back();
-      });
-    }
+        return;
+      }
+      assureReplaceListState();
+      assureApplyListState();
+    });
 
     assurePrev?.addEventListener("click", () => {
       if (assurePage <= 1) return;
@@ -2236,6 +2308,8 @@
       const normalizedNir = String(nir).replace(/\D/g, "");
       const nirToSearch = normalizedNir || String(nir);
       nir = nirToSearch;
+      // Auto-load entry point: keep a single "detail" history entry so Back returns to the previous page.
+      assureReplaceDetailState(nir);
       if (assureSearch) assureSearch.value = nir;
       if (assureTriSelect) assureTriSelect.value = "nir";
       if (!window.pywebview?.api?.fetch_assure) {
