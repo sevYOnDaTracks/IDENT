@@ -31,6 +31,12 @@
         <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo S&#233;curit&#233; Sociale">
         <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
       </div>
+      <div class="toolbar-center">
+        <div class="toolbar-entity" id="toolbar-assure" hidden>
+          <span class="toolbar-entity-label">Assur&#233;</span>
+          <span class="toolbar-entity-value toolbar-entity-value--clamp" id="toolbar-assure-value">-</span>
+        </div>
+      </div>
       <div class="toolbar-right">
         <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -436,9 +442,9 @@
         <button class="icon-button" type="button" id="ayantdroit-modal-close" aria-label="Fermer">×</button>
       </div>
 
-      <div class="modal-tabs">
+     <!--<div class="modal-tabs">
         <button class="tab active" type="button" data-ayantdroit-tab="identification">Identification</button>
-      </div>
+      </div> --> 
 
       <div class="modal-body">
         <div class="modal-panel active" data-ayantdroit-panel="identification">
@@ -760,6 +766,8 @@
     const arpegePanel = document.querySelector('.tab-panel[data-tab="arpege"]');
     const arpegeSummary = document.getElementById("arpege-summary");
     const tableArpege = document.querySelector("#table-arpege tbody");
+    const toolbarAssure = document.getElementById("toolbar-assure");
+    const toolbarAssureValue = document.getElementById("toolbar-assure-value");
     const addrFields = {
       type: document.getElementById("addr-type"),
       line1: document.getElementById("addr-line1"),
@@ -1364,6 +1372,7 @@
       if (backResultsButton) {
         backResultsButton.hidden = !show || !hasSearched;
       }
+      if (toolbarAssure) toolbarAssure.hidden = !show;
       if (!show) {
         setActiveTab("infos");
       }
@@ -1543,6 +1552,10 @@
       if (!selectedAssure) {
         assureFullname.textContent = "-";
         assureMeta.textContent = "-";
+        if (toolbarAssureValue) {
+          toolbarAssureValue.textContent = "-";
+          toolbarAssureValue.title = "-";
+        }
         renderInfoDetails();
         renderSituationDetails();
         renderMaladieDetails();
@@ -1560,6 +1573,11 @@
       if (selectedAssure.date_naissance) metaParts.push(`Né(e) le ${selectedAssure.date_naissance}`);
       if (selectedAssure.sexe) metaParts.push(selectedAssure.sexe);
       assureMeta.textContent = metaParts.join(" â€¢ ") || "-";
+      if (toolbarAssureValue) {
+        const txt = assureFullname.textContent || "-";
+        toolbarAssureValue.textContent = txt;
+        toolbarAssureValue.title = txt;
+      }
     }
 
     function setActiveTab(name) {
