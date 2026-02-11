@@ -4,6 +4,7 @@ import sys
 import traceback
 import os
 import json
+import re
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -14,6 +15,42 @@ from services.oracle_client import OracleClient, build_assure_workbook, build_co
 ORACLE_APP_USER = "ASCOT"
 ORACLE_APP_PASSWORD = "ASCOT"
 DEFAULT_DSN = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=CAVIMAC-ETUD2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=ETUDN)))"
+
+EXPORT_ROOT = Path("\\\\Sbureautique\\SIED\\dpartage\\Travaux et Requ\u00eates")
+EXPORT_SERVICE_DIRS = {
+    "RETRAITE": EXPORT_ROOT / "PENSIONS" / "RECH_IDENT",
+    "AFFILIATION": EXPORT_ROOT / "AFFILIATION" / "RECH_IDENT",
+    "JURIDIQUE": EXPORT_ROOT / "Juridique" / "RECH_IDENT",
+    "PCI": EXPORT_ROOT / "PCI" / "RECH_IDENT",
+}
+EXPORT_SERVICE_ALIASES = {
+    "AFF": "AFFILIATION",
+    "AFFILIATION": "AFFILIATION",
+    "IDENT_AFF": "AFFILIATION",
+    "JUR": "JURIDIQUE",
+    "JURIDIQUE": "JURIDIQUE",
+    "IDENT_JUR": "JURIDIQUE",
+    "RET": "RETRAITE",
+    "RETRAITE": "RETRAITE",
+    "IDENT_RET": "RETRAITE",
+    "PCI": "PCI",
+    "IDENT_PCI": "PCI",
+}
+
+
+def resolve_export_dir(service: str, target_folder: str | None) -> Optional[Path]:
+    """
+    Resolve destination export directory from user service or explicit target.
+
+    Keeps backward compatibility with legacy keys (IDENT_AFF, IDENT_RET...).
+    """
+    key = (target_folder or service or "").strip().upper()
+    if not key:
+        return None
+    canonical = EXPORT_SERVICE_ALIASES.get(key)
+    if not canonical:
+        return None
+    return EXPORT_SERVICE_DIRS.get(canonical)
 
 
 def _bootstrap_site_packages() -> None:
@@ -292,6 +329,149 @@ class Api:
         self._logged_user = None
         return {"ok": "true"}
 
+    def _require_sied(self) -> Optional[dict]:
+        logged = self._logged_user or {}
+        service = str(logged.get("service") or "").strip().upper()
+        if not logged:
+            return {"ok": "false", "message": "Utilisateur non connecte."}
+        if service != "SIED":
+            return {"ok": "false", "message": "Acces refuse : reserve au service SIED."}
+        return None
+
+    @staticmethod
+    def _is_valid_email(email: str) -> bool:
+        return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email or ""))
+
+    def list_users(self, username: str = "", password: str = ""):
+        denied = self._require_sied()
+        if denied:
+            return denied
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": []}
+
+        result = self.client.list_users(user, pwd)
+        if result.get("error"):
+            return {"ok": "false", "message": f"Echec de recuperation : {result['error']}", "data": []}
+
+        data = result.get("data") or []
+        self._cached_user = user
+        self._cached_password = pwd
+        return {"ok": "true", "message": f"{len(data)} utilisateur(s) trouve(s).", "data": data}
+
+    def create_user(self, username: str = "", password: str = "", payload: Optional[dict] = None):
+        denied = self._require_sied()
+        if denied:
+            return denied
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        body = payload or {}
+        identifiant = str(body.get("identifiant") or "").strip()
+        email = str(body.get("email") or "").strip()
+        nom = str(body.get("nom") or "").strip()
+        prenom = str(body.get("prenom") or "").strip()
+        service = str(body.get("service") or "").strip().upper()
+        mot_de_passe = str(body.get("mot_de_passe") or "").strip()
+
+        if not identifiant or not email or not nom or not prenom or not service or not mot_de_passe:
+            return {"ok": "false", "message": "Tous les champs sont obligatoires.", "data": None}
+        if not self._is_valid_email(email):
+            return {"ok": "false", "message": "Email invalide.", "data": None}
+
+        result = self.client.create_user(
+            user,
+            pwd,
+            {
+                "identifiant": identifiant,
+                "email": email,
+                "nom": nom,
+                "prenom": prenom,
+                "service": service,
+                "mot_de_passe": mot_de_passe,
+            },
+        )
+        if result.get("error"):
+            return {"ok": "false", "message": str(result["error"]), "data": None}
+        return {"ok": "true", "message": "Utilisateur cree avec succes.", "data": result.get("data")}
+
+    def update_user(self, username: str = "", password: str = "", user_id: Optional[int] = None, payload: Optional[dict] = None):
+        denied = self._require_sied()
+        if denied:
+            return denied
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        try:
+            target_user_id = int(user_id) if user_id is not None else 0
+        except Exception:
+            target_user_id = 0
+        if target_user_id <= 0:
+            return {"ok": "false", "message": "Utilisateur cible invalide.", "data": None}
+
+        body = payload or {}
+        identifiant = str(body.get("identifiant") or "").strip()
+        email = str(body.get("email") or "").strip()
+        nom = str(body.get("nom") or "").strip()
+        prenom = str(body.get("prenom") or "").strip()
+        service = str(body.get("service") or "").strip().upper()
+        mot_de_passe = str(body.get("mot_de_passe") or "").strip()
+
+        if not identifiant or not email or not nom or not prenom or not service:
+            return {"ok": "false", "message": "Identifiant, email, nom, prenom et service sont obligatoires.", "data": None}
+        if not self._is_valid_email(email):
+            return {"ok": "false", "message": "Email invalide.", "data": None}
+
+        result = self.client.update_user(
+            user,
+            pwd,
+            target_user_id,
+            {
+                "identifiant": identifiant,
+                "email": email,
+                "nom": nom,
+                "prenom": prenom,
+                "service": service,
+                "mot_de_passe": mot_de_passe,
+            },
+        )
+        if result.get("error"):
+            return {"ok": "false", "message": str(result["error"]), "data": None}
+        return {"ok": "true", "message": "Utilisateur modifie avec succes.", "data": result.get("data")}
+
+    def delete_user(self, username: str = "", password: str = "", user_id: Optional[int] = None):
+        denied = self._require_sied()
+        if denied:
+            return denied
+
+        user, pwd = self._resolve_credentials(username, password)
+        if not user or not pwd:
+            return {"ok": "false", "message": "Identifiants manquants.", "data": None}
+
+        try:
+            target_user_id = int(user_id) if user_id is not None else 0
+        except Exception:
+            target_user_id = 0
+        if target_user_id <= 0:
+            return {"ok": "false", "message": "Utilisateur cible invalide.", "data": None}
+
+        try:
+            current_user_id = int((self._logged_user or {}).get("user_id") or 0)
+        except Exception:
+            current_user_id = 0
+        if current_user_id and current_user_id == target_user_id:
+            return {"ok": "false", "message": "Suppression de votre propre compte interdite.", "data": None}
+
+        result = self.client.delete_user(user, pwd, target_user_id)
+        if result.get("error"):
+            return {"ok": "false", "message": str(result["error"]), "data": None}
+        return {"ok": "true", "message": "Utilisateur supprime avec succes.", "data": result.get("data")}
+
     def set_selected_collectivite(self, payload: dict):
         self._selected_collectivite = payload or None
         return {"ok": "true"}
@@ -321,7 +501,7 @@ class Api:
 
         data = result["data"]
         if not data:
-            return {"ok": "false", "message": "Aucun assure trouve pour ce motif NIR.", "data": []}
+            return {"ok": "false", "message": "Aucun assure trouve pour ce motif NIR. Changez puis reessayez !", "data": []}
 
         self._cached_user = user
         self._cached_password = pwd
@@ -1050,7 +1230,7 @@ class Api:
 
         data = result["data"]
         if not data:
-            return {"ok": "false", "message": "Aucun assure trouve pour ce motif NIR, export impossible."}
+            return {"ok": "false", "message": "Aucun assuré trouve pour ce NNI, export impossible."}
 
         first = data[0]
         fullname = f"{first.get('nom_usage','') or ''} {first.get('prenom_usage','') or ''}".strip() or "Assure"
@@ -1060,28 +1240,6 @@ class Api:
 
         if not self.window:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
-
-        def resolve_export_dir(service: str, target_folder: str | None):
-            base_dir = Path(r"\\sbureautique\SIED\dpartage\IDENT")
-            mapping = {
-                "JURIDIQUE": "IDENT_JUR",
-                "AFFILIATION": "IDENT_AFF",
-                "PCI": "IDENT_PCI",
-                "RETRAITE": "IDENT_RET",
-                "SIED": "IDENT_SIED",
-                "AFF": "IDENT_AFF",
-                "JUR": "IDENT_JUR",
-                "RET": "IDENT_RET",
-            }
-            folder = None
-            if target_folder:
-                key = target_folder.strip().upper()
-                folder = mapping.get(key, key)
-            else:
-                folder = mapping.get((service or "").strip().upper())
-            if not folder:
-                return None
-            return base_dir / folder
 
         def ensure_unique_path(path: Path) -> Path:
             if not path.exists():
@@ -1201,28 +1359,6 @@ class Api:
 
         if not self.window:
             return {"ok": "false", "message": "Fenetre pywebview indisponible pour ouvrir la boite de dialogue."}
-
-        def resolve_export_dir(service: str, target: str | None):
-            base_dir = Path(r"\\sbureautique\SIED\dpartage\IDENT")
-            mapping = {
-                "JURIDIQUE": "IDENT_JUR",
-                "AFFILIATION": "IDENT_AFF",
-                "PCI": "IDENT_PCI",
-                "RETRAITE": "IDENT_RET",
-                "SIED": "IDENT_SIED",
-                "AFF": "IDENT_AFF",
-                "JUR": "IDENT_JUR",
-                "RET": "IDENT_RET",
-            }
-            folder = None
-            if target:
-                key = target.strip().upper()
-                folder = mapping.get(key, key)
-            else:
-                folder = mapping.get((service or "").strip().upper())
-            if not folder:
-                return None
-            return base_dir / folder
 
         def ensure_unique_path(path: Path) -> Path:
             if not path.exists():

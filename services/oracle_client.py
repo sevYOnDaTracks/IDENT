@@ -206,6 +206,257 @@ class OracleClient:
         }
         return {"data": data, "error": None}
 
+    def list_users(self, username: str, password: str) -> Dict[str, object]:
+        """Retourne la liste des utilisateurs applicatifs."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": [], "error": f"Module oracledb indisponible : {exc}"}
+
+        sql = """
+            SELECT
+                usr.user_id,
+                usr.identifiant,
+                usr.email,
+                usr.nom,
+                usr.prenom,
+                usr.service,
+                usr.mot_de_passe
+            FROM USER_IDENT usr
+            ORDER BY UPPER(usr.identifiant), usr.user_id
+        """
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    rows = cursor.fetchall()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": [], "error": self._format_oracle_error(exc)}
+
+        data: List[Dict[str, object]] = []
+        for row in rows:
+            data.append(
+                {
+                    "user_id": row[0],
+                    "identifiant": row[1],
+                    "email": row[2],
+                    "nom": row[3],
+                    "prenom": row[4],
+                    "service": row[5],
+                    "mot_de_passe": row[6],
+                }
+            )
+        return {"data": data, "error": None}
+
+    def create_user(self, username: str, password: str, payload: Dict[str, object]) -> Dict[str, object]:
+        """
+        Cree un utilisateur applicatif.
+        USER_ID est genere cote backend avec lock transactionnel.
+        """
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        identifiant = str(payload.get("identifiant") or "").strip()
+        email = str(payload.get("email") or "").strip()
+        nom = str(payload.get("nom") or "").strip()
+        prenom = str(payload.get("prenom") or "").strip()
+        service = str(payload.get("service") or "").strip().upper()
+        mot_de_passe = str(payload.get("mot_de_passe") or "").strip()
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    # Preferred strategy: explicit table lock to avoid USER_ID races.
+                    # Fallback when LOCK TABLE privilege is missing.
+                    try:
+                        cursor.execute("LOCK TABLE USER_IDENT IN EXCLUSIVE MODE")
+                    except Exception as lock_exc:  # noqa: BLE001
+                        lock_msg = str(lock_exc).upper()
+                        if "ORA-01031" not in lock_msg:
+                            raise
+                    cursor.execute(
+                        """
+                        SELECT COUNT(1)
+                        FROM USER_IDENT
+                        WHERE UPPER(TRIM(identifiant)) = UPPER(TRIM(:identifiant))
+                        """,
+                        {"identifiant": identifiant},
+                    )
+                    if (cursor.fetchone() or [0])[0] > 0:
+                        connection.rollback()
+                        return {"data": None, "error": "Identifiant deja utilise."}
+
+                    new_user_id = None
+                    inserted = False
+                    # Retry handles collisions when lock fallback is used.
+                    for _ in range(8):
+                        cursor.execute("SELECT NVL(MAX(user_id), 0) + 1 FROM USER_IDENT")
+                        new_user_id = int((cursor.fetchone() or [1])[0])
+                        try:
+                            cursor.execute(
+                                """
+                                INSERT INTO USER_IDENT (
+                                    user_id, nom, prenom, email, mot_de_passe, service, identifiant
+                                )
+                                VALUES (
+                                    :user_id, :nom, :prenom, :email, :mot_de_passe, :service, :identifiant
+                                )
+                                """,
+                                {
+                                    "user_id": new_user_id,
+                                    "nom": nom,
+                                    "prenom": prenom,
+                                    "email": email,
+                                    "mot_de_passe": mot_de_passe,
+                                    "service": service,
+                                    "identifiant": identifiant,
+                                },
+                            )
+                            inserted = True
+                            break
+                        except Exception as insert_exc:  # noqa: BLE001
+                            if "ORA-00001" in str(insert_exc).upper():
+                                continue
+                            raise
+                    if not inserted:
+                        connection.rollback()
+                        return {"data": None, "error": "Impossible de generer un USER_ID unique."}
+                connection.commit()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": self._format_oracle_error(exc)}
+
+        return {
+            "data": {
+                "user_id": new_user_id,
+                "identifiant": identifiant,
+                "email": email,
+                "nom": nom,
+                "prenom": prenom,
+                "service": service,
+            },
+            "error": None,
+        }
+
+    def update_user(self, username: str, password: str, user_id: int, payload: Dict[str, object]) -> Dict[str, object]:
+        """Met a jour un utilisateur applicatif (mot de passe optionnel)."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        identifiant = str(payload.get("identifiant") or "").strip()
+        email = str(payload.get("email") or "").strip()
+        nom = str(payload.get("nom") or "").strip()
+        prenom = str(payload.get("prenom") or "").strip()
+        service = str(payload.get("service") or "").strip().upper()
+        mot_de_passe = str(payload.get("mot_de_passe") or "").strip()
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    try:
+                        cursor.execute("LOCK TABLE USER_IDENT IN EXCLUSIVE MODE")
+                    except Exception as lock_exc:  # noqa: BLE001
+                        lock_msg = str(lock_exc).upper()
+                        if "ORA-01031" not in lock_msg:
+                            raise
+                    cursor.execute(
+                        """
+                        SELECT COUNT(1)
+                        FROM USER_IDENT
+                        WHERE UPPER(TRIM(identifiant)) = UPPER(TRIM(:identifiant))
+                          AND user_id <> :user_id
+                        """,
+                        {"identifiant": identifiant, "user_id": user_id},
+                    )
+                    if (cursor.fetchone() or [0])[0] > 0:
+                        connection.rollback()
+                        return {"data": None, "error": "Identifiant deja utilise."}
+
+                    if mot_de_passe:
+                        cursor.execute(
+                            """
+                            UPDATE USER_IDENT
+                               SET nom = :nom,
+                                   prenom = :prenom,
+                                   email = :email,
+                                   service = :service,
+                                   identifiant = :identifiant,
+                                   mot_de_passe = :mot_de_passe
+                             WHERE user_id = :user_id
+                            """,
+                            {
+                                "nom": nom,
+                                "prenom": prenom,
+                                "email": email,
+                                "service": service,
+                                "identifiant": identifiant,
+                                "mot_de_passe": mot_de_passe,
+                                "user_id": user_id,
+                            },
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            UPDATE USER_IDENT
+                               SET nom = :nom,
+                                   prenom = :prenom,
+                                   email = :email,
+                                   service = :service,
+                                   identifiant = :identifiant
+                             WHERE user_id = :user_id
+                            """,
+                            {
+                                "nom": nom,
+                                "prenom": prenom,
+                                "email": email,
+                                "service": service,
+                                "identifiant": identifiant,
+                                "user_id": user_id,
+                            },
+                        )
+
+                    if cursor.rowcount == 0:
+                        connection.rollback()
+                        return {"data": None, "error": "Utilisateur introuvable."}
+                connection.commit()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": self._format_oracle_error(exc)}
+
+        return {
+            "data": {
+                "user_id": user_id,
+                "identifiant": identifiant,
+                "email": email,
+                "nom": nom,
+                "prenom": prenom,
+                "service": service,
+            },
+            "error": None,
+        }
+
+    def delete_user(self, username: str, password: str, user_id: int) -> Dict[str, object]:
+        """Supprime un utilisateur applicatif."""
+        try:
+            import oracledb
+        except Exception as exc:
+            return {"data": None, "error": f"Module oracledb indisponible : {exc}"}
+
+        try:
+            with oracledb.connect(user=username, password=password, dsn=self.dsn) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM USER_IDENT WHERE user_id = :user_id", {"user_id": user_id})
+                    if cursor.rowcount == 0:
+                        connection.rollback()
+                        return {"data": None, "error": "Utilisateur introuvable."}
+                connection.commit()
+        except Exception as exc:  # noqa: BLE001
+            return {"data": None, "error": self._format_oracle_error(exc)}
+
+        return {"data": {"user_id": user_id}, "error": None}
+
     def query_assures(
         self,
         username: str,

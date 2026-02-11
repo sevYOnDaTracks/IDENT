@@ -18,6 +18,33 @@
     return current === target;
   };
 
+  const parseCachedUser = () => {
+    try {
+      const raw = localStorage.getItem("logged_user");
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const getCurrentUser = async () => {
+    const cached = parseCachedUser();
+    if (cached && cached.service) return cached;
+    try {
+      if (window.pywebview?.api?.get_logged_user) {
+        const resp = await window.pywebview.api.get_logged_user();
+        if (resp?.data) {
+          try {
+            localStorage.setItem("logged_user", JSON.stringify(resp.data));
+          } catch (_) {}
+          return resp.data;
+        }
+      }
+    } catch (_) {}
+    return cached;
+  };
+
   const svg = {
     menu:
       '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -35,6 +62,9 @@
     book:
       '<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M4 19a2 2 0 0 0 2 2h14"></path><path d="M4 5a2 2 0 0 1 2-2h14v18H6a2 2 0 0 0-2 2V5z"></path></svg>',
+    settings:
+      '<svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 0 1 0 2.83a2 2 0 0 1-2.83 0l-.06-.06a1.7 1.7 0 0 0-1.87-.34a1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09a1.7 1.7 0 0 0 1.55-1A1.7 1.7 0 0 0 4.3 7.13l-.06-.06a2 2 0 0 1 0-2.83a2 2 0 0 1 2.83 0l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 0 1 2.83 0a2 2 0 0 1 0 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0A1.7 1.7 0 0 0 21 10.55H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"></path></svg>',
     search:
       '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>',
@@ -305,7 +335,7 @@
     }
   };
 
-  const mount = () => {
+  const mount = async () => {
     const toolbarLeft = document.querySelector(".toolbar .toolbar-inner .toolbar-left");
     if (!toolbarLeft) return;
     if (document.getElementById("app-sidebar")) return; // already mounted
@@ -337,12 +367,21 @@
     section.textContent = "";
     nav.appendChild(section);
 
+    const user = await getCurrentUser();
+    const service = String(user?.service || "")
+      .trim()
+      .toUpperCase();
+
     const items = [
       { label: "Accueil", href: "home.html", icon: svg.home },
       { label: "Assures", href: "assures.html", icon: svg.user },
       { label: "Collectivites", href: "collectivites.html", icon: svg.building },
       { label: "Réferentiel", href: "referentiel.html", icon: svg.book },
     ];
+
+    if (service === "SIED") {
+      items.push({ label: "Gestion utilisateur", href: "user_management.html", icon: svg.settings });
+    }
 
     items.forEach((it) => {
       const a = document.createElement("a");

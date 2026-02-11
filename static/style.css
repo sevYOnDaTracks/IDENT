@@ -1643,6 +1643,137 @@ body[data-theme="dark"] .tab.active {
   margin-top: 12px;
 }
 
+/* User management modal: keep form controls compact and aligned. */
+.user-management-page .user-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.user-management-page .user-form-grid .field {
+  min-width: 0;
+  align-self: start;
+}
+
+.user-management-page .user-form-grid input,
+.user-management-page .user-form-grid select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  line-height: 1.2;
+}
+
+.user-management-page .modal {
+  width: min(980px, 96vw);
+}
+
+.user-management-page .modal-body {
+  padding-top: 12px;
+}
+
+.user-management-page .modal-actions {
+  margin-top: 14px;
+  padding-top: 4px;
+}
+
+.user-management-page .data-table td:last-child {
+  white-space: nowrap;
+}
+
+.user-management-page .user-action-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.user-management-page .user-action-icon:last-child {
+  margin-right: 0;
+}
+
+.user-management-page .user-action-icon .icon {
+  width: 17px;
+  height: 17px;
+}
+
+.user-management-page #users-search-row {
+  margin-bottom: 8px;
+}
+
+.user-management-page #users-search-row .field {
+  flex: 0 0 560px;
+  max-width: 560px;
+  min-width: 260px;
+}
+
+.user-management-page #users-search-input {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  flex: 0 0 auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.user-management-page .password-field-wrap {
+  position: relative;
+}
+
+.user-management-page .password-field-wrap input {
+  padding-right: 52px;
+}
+
+.user-management-page .user-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.user-management-page .user-password-toggle .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.user-management-page .user-action-edit {
+  color: #1f9d55;
+  border-color: rgba(31, 157, 85, 0.35);
+}
+
+.user-management-page .user-action-edit:hover {
+  background: rgba(31, 157, 85, 0.1);
+  border-color: rgba(31, 157, 85, 0.6);
+}
+
+.user-management-page .user-action-delete {
+  color: #d14343;
+  border-color: rgba(209, 67, 67, 0.35);
+}
+
+.user-management-page .user-action-delete:hover {
+  background: rgba(209, 67, 67, 0.1);
+  border-color: rgba(209, 67, 67, 0.6);
+}
+
+@media (max-width: 920px) {
+  .user-management-page .user-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .check-chip {
   display: inline-flex;
   align-items: center;

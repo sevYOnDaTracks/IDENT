@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion utilisateur - IDENT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/style.css">
+  <script src="../static/sidebar.js" defer></script>
+</head>
+<body class="user-management-page">
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="toolbar-left">
+        <img class="toolbar-logo" src="../images/Logo_Securite_Social.png" alt="Logo Securite Sociale">
+        <img class="toolbar-logo" src="../images/Logo_Cavimac.png" alt="Logo Cavimac">
+      </div>
+      <div class="toolbar-center"></div>
+      <div class="toolbar-right">
+        <a class="button outline toolbar-home" href="home.html" aria-label="Accueil" title="Accueil">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7"></path>
+            <path d="M9 22V12h6v10"></path>
+          </svg>
+        </a>
+        <button class="button outline toolbar-nav" type="button" aria-label="Retour" title="Retour" onclick="history.back()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-nav" type="button" aria-label="Avancer" title="Avancer" onclick="history.forward()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+        <button class="button outline toolbar-theme" type="button" id="theme-toggle" aria-label="Mode sombre" title="Mode sombre">
+          <span class="icon">&#127769;</span>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <button class="button outline user-trigger" type="button" id="user-menu-trigger">
+            <span id="user-trigger-label">Utilisateur</span>
+          </button>
+          <div class="user-dropdown hidden" id="user-menu-panel">
+            <div class="user-info">
+              <div class="user-name" id="user-name">-</div>
+              <div class="user-meta" id="user-service">-</div>
+              <div class="user-meta" id="user-email">-</div>
+            </div>
+            <div class="user-actions">
+          <!--   <a class="user-link" href="user_info.html">Mes infos</a> --> 
+              <button class="button ghost user-logout" type="button" id="user-logout">Deconnexion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="details">
+      <div class="details-header">
+        <div>
+          <h1 class="title">Gestion utilisateur</h1>
+        </div>
+        <button class="button primary" type="button" id="add-user-btn">Ajouter un utilisateur</button>
+      </div>
+
+      
+      <div id="users-denied" class="result hidden">Acces reserve au service SIED.</div>
+
+      <div id="users-search-row" class="form-row">
+        <div class="field" style="max-width: 560px;">
+        <!-- <label class="form-label" for="users-search-input">Recherche</label> --> 
+          <input
+            type="text"
+            id="users-search-input"
+            class="module-search-input"
+            autocomplete="off"
+            placeholder="Rechercher par identifiant, email, nom, prenom ou service..."
+          ><br>
+          <div id="users-result" class="result hidden"></div>
+        </div>
+      </div>
+
+      <div id="users-table-wrapper" class="table-wrapper">
+        <table class="data-table" id="users-table">
+          <thead>
+            <tr>
+              <th>Identifiant</th>
+              <th>Email</th>
+              <th>Nom</th>
+              <th>Prenom</th>
+              <th>Service</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="user-modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+      <div class="modal-header">
+        <div class="modal-title" id="user-modal-title">Utilisateur</div>
+        <button class="button outline" type="button" id="user-modal-close">Fermer</button>
+      </div>
+      <div class="modal-body">
+        <form id="user-form">
+          <div class="info-grid two-col user-form-grid">
+            <div class="field">
+              <label class="form-label" for="user-identifiant">Identifiant</label>
+              <input type="text" id="user-identifiant" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label class="form-label" for="user-email-input">Email</label>
+              <input type="email" id="user-email-input" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label class="form-label" for="user-nom">Nom</label>
+              <input type="text" id="user-nom" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label class="form-label" for="user-prenom">Prenom</label>
+              <input type="text" id="user-prenom" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label class="form-label" for="user-service-input">Service</label>
+              <select id="user-service-input" required>
+                <option value="">Selectionner un service</option>
+                <option value="AFFILIATION">AFFILIATION</option>
+                <option value="RECOUVREMENT">RECOUVREMENT</option>
+                <option value="SIED">SIED</option>
+                <option value="JURIDIQUE">JURIDIQUE</option>
+                <option value="AS">AS</option>
+                <option value="SCM">SCM</option>
+                <option value="RETRAITE">RETRAITE</option>
+                <option value="PCI">PCI</option>
+              </select>
+            </div>
+            <div class="field" id="user-password-field">
+              <label class="form-label" for="user-password">Mot de passe</label>
+              <div class="password-field-wrap">
+                <input type="password" id="user-password" autocomplete="new-password">
+                <button
+                  type="button"
+                  class="button outline user-password-toggle hidden"
+                  id="user-password-toggle"
+                  aria-label="Afficher le mot de passe"
+                  title="Afficher le mot de passe"
+                >
+                  <svg class="icon" id="user-password-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6s10 6 10 6s-3.5 6-10 6s-10-6-10-6Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="user-form-result" class="result hidden"></div>
+          <div class="modal-actions">
+            <button class="button outline" type="button" id="user-cancel-btn">Annuler</button>
+            <button class="button primary" type="submit" id="user-save-btn">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const themeToggle = document.getElementById("theme-toggle");
+      const userTrigger = document.getElementById("user-menu-trigger");
+      const userPanel = document.getElementById("user-menu-panel");
+      const userName = document.getElementById("user-name");
+      const userService = document.getElementById("user-service");
+      const userEmail = document.getElementById("user-email");
+      const userLogout = document.getElementById("user-logout");
+      const userLabel = document.getElementById("user-trigger-label");
+
+      const usersResult = document.getElementById("users-result");
+      const usersDenied = document.getElementById("users-denied");
+      const usersSearchRow = document.getElementById("users-search-row");
+      const usersSearchInput = document.getElementById("users-search-input");
+      const usersTableWrapper = document.getElementById("users-table-wrapper");
+      const usersTbody = document.getElementById("users-tbody");
+      const addUserBtn = document.getElementById("add-user-btn");
+
+      const modalOverlay = document.getElementById("user-modal-overlay");
+      const modalTitle = document.getElementById("user-modal-title");
+      const modalClose = document.getElementById("user-modal-close");
+      const userForm = document.getElementById("user-form");
+      const userCancelBtn = document.getElementById("user-cancel-btn");
+      const userSaveBtn = document.getElementById("user-save-btn");
+      const userFormResult = document.getElementById("user-form-result");
+      const passwordField = document.getElementById("user-password-field");
+
+      const inputIdentifiant = document.getElementById("user-identifiant");
+      const inputEmail = document.getElementById("user-email-input");
+      const inputNom = document.getElementById("user-nom");
+      const inputPrenom = document.getElementById("user-prenom");
+      const inputService = document.getElementById("user-service-input");
+      const inputPassword = document.getElementById("user-password");
+      const inputPasswordToggle = document.getElementById("user-password-toggle");
+      const inputPasswordToggleIcon = document.getElementById("user-password-toggle-icon");
+
+      let usersCache = [];
+      let currentUser = null;
+      let currentMode = "create";
+      let currentEditUserId = null;
+
+      const escapeHtml = (value) =>
+        String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+
+      const showResult = (message, isSuccess = false) => {
+        usersResult.textContent = message || "";
+        usersResult.classList.toggle("hidden", !message);
+        usersResult.classList.toggle("success", !!isSuccess);
+      };
+
+      const showFormResult = (message, isSuccess = false) => {
+        userFormResult.textContent = message || "";
+        userFormResult.classList.toggle("hidden", !message);
+        userFormResult.classList.toggle("success", !!isSuccess);
+      };
+
+      const setFormDisabled = (disabled) => {
+        [inputIdentifiant, inputEmail, inputNom, inputPrenom, inputService, inputPassword].forEach((el) => {
+          el.disabled = disabled;
+        });
+      };
+
+      const setPasswordVisibility = (visible) => {
+        inputPassword.type = visible ? "text" : "password";
+        if (inputPasswordToggleIcon) {
+          inputPasswordToggleIcon.innerHTML = visible
+            ? '<path d="M17.94 17.94A10.88 10.88 0 0 1 12 20c-6.5 0-10-8-10-8a18.6 18.6 0 0 1 5.08-5.94M9.9 4.24A11.2 11.2 0 0 1 12 4c6.5 0 10 8 10 8a18.57 18.57 0 0 1-2.22 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><path d="M1 1l22 22"></path>'
+            : '<path d="M2 12s3.5-6 10-6s10 6 10 6s-3.5 6-10 6s-10-6-10-6Z"></path><circle cx="12" cy="12" r="3"></circle>';
+        }
+        if (inputPasswordToggle) {
+          inputPasswordToggle.setAttribute(
+            "aria-label",
+            visible ? "Masquer le mot de passe" : "Afficher le mot de passe"
+          );
+          inputPasswordToggle.title = visible ? "Masquer le mot de passe" : "Afficher le mot de passe";
+        }
+      };
+
+      const openModal = (mode, user) => {
+        currentMode = mode;
+        currentEditUserId = user?.user_id ?? null;
+        showFormResult("");
+
+        if (mode === "create") {
+          modalTitle.textContent = "Ajouter un utilisateur";
+          inputIdentifiant.value = "";
+          inputEmail.value = "";
+          inputNom.value = "";
+          inputPrenom.value = "";
+          setServiceValue("");
+          inputPassword.value = "";
+          setPasswordVisibility(false);
+          passwordField.classList.remove("hidden");
+          inputPasswordToggle?.classList.add("hidden");
+          userSaveBtn.classList.remove("hidden");
+          userCancelBtn.textContent = "Annuler";
+          inputPassword.required = true;
+          setFormDisabled(false);
+        } else if (mode === "edit") {
+          modalTitle.textContent = "Modifier un utilisateur";
+          inputIdentifiant.value = user?.identifiant || "";
+          inputEmail.value = user?.email || "";
+          inputNom.value = user?.nom || "";
+          inputPrenom.value = user?.prenom || "";
+          setServiceValue(user?.service || "");
+          inputPassword.value = "";
+          setPasswordVisibility(false);
+          passwordField.classList.remove("hidden");
+          inputPasswordToggle?.classList.add("hidden");
+          userSaveBtn.classList.remove("hidden");
+          userCancelBtn.textContent = "Annuler";
+          inputPassword.required = false;
+          inputPassword.placeholder = "Laisser vide pour conserver";
+          setFormDisabled(false);
+        } else {
+          modalTitle.textContent = "Voir un utilisateur";
+          inputIdentifiant.value = user?.identifiant || "";
+          inputEmail.value = user?.email || "";
+          inputNom.value = user?.nom || "";
+          inputPrenom.value = user?.prenom || "";
+          setServiceValue(user?.service || "");
+          inputPassword.value = String(user?.mot_de_passe || "");
+          setPasswordVisibility(false);
+          passwordField.classList.remove("hidden");
+          inputPasswordToggle?.classList.remove("hidden");
+          userSaveBtn.classList.add("hidden");
+          userCancelBtn.textContent = "Fermer";
+          inputPassword.required = false;
+          inputPassword.placeholder = "";
+          setFormDisabled(true);
+        }
+
+        modalOverlay.classList.remove("hidden");
+        modalOverlay.setAttribute("aria-hidden", "false");
+      };
+
+      const closeModal = () => {
+        modalOverlay.classList.add("hidden");
+        modalOverlay.setAttribute("aria-hidden", "true");
+      };
+
+      const validatePayload = (payload, mode) => {
+        const required = ["identifiant", "email", "nom", "prenom", "service"];
+        for (const key of required) {
+          if (!String(payload[key] || "").trim()) return "Tous les champs obligatoires doivent etre saisis.";
+        }
+        const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(payload.email);
+        if (!emailOk) return "Email invalide.";
+        if (mode === "create" && !String(payload.mot_de_passe || "").trim()) {
+          return "Le mot de passe est obligatoire pour la creation.";
+        }
+        return "";
+      };
+
+      const renderRows = (rows) => {
+        if (!rows.length) {
+          usersTbody.innerHTML = '<tr><td colspan="6">Aucun utilisateur.</td></tr>';
+          return;
+        }
+
+        const html = rows
+          .map(
+            (u) => `
+              <tr data-user-id="${escapeHtml(u.user_id)}">
+                <td>${escapeHtml(u.identifiant || "-")}</td>
+                <td>${escapeHtml(u.email || "-")}</td>
+                <td>${escapeHtml(u.nom || "-")}</td>
+                <td>${escapeHtml(u.prenom || "-")}</td>
+                <td>${escapeHtml(u.service || "-")}</td>
+                <td>
+                  <button class="button outline user-action-icon user-action-view" type="button" data-user-id="${escapeHtml(u.user_id)}" aria-label="Voir" title="Voir">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M2 12s3.5-6 10-6s10 6 10 6s-3.5 6-10 6s-10-6-10-6Z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button class="button outline user-action-icon user-action-edit" type="button" data-user-id="${escapeHtml(u.user_id)}" aria-label="Modifier" title="Modifier">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="m16.5 3.5 4 4L8 20l-5 1 1-5 12.5-12.5Z"></path>
+                    </svg>
+                  </button>
+                  <button class="button outline user-action-icon user-action-delete" type="button" data-user-id="${escapeHtml(u.user_id)}" aria-label="Supprimer" title="Supprimer">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 6h18"></path>
+                      <path d="M8 6V4h8v2"></path>
+                      <path d="M19 6l-1 14H6L5 6"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+        usersTbody.innerHTML = html;
+      };
+
+      const findUser = (userId) => usersCache.find((u) => String(u.user_id) === String(userId));
+
+      const filterUsers = () => {
+        const query = String(usersSearchInput?.value || "").trim().toLowerCase();
+        if (!query) {
+          renderRows(usersCache);
+          showResult(`${usersCache.length} utilisateur(s) trouves.`, true);
+          return;
+        }
+        const filtered = usersCache.filter((u) => {
+          const rowText = [
+            u.user_id,
+            u.identifiant,
+            u.email,
+            u.nom,
+            u.prenom,
+            u.service,
+          ]
+            .map((v) => String(v || "").toLowerCase())
+            .join(" ");
+          return rowText.includes(query);
+        });
+        renderRows(filtered);
+        showResult(`${filtered.length} utilisateur(s) trouves (filtre).`, true);
+      };
+
+      const loadUsers = async () => {
+        if (!window.pywebview?.api?.list_users) return;
+        showResult("Chargement des utilisateurs...");
+        try {
+          const resp = await window.pywebview.api.list_users("", "");
+          if (resp?.ok !== "true") {
+            showResult(resp?.message || "Echec de recuperation.");
+            usersCache = [];
+            renderRows([]);
+            return;
+          }
+          usersCache = resp.data || [];
+          filterUsers();
+        } catch (error) {
+          showResult(`Erreur inattendue: ${error}`);
+          usersCache = [];
+          renderRows([]);
+        }
+      };
+
+      const applyUser = (data) => {
+        if (!data) return false;
+        currentUser = data;
+        const fullName = `${data.prenoms ?? ""} ${data.nom ?? ""}`.trim();
+        const email = data.email || "";
+        const service = data.service || "";
+        if (userName) userName.textContent = fullName || "Utilisateur";
+        if (userService) userService.textContent = service ? `Service : ${service}` : "";
+        if (userEmail) userEmail.textContent = email;
+        if (userLabel) userLabel.textContent = service ? `${email} - ${service}` : email || "Utilisateur";
+        return true;
+      };
+
+      const enforceRoleUi = () => {
+        const isSied = String(currentUser?.service || "")
+          .trim()
+          .toUpperCase() === "SIED";
+        usersDenied.classList.toggle("hidden", isSied);
+        if (usersSearchRow) usersSearchRow.classList.toggle("hidden", !isSied);
+        usersTableWrapper.classList.toggle("hidden", !isSied);
+        addUserBtn.classList.toggle("hidden", !isSied);
+        if (!isSied) showResult("Acces refuse : reserve au service SIED.");
+        return isSied;
+      };
+
+      const loadUserFromApi = async () => {
+        const cached = localStorage.getItem("logged_user");
+        if (cached) {
+          try {
+            applyUser(JSON.parse(cached));
+          } catch (_) {}
+        }
+        if (window.pywebview?.api?.get_logged_user) {
+          try {
+            const resp = await window.pywebview.api.get_logged_user();
+            if (resp?.data) {
+              applyUser(resp.data);
+              localStorage.setItem("logged_user", JSON.stringify(resp.data));
+            }
+          } catch (_) {}
+        }
+        const canManage = enforceRoleUi();
+        if (canManage) await loadUsers();
+      };
+
+      const collectPayload = () => ({
+        identifiant: String(inputIdentifiant.value || "").trim(),
+        email: String(inputEmail.value || "").trim(),
+        nom: String(inputNom.value || "").trim(),
+        prenom: String(inputPrenom.value || "").trim(),
+        service: String(inputService.value || "").trim().toUpperCase(),
+        mot_de_passe: String(inputPassword.value || "").trim(),
+      });
+
+      const setServiceValue = (value) => {
+        const normalized = String(value || "").trim().toUpperCase();
+        if (!normalized) {
+          inputService.value = "";
+          return;
+        }
+        const exists = Array.from(inputService.options).some((opt) => opt.value === normalized);
+        if (!exists) {
+          const option = document.createElement("option");
+          option.value = normalized;
+          option.textContent = normalized;
+          inputService.appendChild(option);
+        }
+        inputService.value = normalized;
+      };
+
+      usersTbody.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-user-id]");
+        if (!button) return;
+        const userId = button.getAttribute("data-user-id");
+        const user = findUser(userId);
+        if (!user) return;
+
+        if (button.classList.contains("user-action-view")) {
+          openModal("view", user);
+          return;
+        }
+        if (button.classList.contains("user-action-edit")) {
+          openModal("edit", user);
+          return;
+        }
+        if (!button.classList.contains("user-action-delete")) return;
+
+        const selfId = String(currentUser?.user_id || "");
+        if (selfId && selfId === String(userId)) {
+          showResult("Suppression de votre propre compte interdite.");
+          return;
+        }
+
+        if (!window.confirm(`Confirmer la suppression de ${user.identifiant} ?`)) return;
+        showResult("Suppression en cours...");
+        try {
+          const resp = await window.pywebview.api.delete_user("", "", Number(userId));
+          if (resp?.ok !== "true") {
+            showResult(resp?.message || "Echec suppression.");
+            return;
+          }
+          showResult("Utilisateur supprime avec succes.", true);
+          await loadUsers();
+        } catch (error) {
+          showResult(`Erreur inattendue: ${error}`);
+        }
+      });
+
+      userForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (currentMode === "view") {
+          closeModal();
+          return;
+        }
+
+        const payload = collectPayload();
+        const validationError = validatePayload(payload, currentMode);
+        if (validationError) {
+          showFormResult(validationError);
+          return;
+        }
+
+        showFormResult("Enregistrement en cours...");
+        try {
+          let resp;
+          if (currentMode === "create") {
+            resp = await window.pywebview.api.create_user("", "", payload);
+          } else {
+            resp = await window.pywebview.api.update_user("", "", Number(currentEditUserId), payload);
+          }
+
+          if (resp?.ok !== "true") {
+            showFormResult(resp?.message || "Echec enregistrement.");
+            return;
+          }
+          closeModal();
+          showResult(resp.message || "Operation reussie.", true);
+          await loadUsers();
+        } catch (error) {
+          showFormResult(`Erreur inattendue: ${error}`);
+        }
+      });
+
+      addUserBtn.addEventListener("click", () => openModal("create", null));
+      usersSearchInput?.addEventListener("input", filterUsers);
+      inputPasswordToggle?.addEventListener("click", () => {
+        setPasswordVisibility(inputPassword.type === "password");
+      });
+      modalClose.addEventListener("click", closeModal);
+      userCancelBtn.addEventListener("click", closeModal);
+      modalOverlay.addEventListener("click", (event) => {
+        if (event.target === modalOverlay) closeModal();
+      });
+
+      const storedTheme = localStorage.getItem("theme");
+      if (storedTheme === "dark") document.body.dataset.theme = "dark";
+      if (themeToggle) {
+        const sync = () => {
+          const isDark = document.body.dataset.theme === "dark";
+          const icon = themeToggle.querySelector(".icon");
+          if (icon) icon.textContent = isDark ? "\u2600" : "\uD83C\uDF19";
+        };
+        sync();
+        themeToggle.addEventListener("click", () => {
+          const isDark = document.body.dataset.theme === "dark";
+          document.body.dataset.theme = isDark ? "" : "dark";
+          localStorage.setItem("theme", isDark ? "light" : "dark");
+          sync();
+        });
+      }
+
+      if (userTrigger && userPanel) {
+        const closeMenu = () => userPanel.classList.add("hidden");
+        userTrigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          userPanel.classList.toggle("hidden");
+        });
+        userPanel.addEventListener("click", (event) => event.stopPropagation());
+        document.addEventListener("click", () => closeMenu());
+      }
+
+      if (userLogout) {
+        userLogout.addEventListener("click", async () => {
+          try {
+            if (window.pywebview?.api?.logout) {
+              await window.pywebview.api.logout();
+            }
+          } catch (_) {}
+          localStorage.removeItem("logged_user");
+          window.location.replace("login.html");
+        });
+      }
+
+      loadUserFromApi();
+      window.addEventListener("pywebviewready", loadUserFromApi);
+    })();
+  </script>
+</body>
+</html>

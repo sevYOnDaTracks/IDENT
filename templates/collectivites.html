@@ -543,19 +543,17 @@
     };
 
     const exportFolderMap = {
-      AFF: "IDENT_AFF",
-      AFFILIATION: "IDENT_AFF",
-      JUR: "IDENT_JUR",
-      JURIDIQUE: "IDENT_JUR",
-      PCI: "IDENT_PCI",
-      RET: "IDENT_RET",
-      RETRAITE: "IDENT_RET",
-      SIED: "IDENT_SIED",
-      IDENT_AFF: "IDENT_AFF",
-      IDENT_JUR: "IDENT_JUR",
-      IDENT_PCI: "IDENT_PCI",
-      IDENT_RET: "IDENT_RET",
-      IDENT_SIED: "IDENT_SIED",
+      AFF: "AFFILIATION",
+      AFFILIATION: "AFFILIATION",
+      JUR: "JURIDIQUE",
+      JURIDIQUE: "JURIDIQUE",
+      PCI: "PCI",
+      RET: "RETRAITE",
+      RETRAITE: "RETRAITE",
+      IDENT_AFF: "AFFILIATION",
+      IDENT_JUR: "JURIDIQUE",
+      IDENT_PCI: "PCI",
+      IDENT_RET: "RETRAITE",
     };
 
     const getUserService = () => {
@@ -573,20 +571,15 @@
       if (!value) return null;
       const key = value.trim().toUpperCase();
       if (exportFolderMap[key]) return exportFolderMap[key];
-      if (key.startsWith("IDENT_")) return key;
       return null;
     };
 
     const chooseExportOptions = () => {
       const service = getUserService().toUpperCase();
-      const mappedService = normalizeExportFolder(service);
-      if (!service || !mappedService) {
-        return { mode: "choose" };
-      }
       if (service === "SIED") {
         const choice = window.prompt(
-          "Choisir dossier : AFF, PCI, JUR, RET, SIED ou PERSO",
-          "SIED"
+          "Choisir dossier : AFF, PCI, JUR, RET ou PERSO",
+          "AFF"
         );
         if (!choice) return null;
         const key = choice.trim().toUpperCase();
@@ -599,6 +592,10 @@
           return null;
         }
         return { mode: "auto", folder };
+      }
+      const mappedService = normalizeExportFolder(service);
+      if (!service || !mappedService) {
+        return { mode: "choose" };
       }
       const ok = window.confirm(
         "Exporter dans le dossier de votre service ?\nOK = dossier service\nAnnuler = choisir un emplacement"
