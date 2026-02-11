@@ -271,7 +271,11 @@ class OracleClient:
              AND ac.ac_dtefdeb <= SYSDATE
              AND (ac.ac_dteffin IS NULL OR ac.ac_dteffin = TO_DATE('31123999', 'DDMMYYYY'))
             WHERE ( :nir_pattern IS NULL OR UPPER(a.as_nni) LIKE UPPER(:nir_pattern) )
-              AND ( :nom_pattern IS NULL OR UPPER(a.as_nompat) LIKE UPPER(:nom_pattern) )
+              AND (
+                    :nom_pattern IS NULL
+                    OR UPPER(a.as_nompat) LIKE UPPER(:nom_pattern)
+                    OR ( :prenom_pattern IS NULL AND UPPER(a.as_prenoms) LIKE UPPER(:nom_pattern) )
+                  )
               AND ( :prenom_pattern IS NULL OR UPPER(a.as_prenoms) LIKE UPPER(:prenom_pattern) )
             GROUP BY
                 a.as_nni,

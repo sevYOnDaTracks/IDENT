@@ -883,7 +883,7 @@ class Api:
 
         self._cached_user = user
         self._cached_password = pwd
-        return {"ok": "true", "message": "Civilites recuperees.", "data": result["data"]}
+        return {"ok": "true", "message": "Civilites recuperées.", "data": result["data"]}
 
     def fetch_referentiel_cultes(self, username: str, password: str):
         user, pwd = self._resolve_credentials(username, password)

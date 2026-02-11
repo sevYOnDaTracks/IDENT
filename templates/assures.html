@@ -35,7 +35,7 @@
       <div class="toolbar-center">
         <div class="toolbar-entity" id="toolbar-assure" hidden>
           <span class="toolbar-entity-label">Assur&#233;</span>
-          <span class="toolbar-entity-value toolbar-entity-value--clamp" id="toolbar-assure-value">-</span>
+          <span class="toolbar-entity-value" id="toolbar-assure-value">-</span>
         </div>
       </div>
       <div class="toolbar-right">
@@ -87,7 +87,7 @@
         <div class="panel panel-search">
           <div class="panel-body">
             <div class="form-row compact">
-              <input id="assure-search" name="search" type="text" placeholder="Rechercher par NIR, nom ou prénoms..." autocomplete="off">
+              <input id="assure-search" class="module-search-input" name="search" type="text" placeholder="Rechercher un assuré par NNI, nom ou prénoms..." autocomplete="off">
             </div>
           </div>
         </div>
@@ -126,6 +126,15 @@
 
       <div class="pagination hidden" id="assure-pagination">
         <span class="pagination-info" id="assure-pagination-text">0 résultat</span>
+        <label class="pagination-size" for="assure-page-size">
+           <!-- Afficher -->
+          <select id="assure-page-size" aria-label="Nombre de résultats par page">
+            <option value="20" selected>20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="-1">Tout</option>
+          </select>
+        </label>
         <button class="button outline" type="button" id="assure-prev">Précédent</button>
         <button class="button outline" type="button" id="assure-next">Suivant</button>
       </div>
@@ -135,6 +144,7 @@
           <div>
             <div class="details-title" id="assure-fullname">-</div>
             <div class="details-sub" id="assure-meta">-</div>
+            <div class="details-sub" id="assure-collect-meta">Collectivité maladie : - | Collectivité vieillesse : -</div>
           </div>
           <div class="actions">
             <button class="button outline with-icon" id="btn-export" aria-label="Exporter en Excel" title="Exporter en Excel">
@@ -163,7 +173,7 @@
           <div id="info-list" class="info-grid"></div>
         </div>
         <div class="tab-panel" data-tab="situations">
-          <div id="situation-grid" class="info-grid two-col"></div>
+          <div id="situation-grid" class="info-grid one-col"></div>
         </div>
         <div class="tab-panel" data-tab="maladie">
           <div class="table-title">Historique des situations maladie</div>
@@ -347,7 +357,7 @@
         </div>
         <div class="tab-panel" data-tab="adresse">
           <div class="info-section">Adresse de l'assuré</div>
-          <div class="info-grid two-max">
+          <div class="info-grid one-col">
             <div class="info-row span-all">
               <div class="info-label">Type adresse</div>
               <div class="info-value" id="addr-type">-</div>
@@ -559,7 +569,7 @@
             </div>
           </div>
 
-          <div class="table-title" style="margin-top:12px;">Historique des situations Justificatifs d’Ouverture des Droits</div>
+          <div class="table-title" style="margin-top:12px;">Historique des situations Justificatifs d’Ouverture des droits</div>
           <table class="data-table" id="table-ayantdroit-jod">
             <thead>
               <tr>
@@ -748,6 +758,7 @@
     const assureTableWrapper = document.getElementById("assure-table-wrapper");
     const assurePagination = document.getElementById("assure-pagination");
     const assurePaginationText = document.getElementById("assure-pagination-text");
+    const assurePageSizeSelect = document.getElementById("assure-page-size");
     const assurePrev = document.getElementById("assure-prev");
     const assureNext = document.getElementById("assure-next");
     const homeButton = document.getElementById("btn-home");
@@ -757,6 +768,7 @@
     const exportButton = document.getElementById("btn-export");
     const assureFullname = document.getElementById("assure-fullname");
     const assureMeta = document.getElementById("assure-meta");
+    const assureCollectMeta = document.getElementById("assure-collect-meta");
     const assureLoader = document.getElementById("assure-loader");
     const infoList = document.getElementById("info-list");
     const situationGrid = document.getElementById("situation-grid");
@@ -802,11 +814,15 @@
     let selectedAssure = null;
     let lastNirValue = "";
     let assurePage = 1;
-    const assurePageSize = 20;
+    let assurePageSize = 20;
     let selectedRowIndex = null;
     let cachedUser = null;
     let cachedPassword = null;
     let hasSearched = false;
+    const ASSURE_AUTO_SEARCH_MIN_CHARS = 2;
+    const ASSURE_AUTO_SEARCH_DEBOUNCE_MS = 280;
+    let assureAutoSearchTimer = null;
+    let assureSearchRequestId = 0;
     const assureParams = new URLSearchParams(window.location.search || "");
     const fromValue = assureParams.get("from") || "";
     const fromCollectivite = fromValue === "collectivite";
@@ -859,11 +875,18 @@
       showError("Erreur inattendue : " + (event.reason || ""));
     });
 
-    function resolveSearchValues(input) {
+    function resolveSearchValues(input, triValue) {
       const query = (input || "").trim();
       if (!query) return { nir: "", nom: "", prenom: "" };
       if (/^\d+$/.test(query)) {
         return { nir: query, nom: "", prenom: "" };
+      }
+      const tri = String(triValue || "").trim().toLowerCase();
+      if (tri === "prenom") {
+        return { nir: "", nom: "", prenom: query };
+      }
+      if (tri === "nom") {
+        return { nir: "", nom: query, prenom: "" };
       }
       const parts = query.split(/\s+/).filter(Boolean);
       if (parts.length >= 2) {
@@ -872,10 +895,25 @@
       return { nir: "", nom: query, prenom: "" };
     }
 
+    function resetAssureSearchResults() {
+      hasSearched = false;
+      assureData = [];
+      selectedAssure = null;
+      selectedRowIndex = null;
+      lastNirValue = "";
+      assurePage = 1;
+      setResultMessage("");
+      setLoader(false);
+      renderAssureTable(assureData);
+      toggleDetails(false);
+      toggleList(true);
+    }
+
     const runAssureSearch = async () => {
       const searchValue = (assureSearch?.value || "").trim();
-      const { nir, nom, prenom } = resolveSearchValues(searchValue);
       const tri = (assureTriSelect?.value || "nom").trim();
+      const { nir, nom, prenom } = resolveSearchValues(searchValue, tri);
+      const requestId = ++assureSearchRequestId;
 
       if (!searchValue) {
         setResultMessage("Renseignez un critère de recherche.");
@@ -894,11 +932,13 @@
       try {
         const user = await ensureCredentials();
         const pwd = cachedPassword;
+        if (requestId !== assureSearchRequestId) return;
         if (!user || !pwd) {
           setResultMessage("Connexion annulée (identifiants manquants).");
           return;
         }
         const response = await window.pywebview.api.fetch_assure(user, pwd, nir, nom, prenom, tri);
+        if (requestId !== assureSearchRequestId) return;
         if (response?.ok === "true") {
           hasSearched = true;
           assureData = response.data || [];
@@ -924,6 +964,7 @@
           toggleList(true);
         }
       } catch (error) {
+        if (requestId !== assureSearchRequestId) return;
         hasSearched = true;
         setResultMessage("");
         showError("Erreur pendant la recherche : " + error);
@@ -948,6 +989,35 @@
       runAssureSearch();
     });
 
+    assureSearch?.addEventListener("input", () => {
+      const value = (assureSearch.value || "").trim();
+      clearTimeout(assureAutoSearchTimer);
+
+      if (!value) {
+        assureSearchRequestId += 1;
+        resetAssureSearchResults();
+        return;
+      }
+
+      if (value.length < ASSURE_AUTO_SEARCH_MIN_CHARS) {
+        assureSearchRequestId += 1;
+        hasSearched = false;
+        assureData = [];
+        selectedAssure = null;
+        selectedRowIndex = null;
+        assurePage = 1;
+        renderAssureTable(assureData);
+        toggleDetails(false);
+        toggleList(true);
+        setResultMessage("");
+        return;
+      }
+
+      assureAutoSearchTimer = setTimeout(() => {
+        runAssureSearch();
+      }, ASSURE_AUTO_SEARCH_DEBOUNCE_MS);
+    });
+
     function updateAssurePagination(total, start, end, pageCount) {
       if (!assurePagination || !assurePaginationText) return;
       if (!total) {
@@ -963,14 +1033,20 @@
       if (assureNext) assureNext.disabled = assurePage >= pageCount;
     }
 
+    function getAssureEffectivePageSize(total) {
+      if (assurePageSize === -1) return Math.max(total, 1);
+      return assurePageSize;
+    }
+
     function getAssurePageSlice(rows) {
       const total = rows.length;
       if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
-      const pageCount = Math.max(1, Math.ceil(total / assurePageSize));
+      const pageSize = getAssureEffectivePageSize(total);
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
       if (assurePage > pageCount) assurePage = pageCount;
       if (assurePage < 1) assurePage = 1;
-      const start = (assurePage - 1) * assurePageSize;
-      const end = Math.min(start + assurePageSize, total);
+      const start = (assurePage - 1) * pageSize;
+      const end = Math.min(start + pageSize, total);
       return { slice: rows.slice(start, end), start, end, pageCount };
     }
 
@@ -1373,6 +1449,34 @@
       }
     }
 
+    function extractCollectiviteNumero(value) {
+      const raw = String(value || "").trim();
+      if (!raw || raw === "-") return "";
+      const firstToken = raw.split(/\s+/)[0];
+      return firstToken || raw;
+    }
+
+    async function openCollectiviteFromAssure(collectValue) {
+      const numero = extractCollectiviteNumero(collectValue);
+      if (!numero) {
+        showError("Numéro de collectivité manquant.");
+        return;
+      }
+      try {
+        localStorage.setItem("collect_id_target", numero);
+      } catch (_) {
+        /* ignore storage errors */
+      }
+      try {
+        if (window.pywebview?.api?.set_selected_collectivite) {
+          await window.pywebview.api.set_selected_collectivite({ numero });
+        }
+      } catch (_) {
+        /* ignore api errors */
+      }
+      window.location.href = `collectivites.html?collect=${encodeURIComponent(numero)}&from=assure`;
+    }
+
     function toggleDetails(show) {
       if (!detailsSection) return;
       detailsSection.hidden = !show;
@@ -1380,9 +1484,21 @@
       if (backResultsButton) {
         backResultsButton.hidden = !show || !hasSearched;
       }
-      if (toolbarAssure) toolbarAssure.hidden = !show;
+      if (toolbarAssure) {
+        toolbarAssure.hidden = !show;
+        toolbarAssure.classList.toggle("hidden", !show);
+      }
       if (!show) {
+        if (toolbarAssureValue) {
+          toolbarAssureValue.textContent = "-";
+          toolbarAssureValue.title = "-";
+        }
         setActiveTab("infos");
+        // Hide the subnav when leaving the details view.
+        refreshAssureSubnav();
+      } else {
+        // Refresh the subnav when entering the details view.
+        setTimeout(refreshAssureSubnav, 0);
       }
     }
 
@@ -1462,6 +1578,7 @@
 
     function assureApplyListState() {
       // Show the list and hide details without wiping the loaded rows.
+      selectedAssure = null;
       toggleDetails(false);
       toggleSearchArea(false);
       setLoader(false);
@@ -1510,9 +1627,17 @@
     });
 
     assureNext?.addEventListener("click", () => {
-      const pageCount = Math.max(1, Math.ceil(assureData.length / assurePageSize));
+      const pageSize = getAssureEffectivePageSize(assureData.length);
+      const pageCount = Math.max(1, Math.ceil(assureData.length / pageSize));
       if (assurePage >= pageCount) return;
       assurePage += 1;
+      renderAssureTable(assureData);
+    });
+
+    assurePageSizeSelect?.addEventListener("change", () => {
+      const value = Number(assurePageSizeSelect.value);
+      assurePageSize = [20, 40, 60, -1].includes(value) ? value : 20;
+      assurePage = 1;
       renderAssureTable(assureData);
     });
 
@@ -1560,6 +1685,9 @@
       if (!selectedAssure) {
         assureFullname.textContent = "-";
         assureMeta.textContent = "-";
+        if (assureCollectMeta) {
+          assureCollectMeta.textContent = "Collectivité maladie : - | Collectivité vieillesse : -";
+        }
         if (toolbarAssureValue) {
           toolbarAssureValue.textContent = "-";
           toolbarAssureValue.title = "-";
@@ -1581,10 +1709,20 @@
       if (selectedAssure.date_naissance) metaParts.push(`Né(e) le ${selectedAssure.date_naissance}`);
       if (selectedAssure.sexe) metaParts.push(selectedAssure.sexe);
       assureMeta.textContent = metaParts.join(" â€¢ ") || "-";
+      if (assureCollectMeta) {
+        const collMal = selectedAssure.collectivite_maladie || "-";
+        const collVie = selectedAssure.collectivite_vieillesse || "-";
+        assureCollectMeta.textContent = `Collectivité maladie : ${collMal} | Collectivité vieillesse : ${collVie}`;
+      }
       if (toolbarAssureValue) {
-        const txt = assureFullname.textContent || "-";
-        toolbarAssureValue.textContent = txt;
-        toolbarAssureValue.title = txt;
+        const nom = String(selectedAssure.nom_usage || "").trim();
+        const prenomRaw = String(selectedAssure.prenom_usage || "").trim();
+        const firstPrenom = prenomRaw ? prenomRaw.split(/\s+/)[0] : "";
+        const namePart = [nom, firstPrenom].filter(Boolean).join(" ").trim() || "-";
+        const nirPart = selectedAssure.nir ? ` - ${selectedAssure.nir}` : "";
+        const full = `${namePart}${nirPart}`.trim();
+        toolbarAssureValue.textContent = full || "-";
+        toolbarAssureValue.title = full || "-";
       }
     }
 
@@ -1595,6 +1733,212 @@
       panels.forEach((panel) => {
         panel.classList.toggle("active", panel.dataset.tab === name);
       });
+      refreshAssureSubnav();
+    }
+
+    // ---- "Sommaire" (scrollspy) for long tabs in the assure details.
+    let assureSubnavObserver = null;
+    let assureSubnavScrollCleanup = null;
+
+    function slugify(text) {
+      return String(text || "")
+        .toLowerCase()
+        .trim()
+        .replace(/['"]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function ensureAssureSubnav() {
+      if (!detailsSection) return null;
+      let el = document.getElementById("assure-subnav");
+      if (el) return el;
+      el = document.createElement("aside");
+      el.id = "assure-subnav";
+      el.className = "assure-subnav";
+      el.hidden = true;
+      detailsSection.appendChild(el);
+      return el;
+    }
+
+    function destroyAssureSubnavObserver() {
+      if (assureSubnavObserver) {
+        try {
+          assureSubnavObserver.disconnect();
+        } catch (_) {}
+        assureSubnavObserver = null;
+      }
+    }
+
+    function destroyAssureSubnavScrollSpy() {
+      if (assureSubnavScrollCleanup) {
+        try {
+          assureSubnavScrollCleanup();
+        } catch (_) {}
+        assureSubnavScrollCleanup = null;
+      }
+    }
+
+    function getToolbarOffsetPx() {
+      try {
+        const raw = getComputedStyle(document.documentElement).getPropertyValue("--toolbar-height");
+        const n = parseInt(String(raw || "").trim(), 10);
+        return Number.isFinite(n) ? n : 80;
+      } catch (_) {
+        return 80;
+      }
+    }
+
+    function refreshAssureSubnav() {
+      const subnav = ensureAssureSubnav();
+      if (!subnav) return;
+
+      // Only when details are visible and we have data.
+      if (!selectedAssure || detailsSection?.hidden) {
+        destroyAssureSubnavObserver();
+        destroyAssureSubnavScrollSpy();
+        subnav.hidden = true;
+        subnav.innerHTML = "";
+        return;
+      }
+
+      const activePanel = document.querySelector('#assure-details .tab-panel.active');
+      const activeTab = document.querySelector('#assure-details .tab.active')?.dataset?.tab || "tab";
+      if (!activePanel) {
+        destroyAssureSubnavObserver();
+        destroyAssureSubnavScrollSpy();
+        subnav.hidden = true;
+        subnav.innerHTML = "";
+        return;
+      }
+
+      // Collect section anchors from the visible panel.
+      const candidates = Array.from(
+        activePanel.querySelectorAll(".info-section, .table-title, .situation-title")
+      );
+
+      const targets = candidates
+        .map((el) => ({ el, title: (el.textContent || "").trim() }))
+        .filter((x) => x.title && x.title.length > 0);
+
+      // Hide if there is nothing useful to navigate.
+      if (targets.length < 2) {
+        destroyAssureSubnavObserver();
+        destroyAssureSubnavScrollSpy();
+        subnav.hidden = true;
+        subnav.innerHTML = "";
+        return;
+      }
+
+      // Ensure unique ids.
+      targets.forEach((t, idx) => {
+        if (!t.el.id) {
+          const base = slugify(t.title) || "section";
+          t.el.id = `assure-${activeTab}-${base}-${idx + 1}`;
+        }
+      });
+
+      subnav.hidden = false;
+      subnav.innerHTML = "";
+
+      const title = document.createElement("div");
+      title.className = "assure-subnav-title";
+      title.textContent = "Sommaire";
+      subnav.appendChild(title);
+
+      const list = document.createElement("div");
+      list.className = "assure-subnav-list";
+      subnav.appendChild(list);
+
+      function setActiveById(id) {
+        links.forEach((a) => {
+          const href = a.getAttribute("href") || "";
+          a.classList.toggle("active", href === `#${id}`);
+        });
+      }
+
+      const links = targets.map((t, idx) => {
+        const a = document.createElement("a");
+        a.className = "assure-subnav-link";
+        a.href = `#${t.el.id}`;
+        a.textContent = t.title;
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          setActiveById(t.el.id);
+          try {
+            t.el.scrollIntoView({ behavior: "smooth", block: "start" });
+          } catch (_) {
+            window.location.hash = t.el.id;
+          }
+        });
+        if (idx === 0) a.classList.add("active");
+        list.appendChild(a);
+        return a;
+      });
+
+      destroyAssureSubnavObserver();
+      destroyAssureSubnavScrollSpy();
+
+      const toolbarOffset = getToolbarOffsetPx();
+      const topMargin = toolbarOffset + 150;
+      assureSubnavObserver = new IntersectionObserver(
+        (entries) => {
+          // Pick the closest visible section.
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0));
+          if (visible.length) {
+            setActiveById(visible[0].target.id);
+          }
+        },
+        {
+          root: null,
+          threshold: [0.12, 0.25, 0.5],
+          rootMargin: `-${topMargin}px 0px -70% 0px`,
+        }
+      );
+
+      targets.forEach((t) => {
+        try {
+          assureSubnavObserver.observe(t.el);
+        } catch (_) {}
+      });
+
+      // Fallback scrollspy (more reliable than IntersectionObserver in embedded webviews).
+      const computeActive = () => {
+        const y = window.scrollY || 0;
+        const doc = document.documentElement;
+        const atBottom = y + window.innerHeight >= (doc?.scrollHeight || 0) - 2;
+        if (atBottom) {
+          const last = targets[targets.length - 1];
+          if (last?.el?.id) setActiveById(last.el.id);
+          return;
+        }
+        const offset = toolbarOffset + 160;
+        let current = targets[0];
+        for (const t of targets) {
+          const rect = t.el.getBoundingClientRect();
+          const top = rect.top + y;
+          if (top - offset <= y + 1) current = t;
+        }
+        if (current?.el?.id) setActiveById(current.el.id);
+      };
+
+      // Throttled scroll handler.
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          ticking = false;
+          computeActive();
+        });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      assureSubnavScrollCleanup = () => window.removeEventListener("scroll", onScroll);
+
+      // Ensure correct active state after build.
+      setTimeout(computeActive, 0);
     }
 
     function renderInfoDetails() {
@@ -1606,14 +1950,19 @@
         { label: "NIR", value: selectedAssure.nir },
         { label: "Nom usage", value: selectedAssure.nom_usage },
         { label: "Prénom usage", value: selectedAssure.prenom_usage },
-        { label: "Date de naissance", value: selectedAssure.date_naissance },
-        { label: "Civilité", value: selectedAssure.civilite },
+        {
+          dual: true,
+          labelLeft: "Date de naissance",
+          valueLeft: selectedAssure.date_naissance,
+          labelRight: "Civilité",
+          valueRight: selectedAssure.civilite,
+        },
         { section: "2 - Identification" },
         { label: "Nom usuel", value: selectedAssure.nom_usuel },
         { label: "Date certification RNIAM", value: selectedAssure.date_certif_rniam },
         { section: "3 - Collectivités" },
-        { label: "Collectivité maladie", value: selectedAssure.collectivite_maladie },
-        { label: "Collectivité vieillesse", value: selectedAssure.collectivite_vieillesse },
+        { label: "Collectivité maladie", value: selectedAssure.collectivite_maladie, collectLink: true },
+        { label: "Collectivité vieillesse", value: selectedAssure.collectivite_vieillesse, collectLink: true },
         { label: "Communauté", value: selectedAssure.communaute },
         { section: "4 - Lieu de naissance" },
         { label: "Code postal", value: selectedAssure.code_postal },
@@ -1636,6 +1985,62 @@
           section.className = "info-section";
           section.textContent = item.section;
           infoList.appendChild(section);
+        } else if (item.dual) {
+          const row = document.createElement("div");
+          row.className = "info-row info-row-double";
+          row.innerHTML = `
+            <div class="info-label">${item.labelLeft}</div>
+            <div class="info-value">${item.valueLeft || "-"}</div>
+            <div class="info-label">${item.labelRight}</div>
+            <div class="info-value">${item.valueRight || "-"}</div>
+          `;
+          infoList.appendChild(row);
+        } else if (item.collectLink) {
+          const row = document.createElement("div");
+          row.className = "info-row";
+
+          const label = document.createElement("div");
+          label.className = "info-label";
+          label.textContent = item.label;
+
+          const valueCell = document.createElement("div");
+          valueCell.className = "info-value";
+
+          const numero = extractCollectiviteNumero(item.value);
+          if (!numero) {
+            valueCell.textContent = "-";
+          } else {
+            const actions = document.createElement("div");
+            actions.className = "assure-inline-actions";
+
+            const link = document.createElement("button");
+            link.type = "button";
+            link.className = "assure-inline-link";
+            link.textContent = numero;
+            link.title = `Ouvrir la collectivité ${numero}`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "button outline assure-inline-btn";
+            btn.textContent = "Consulter";
+            btn.title = `Consulter la collectivité ${numero}`;
+
+            const onOpen = async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              await openCollectiviteFromAssure(numero);
+            };
+
+            link.addEventListener("click", onOpen);
+            btn.addEventListener("click", onOpen);
+            actions.appendChild(link);
+            actions.appendChild(btn);
+            valueCell.appendChild(actions);
+          }
+
+          row.appendChild(label);
+          row.appendChild(valueCell);
+          infoList.appendChild(row);
         } else {
           const row = document.createElement("div");
           row.className = "info-row";
@@ -1646,62 +2051,64 @@
           infoList.appendChild(row);
         }
       });
+
+      refreshAssureSubnav();
     }
 
     function renderSituationDetails() {
       if (!situationGrid) return;
       situationGrid.innerHTML = "";
       if (!selectedAssure) return;
+      const title = document.createElement("div");
+      title.className = "table-title";
+      title.textContent = "Comparatif des situations Maladie / Vieillesse";
+      situationGrid.appendChild(title);
 
-      const maladie = [
-        { label: "Situation", value: selectedAssure.sit_maladie },
-        { label: "Nature situation 1", value: selectedAssure.nature1_maladie },
-        { label: "Date condition", value: selectedAssure.date_condition_maladie },
-        { label: "Date déclaration", value: selectedAssure.date_declaration_maladie },
-        { label: "Cristallisation", value: selectedAssure.cristallisation_maladie },
-        { label: "Date effet", value: selectedAssure.date_effet_maladie },
-        { label: "Nature situation 2", value: selectedAssure.nature2_maladie },
-        { label: "Date nature situation 2", value: selectedAssure.date_nature2_maladie },
-        { label: "Date MAJ situation", value: selectedAssure.date_maj_situation_maladie },
-        { label: "Date édition notification", value: selectedAssure.date_edition_notification_maladie },
-        { label: "Date MAJ", value: selectedAssure.date_maj_maladie },
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-wrapper";
+
+      const table = document.createElement("table");
+      table.className = "data-table";
+      table.id = "table-situation-compare";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Critère</th>
+            <th>Maladie</th>
+            <th>Vieillesse</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const rows = [
+        { label: "Situation", maladie: selectedAssure.sit_maladie, vieillesse: selectedAssure.sit_vieillesse },
+        { label: "Nature situation 1", maladie: selectedAssure.nature1_maladie, vieillesse: selectedAssure.nature1_vieillesse },
+        { label: "Date condition", maladie: selectedAssure.date_condition_maladie, vieillesse: selectedAssure.date_condition_vieillesse },
+        { label: "Date déclaration", maladie: selectedAssure.date_declaration_maladie, vieillesse: selectedAssure.date_declaration_vieillesse },
+        { label: "Cristallisation", maladie: selectedAssure.cristallisation_maladie, vieillesse: selectedAssure.cristallisation_vieillesse },
+        { label: "Date effet", maladie: selectedAssure.date_effet_maladie, vieillesse: selectedAssure.date_effet_vieillesse },
+        { label: "Nature situation 2", maladie: selectedAssure.nature2_maladie, vieillesse: selectedAssure.nature2_vieillesse },
+        { label: "Date nature situation 2", maladie: selectedAssure.date_nature2_maladie, vieillesse: selectedAssure.date_nature2_vieillesse },
+        { label: "Date MAJ situation", maladie: selectedAssure.date_maj_situation_maladie, vieillesse: selectedAssure.date_maj_situation_vieillesse },
+        { label: "Date édition notification", maladie: selectedAssure.date_edition_notification_maladie, vieillesse: selectedAssure.date_edition_notification_vieillesse },
+        { label: "Date MAJ", maladie: selectedAssure.date_maj_maladie, vieillesse: selectedAssure.date_maj_vieillesse },
       ];
 
-      const vieillesse = [
-        { label: "Situation", value: selectedAssure.sit_vieillesse },
-        { label: "Nature situation 1", value: selectedAssure.nature1_vieillesse },
-        { label: "Date condition", value: selectedAssure.date_condition_vieillesse },
-        { label: "Date déclaration", value: selectedAssure.date_declaration_vieillesse },
-        { label: "Cristallisation", value: selectedAssure.cristallisation_vieillesse },
-        { label: "Date effet", value: selectedAssure.date_effet_vieillesse },
-        { label: "Nature situation 2", value: selectedAssure.nature2_vieillesse },
-        { label: "Date nature situation 2", value: selectedAssure.date_nature2_vieillesse },
-        { label: "Date MAJ situation", value: selectedAssure.date_maj_situation_vieillesse },
-        { label: "Date édition notification", value: selectedAssure.date_edition_notification_vieillesse },
-        { label: "Date MAJ", value: selectedAssure.date_maj_vieillesse },
-      ];
+      const tbody = table.querySelector("tbody");
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.label}</td>
+          <td>${row.maladie || "-"}</td>
+          <td>${row.vieillesse || "-"}</td>
+        `;
+        tbody?.appendChild(tr);
+      });
 
-      const buildCard = (title, rows) => {
-        const card = document.createElement("div");
-        card.className = "situation-card";
-        const h = document.createElement("h4");
-        h.className = "situation-title";
-        h.textContent = title;
-        card.appendChild(h);
-        rows.forEach((row) => {
-          const el = document.createElement("div");
-          el.className = "info-row";
-          el.innerHTML = `
-            <div class="info-label">${row.label}</div>
-            <div class="info-value">${row.value || "-"}</div>
-          `;
-          card.appendChild(el);
-        });
-        return card;
-      };
-
-      situationGrid.appendChild(buildCard("1 - Maladie", maladie));
-      situationGrid.appendChild(buildCard("2 - Vieillesse", vieillesse));
+      wrapper.appendChild(table);
+      situationGrid.appendChild(wrapper);
+      refreshAssureSubnav();
     }
 
     function renderMaladieDetails() {

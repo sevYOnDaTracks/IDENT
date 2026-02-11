@@ -78,7 +78,7 @@
           <div class="panel-body">
             <div class="form-row compact">
              <!-- <label class="form-label" for="search-input">Recherche</label> -->
-              <input id="search-input" name="search" type="text" placeholder="Rechercher par numéro, nom, ville ou code postal..." autocomplete="off">
+              <input id="search-input" class="module-search-input" name="search" type="text" placeholder="Rechercher une collectivité par numéro, nom, ville ou code postal..." autocomplete="off">
             </div>
           </div>
         </div>
@@ -113,13 +113,22 @@
 
       <div class="pagination hidden" id="collect-pagination">
         <span class="pagination-info" id="collect-pagination-text">0 résultat</span>
+        <label class="pagination-size" for="collect-page-size">
+         <!-- Afficher -->
+          <select id="collect-page-size" aria-label="Nombre de résultats par page">
+            <option value="20" selected>20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="-1">Tout</option>
+          </select>
+        </label>
         <button class="button outline" type="button" id="collect-prev">Précédent</button>
         <button class="button outline" type="button" id="collect-next">Suivant</button>
       </div>
 
       <div class="actions" id="collect-actions" style="justify-content: flex-end; gap: 10px; margin-top: 12px;">
        <!--  <button type="button" class="button ghost" id="btn-ok">consulter</button> -->
-        <button type="button" class="button outline" id="btn-cancel">Réinitialiser le tableau</button>
+      <!--  <button type="button" class="button outline" id="btn-cancel">Réinitialiser le tableau</button> -->
        <!-- <button type="button" class="button primary" id="btn-new">Nouveau</button> -->
       </div>
 
@@ -226,45 +235,45 @@
           </div>
 
           <div class="tab-panel" data-tab="responsables">
-            <div class="info-section">1 - Responsable maladie</div> <br>
-            <div class="info-grid">
-              <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-maladie-nom">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-maladie-adr1">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="resp-maladie-adr2">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 3</div><div class="info-value" id="resp-maladie-adr3">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 4</div><div class="info-value" id="resp-maladie-adr4">-</div></div>
-              <div class="info-grid two-col">
-                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="resp-maladie-cp">-</div></div>
-                <div class="info-row"><div class="info-label">Ville</div><div class="info-value" id="resp-maladie-ville">-</div></div>
-              </div>
-              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="resp-maladie-pays">-</div></div>
-              <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="resp-maladie-email">-</div></div>
-              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="resp-maladie-tel">-</div></div>
-              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="resp-maladie-fax">-</div></div>
-              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="resp-maladie-maj">-</div></div>
-            </div>
-
-            <div class="info-section" style="margin-top: 16px;">2 - Responsable vieillesse</div><br>
-            <div class="info-grid">
-              <div class="info-row"><div class="info-label">Nom du responsable</div><div class="info-value" id="resp-vie-nom">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 1</div><div class="info-value" id="resp-vie-adr1">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 2</div><div class="info-value" id="resp-vie-adr2">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 3</div><div class="info-value" id="resp-vie-adr3">-</div></div>
-              <div class="info-row"><div class="info-label">Ligne 4</div><div class="info-value" id="resp-vie-adr4">-</div></div>
-              <div class="info-grid two-col">
-                <div class="info-row"><div class="info-label">Code postal</div><div class="info-value" id="resp-vie-cp">-</div></div>
-                <div class="info-row"><div class="info-label">Ville</div><div class="info-value" id="resp-vie-ville">-</div></div>
-              </div>
-              <div class="info-row"><div class="info-label">Pays</div><div class="info-value" id="resp-vie-pays">-</div></div>
-              <div class="info-row"><div class="info-label">E-mail</div><div class="info-value" id="resp-vie-email">-</div></div>
-              <div class="info-row"><div class="info-label">Numéro téléphone</div><div class="info-value" id="resp-vie-tel">-</div></div>
-              <div class="info-row"><div class="info-label">Numéro télécopie</div><div class="info-value" id="resp-vie-fax">-</div></div>
-              <div class="info-row"><div class="info-label">Date MAJ</div><div class="info-value" id="resp-vie-maj">-</div></div>
+            <div class="info-section">Responsables maladie / vieillesse</div>
+            <div class="table-wrapper" style="margin-top: 10px;">
+              <table class="data-table" id="table-responsables">
+                <thead>
+                  <tr>
+                    <th>Champ</th>
+                    <th>Responsable maladie</th>
+                    <th>Responsable vieillesse</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Nom du responsable</td><td id="resp-maladie-nom">-</td><td id="resp-vie-nom">-</td></tr>
+                  <tr><td>Ligne 1</td><td id="resp-maladie-adr1">-</td><td id="resp-vie-adr1">-</td></tr>
+                  <tr><td>Ligne 2</td><td id="resp-maladie-adr2">-</td><td id="resp-vie-adr2">-</td></tr>
+                  <tr><td>Ligne 3</td><td id="resp-maladie-adr3">-</td><td id="resp-vie-adr3">-</td></tr>
+                  <tr><td>Ligne 4</td><td id="resp-maladie-adr4">-</td><td id="resp-vie-adr4">-</td></tr>
+                  <tr><td>Code postal</td><td id="resp-maladie-cp">-</td><td id="resp-vie-cp">-</td></tr>
+                  <tr><td>Ville</td><td id="resp-maladie-ville">-</td><td id="resp-vie-ville">-</td></tr>
+                  <tr><td>Pays</td><td id="resp-maladie-pays">-</td><td id="resp-vie-pays">-</td></tr>
+                  <tr><td>E-mail</td><td id="resp-maladie-email">-</td><td id="resp-vie-email">-</td></tr>
+                  <tr><td>Numéro téléphone</td><td id="resp-maladie-tel">-</td><td id="resp-vie-tel">-</td></tr>
+                  <tr><td>Numéro télécopie</td><td id="resp-maladie-fax">-</td><td id="resp-vie-fax">-</td></tr>
+                  <tr><td>Date MAJ</td><td id="resp-maladie-maj">-</td><td id="resp-vie-maj">-</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
           <div class="tab-panel" data-tab="assures">
-            <form id="assures-collect-form" class="form search-panel" style="margin-bottom: 12px;">
+            <form id="assures-collect-form" class="form search-panel assures-search-panel" style="margin-bottom: 12px;">
+              <div class="assures-search-row">
+                <input
+                  id="assures-search-input"
+                  type="text"
+                  placeholder="Rechercher un assuré (nom, prénoms, NNI...)"
+                  aria-label="Recherche dans la liste des assurés"
+                  autocomplete="off"
+                >
+              </div>
               <div class="panel panel-search">
                 <div class="panel-body">
                   <div class="field">
@@ -315,6 +324,15 @@
             </div>
             <div class="pagination" id="assures-pagination">
               <span class="pagination-info">Affichage : <span id="assures-range">0</span> sur <span id="assures-total">0</span> résultats</span>
+              <label class="pagination-size" for="assures-page-size">
+                 <!-- Afficher -->
+                <select id="assures-page-size" aria-label="Nombre de résultats assurés par page">
+                  <option value="20" selected>20</option>
+                  <option value="40">40</option>
+                  <option value="60">60</option>
+                  <option value="-1">Tout</option>
+                </select>
+              </label>
               <button class="button outline" type="button" id="assures-prev">Précédent</button>
               <button class="button outline" type="button" id="assures-next">Suivant</button>
             </div>
@@ -394,6 +412,7 @@
     const actionsPanel = document.getElementById("collect-actions");
     const collectPagination = document.getElementById("collect-pagination");
     const collectPaginationText = document.getElementById("collect-pagination-text");
+    const collectPageSizeSelect = document.getElementById("collect-page-size");
     const collectPrev = document.getElementById("collect-prev");
     const collectNext = document.getElementById("collect-next");
     const collectTitle = document.getElementById("collect-title");
@@ -461,12 +480,14 @@
       maj: document.getElementById("resp-vie-maj"),
     };
     const assuresForm = document.getElementById("assures-collect-form");
+    const assuresSearchInput = document.getElementById("assures-search-input");
     const assureFilterSelect = document.getElementById("assure-filter-select");
     const assureTriSelect = document.getElementById("assure-tri-select");
     const assuresResult = document.getElementById("assures-result");
     const assuresTableBody = document.querySelector("#assures-table tbody");
     const assuresRange = document.getElementById("assures-range");
     const assuresTotal = document.getElementById("assures-total");
+    const assuresPageSizeSelect = document.getElementById("assures-page-size");
     const assuresPrev = document.getElementById("assures-prev");
     const assuresNext = document.getElementById("assures-next");
     const exportResult = document.getElementById("export-result");
@@ -493,14 +514,20 @@
     let selectedRowIndex = null;
     let currentRows = [];
     let hasSearched = false;
+    let allAssuresRows = [];
     let currentAssuresRows = [];
     let selectedData = null;
     let cachedUser = null;
     let cachedPassword = null;
     let collectPage = 1;
-    const collectPageSize = 20;
+    let collectPageSize = 20;
     let assuresPage = 1;
-    const assuresPageSize = 20;
+    let assuresPageSize = 20;
+    let selectedAssureRowIndex = null;
+    const COLLECT_AUTO_SEARCH_MIN_CHARS = 2;
+    const COLLECT_AUTO_SEARCH_DEBOUNCE_MS = 280;
+    let collectAutoSearchTimer = null;
+    let collectSearchRequestId = 0;
 
     const showError = (msg) => {
       try { window.alert(msg); } catch (_) {}
@@ -642,10 +669,14 @@
       if (collSub) collSub.textContent = denom2 ?? "";
       if (collCulte) collCulte.textContent = culte ? `Culte : ${culte}` : "Culte : -";
       if (toolbarCollectivite && toolbarCollectiviteValue) {
+        if (detailsSection?.hidden) return;
         toolbarCollectivite.hidden = false;
-        toolbarCollectiviteValue.textContent = `${numero ?? "-"} ${denom1 ?? ""}`.trim();
+        toolbarCollectivite.classList.remove("hidden");
+        const toolbarText = `${numero ?? "-"} ${denom1 ?? ""}`.trim() || "-";
+        toolbarCollectiviteValue.textContent = toolbarText;
+        toolbarCollectiviteValue.title = toolbarText;
         if (toolbarCollectiviteCulte) {
-          toolbarCollectiviteCulte.textContent = culte ? ` * ${culte}` : "";
+          toolbarCollectiviteCulte.textContent = "";
         }
       }
     }
@@ -709,14 +740,54 @@
       if (assuresNext) assuresNext.disabled = assuresPage >= pageCount;
     }
 
+    function normalizeAssureSearchValue(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function buildAssureSearchText(row) {
+      return [
+        row?.nom,
+        row?.prenoms,
+        row?.nni,
+        row?.code_maladie,
+        row?.code_vieillesse,
+        row?.num_coll_maladie,
+        row?.num_coll_vieillesse,
+        row?.type_adresse,
+      ].join(" ");
+    }
+
+    function applyAssuresLocalSearch(resetPage = true) {
+      const query = normalizeAssureSearchValue(assuresSearchInput?.value || "");
+      if (!query) {
+        currentAssuresRows = [...allAssuresRows];
+      } else {
+        currentAssuresRows = allAssuresRows.filter((row) =>
+          normalizeAssureSearchValue(buildAssureSearchText(row)).includes(query)
+        );
+      }
+      if (resetPage) assuresPage = 1;
+      renderAssuresPage();
+    }
+
+    function getAssuresEffectivePageSize(total) {
+      if (assuresPageSize === -1) return Math.max(total, 1);
+      return assuresPageSize;
+    }
+
     function getAssuresPageSlice(rows) {
       const total = rows.length;
       if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
-      const pageCount = Math.max(1, Math.ceil(total / assuresPageSize));
+      const pageSize = getAssuresEffectivePageSize(total);
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
       if (assuresPage > pageCount) assuresPage = pageCount;
       if (assuresPage < 1) assuresPage = 1;
-      const start = (assuresPage - 1) * assuresPageSize;
-      const end = Math.min(start + assuresPageSize, total);
+      const start = (assuresPage - 1) * pageSize;
+      const end = Math.min(start + pageSize, total);
       return { slice: rows.slice(start, end), start, end, pageCount };
     }
 
@@ -724,6 +795,7 @@
       if (!assuresTableBody) return;
       assuresTableBody.innerHTML = "";
         if (!currentAssuresRows.length) {
+          selectedAssureRowIndex = null;
           const tr = document.createElement("tr");
           tr.innerHTML = `<td colspan="13" style="text-align:center;">-</td>`;
           assuresTableBody.appendChild(tr);
@@ -767,9 +839,12 @@
           window.location.href = `assures.html?nir=${nir}&from=collectivite`;
         };
 
-        slice.forEach((r) => {
+        slice.forEach((r, idx) => {
+          const absoluteIndex = start + idx;
           const tr = document.createElement("tr");
           tr.dataset.nni = r.nni || "";
+          tr.dataset.absoluteIndex = String(absoluteIndex);
+          if (selectedAssureRowIndex === absoluteIndex) tr.classList.add("row-selected");
           tr.innerHTML = `
             <td>${r.nom || "-"}</td>
             <td>${r.prenoms || "-"}</td>
@@ -795,19 +870,28 @@
           btnConsult.textContent = "Consulter";
           btnConsult.addEventListener("click", async (e) => {
             e.stopPropagation();
+            selectedAssureRowIndex = absoluteIndex;
+            assuresTableBody.querySelectorAll("tr").forEach((rowEl) => {
+              rowEl.classList.toggle("row-selected", rowEl === tr);
+            });
             await openAssureFromRow(r);
           });
           actionsTd.appendChild(btnConsult);
           tr.appendChild(actionsTd);
+          tr.addEventListener("click", () => {
+            selectedAssureRowIndex = absoluteIndex;
+            assuresTableBody.querySelectorAll("tr").forEach((rowEl) => {
+              rowEl.classList.toggle("row-selected", rowEl === tr);
+            });
+          });
           assuresTableBody.appendChild(tr);
         });
       updateAssuresPagination(currentAssuresRows.length, start, end, pageCount);
     }
 
     function renderAssures(rows) {
-      currentAssuresRows = rows || [];
-      assuresPage = 1;
-      renderAssuresPage();
+      allAssuresRows = rows || [];
+      applyAssuresLocalSearch(true);
     }
 
     function setCommunautesResult(message, success = false) {
@@ -895,6 +979,7 @@
     function toggleDetails(show) {
       if (detailsSection) detailsSection.hidden = !show;
       if (!show) {
+        clearToolbarCollectivite();
         setActiveTab("ident");
       }
     }
@@ -914,14 +999,20 @@
       if (collectNext) collectNext.disabled = collectPage >= pageCount;
     }
 
+    function getCollectEffectivePageSize(total) {
+      if (collectPageSize === -1) return Math.max(total, 1);
+      return collectPageSize;
+    }
+
     function getCollectPageSlice(rows) {
       const total = rows.length;
       if (!total) return { slice: [], start: 0, end: 0, pageCount: 1 };
-      const pageCount = Math.max(1, Math.ceil(total / collectPageSize));
+      const pageSize = getCollectEffectivePageSize(total);
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
       if (collectPage > pageCount) collectPage = pageCount;
       if (collectPage < 1) collectPage = 1;
-      const start = (collectPage - 1) * collectPageSize;
-      const end = Math.min(start + collectPageSize, total);
+      const start = (collectPage - 1) * pageSize;
+      const end = Math.min(start + pageSize, total);
       return { slice: rows.slice(start, end), start, end, pageCount };
     }
 
@@ -940,6 +1031,7 @@
       slice.forEach((r, idx) => {
         const absoluteIndex = start + idx;
         const tr = document.createElement("tr");
+        tr.dataset.absoluteIndex = String(absoluteIndex);
         if (selectedRowIndex === absoluteIndex) tr.classList.add("row-selected");
         tr.innerHTML = `
           <td>${r.numero || "-"}</td>
@@ -962,7 +1054,13 @@
         tr.appendChild(actionsTd);
         tr.addEventListener("click", () => {
           selectedRowIndex = absoluteIndex;
-          renderTable(rows);
+          tableBody.querySelectorAll("tr").forEach((rowEl) => {
+            rowEl.classList.toggle("row-selected", rowEl === tr);
+          });
+        });
+        tr.addEventListener("dblclick", async (e) => {
+          if (e.target && e.target.closest && e.target.closest("button")) return;
+          await openCollectivite(r, { pushHistory: true });
         });
         tableBody.appendChild(tr);
       });
@@ -1053,10 +1151,10 @@
         collectEnsureListState();
         collectPushDetailState(numero);
       }
-      applyIdentification(selected);
-      renderTables();
       toggleList(false);
       toggleDetails(true);
+      applyIdentification(selected);
+      renderTables();
       setActiveTab("ident");
       await loadIdentification(numero);
       await loadAdresse(numero);
@@ -1355,8 +1453,8 @@
       }
     }
 
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    function resetCollectSearchView(options = {}) {
+      const clearInput = options.clearInput !== false;
       toggleDetails(false);
       toggleList(true);
       selectedData = null;
@@ -1366,71 +1464,26 @@
       clearResponsable(respVieFields);
       renderAssures([]);
       setAssuresResult("");
+      if (assuresSearchInput) assuresSearchInput.value = "";
+      if (assuresPageSizeSelect) assuresPageSizeSelect.value = "20";
+      assuresPageSize = 20;
       renderCommunautes([]);
       setCommunautesResult("");
       clearReferent();
       selectedRowIndex = null;
+      selectedAssureRowIndex = null;
       collectPage = 1;
-      const searchValue = (searchInput?.value || "").trim();
-      const parsed = parseCollectSearch(searchValue);
-      const num = parsed.num;
-      const denom = parsed.denom;
-      const cp = parsed.cp;
+      if (clearInput && searchInput) searchInput.value = "";
+      hasSearched = false;
+      currentRows = [];
+      renderTable(currentRows);
+      setResult("", false);
+      setCollectLoading(false);
+    }
 
-      if (!num && !denom && !cp) {
-        setResult("Renseignez un terme (num?ro, nom, ville ou code postal).", false);
-        renderTable([]);
-        return;
-      }
-      hasSearched = true;
-
-      if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_collectivites) {
-        setResult("API pywebview indisponible (collectivit?s).", false);
-        return;
-      }
-
-      setCollectLoading(true);
-      setResult("");
-      const user = await ensureCredentials();
-      const pwd = cachedPassword;
-      if (!user || !pwd) {
-        setCollectLoading(false);
-        setResult("Connexion annul?e (identifiants manquants).");
-        return;
-      }
-
-      try {
-        const response = await window.pywebview.api.fetch_collectivites(user, pwd, num, denom, cp);
-        if (response?.ok === "true") {
-          currentRows = response.data || [];
-          renderTable(currentRows);
-          setResult(response.message || "R?sultat disponible.", true);
-        } else {
-          currentRows = [];
-          renderTable(currentRows);
-          setResult(response?.message || "Aucune collectivit? trouv?e.", false);
-        }
-      } catch (err) {
-        currentRows = [];
-        renderTable(currentRows);
-        setResult("Erreur pendant la recherche.", false);
-        showError("Erreur pendant la recherche : " + err);
-      } finally {
-        setCollectLoading(false);
-      }
-    });
-
-        btnOk?.addEventListener("click", async () => {
-      if (selectedRowIndex === null || selectedRowIndex === undefined) {
-        window.alert("S?lectionnez une collectivit? dans la liste.");
-        return;
-      }
-      const selected = currentRows[selectedRowIndex];
-      await openCollectivite(selected);
-    });
-
-    btnCancel?.addEventListener("click", () => {
-      selectedRowIndex = null;
+    async function runCollectSearch() {
+      toggleDetails(false);
+      toggleList(true);
       selectedData = null;
       currentSituations = [];
       currentFusions = [];
@@ -1438,20 +1491,97 @@
       clearResponsable(respVieFields);
       renderAssures([]);
       setAssuresResult("");
+      if (assuresSearchInput) assuresSearchInput.value = "";
+      if (assuresPageSizeSelect) assuresPageSizeSelect.value = "20";
+      assuresPageSize = 20;
       renderCommunautes([]);
       setCommunautesResult("");
       clearReferent();
+      selectedRowIndex = null;
+      selectedAssureRowIndex = null;
+      collectPage = 1;
+      const searchValue = (searchInput?.value || "").trim();
+      const parsed = parseCollectSearch(searchValue);
+      const num = parsed.num;
+      const denom = parsed.denom;
+      const cp = parsed.cp;
+      const requestId = ++collectSearchRequestId;
+
+      if (!num && !denom && !cp) {
+        if (requestId !== collectSearchRequestId) return;
+        setResult("", false);
+        hasSearched = false;
+        renderTable([]);
+        return;
+      }
+      hasSearched = true;
+
+      if (!window.pywebview || !window.pywebview.api || !window.pywebview.api.fetch_collectivites) {
+        if (requestId !== collectSearchRequestId) return;
+        setResult("API pywebview indisponible (collectivités).", false);
+        return;
+      }
+
+      setCollectLoading(true);
+      setResult("");
+      const user = await ensureCredentials();
+      const pwd = cachedPassword;
+      if (requestId !== collectSearchRequestId) return;
+      if (!user || !pwd) {
+        setCollectLoading(false);
+        setResult("Connexion annulée (identifiants manquants).");
+        return;
+      }
+
+      try {
+        const response = await window.pywebview.api.fetch_collectivites(user, pwd, num, denom, cp);
+        if (requestId !== collectSearchRequestId) return;
+        if (response?.ok === "true") {
+          currentRows = response.data || [];
+          renderTable(currentRows);
+          setResult(response.message || "Résultat disponible.", true);
+        } else {
+          currentRows = [];
+          renderTable(currentRows);
+          setResult(response?.message || "Aucune collectivité trouvée.", false);
+        }
+      } catch (err) {
+        if (requestId !== collectSearchRequestId) return;
+        currentRows = [];
+        renderTable(currentRows);
+        setResult("Erreur pendant la recherche.", false);
+        showError("Erreur pendant la recherche : " + err);
+      } finally {
+        if (requestId === collectSearchRequestId) {
+          setCollectLoading(false);
+        }
+      }
+    }
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await runCollectSearch();
+    });
+
+        btnOk?.addEventListener("click", async () => {
+      if (selectedRowIndex === null || selectedRowIndex === undefined) {
+        window.alert("Sélectionnez une collectivité dans la liste.");
+        return;
+      }
+      const selected = currentRows[selectedRowIndex];
+      await openCollectivite(selected);
+    });
+
+    btnCancel?.addEventListener("click", () => {
+      collectSearchRequestId += 1;
       if (toolbarCollectivite && toolbarCollectiviteValue) {
         toolbarCollectivite.hidden = true;
+        toolbarCollectivite.classList.add("hidden");
         toolbarCollectiviteValue.textContent = "-";
+        toolbarCollectiviteValue.title = "-";
         if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
       }
-      if (searchInput) searchInput.value = "";
-      collectPage = 1;
-      hasSearched = false;
-      currentRows = [];
-      renderTable(currentRows);
-      setResult("", false);
+      resetCollectSearchView({ clearInput: true });
     });
     btnNew?.addEventListener("click", () => {
       window.alert("Création d'une nouvelle collectivité : fonctionnalité à venir.");
@@ -1464,7 +1594,7 @@
         await loadAssures(numero);
       } else {
         renderAssures([]);
-        setAssuresResult("Num?ro de collectivit? manquant.");
+        setAssuresResult("Numéro de collectivit? manquant.");
       }
     });
 
@@ -1495,6 +1625,35 @@
 
     assureFilterSelect?.addEventListener("change", scheduleAssuresReload);
     assureTriSelect?.addEventListener("change", scheduleAssuresReload);
+    assuresSearchInput?.addEventListener("input", () => {
+      applyAssuresLocalSearch(true);
+    });
+
+    searchInput?.addEventListener("input", () => {
+      const value = (searchInput.value || "").trim();
+      clearTimeout(collectAutoSearchTimer);
+
+      if (!value) {
+        collectSearchRequestId += 1;
+        resetCollectSearchView({ clearInput: false });
+        return;
+      }
+
+      if (value.length < COLLECT_AUTO_SEARCH_MIN_CHARS) {
+        collectSearchRequestId += 1;
+        hasSearched = false;
+        selectedRowIndex = null;
+        currentRows = [];
+        collectPage = 1;
+        renderTable(currentRows);
+        setResult("", false);
+        return;
+      }
+
+      collectAutoSearchTimer = setTimeout(() => {
+        runCollectSearch();
+      }, COLLECT_AUTO_SEARCH_DEBOUNCE_MS);
+    });
 
     collectPrev?.addEventListener("click", () => {
       if (collectPage > 1) {
@@ -1505,11 +1664,19 @@
 
     collectNext?.addEventListener("click", () => {
       const total = currentRows.length;
-      const pageCount = Math.max(1, Math.ceil(total / collectPageSize));
+      const pageSize = getCollectEffectivePageSize(total);
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
       if (collectPage < pageCount) {
         collectPage += 1;
         renderTable(currentRows);
       }
+    });
+
+    collectPageSizeSelect?.addEventListener("change", () => {
+      const value = Number(collectPageSizeSelect.value);
+      collectPageSize = [20, 40, 60, -1].includes(value) ? value : 20;
+      collectPage = 1;
+      renderTable(currentRows);
     });
 
     assuresPrev?.addEventListener("click", () => {
@@ -1521,18 +1688,28 @@
 
     assuresNext?.addEventListener("click", () => {
       const total = currentAssuresRows.length;
-      const pageCount = Math.max(1, Math.ceil(total / assuresPageSize));
+      const pageSize = getAssuresEffectivePageSize(total);
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
       if (assuresPage < pageCount) {
         assuresPage += 1;
         renderAssuresPage();
       }
     });
 
+    assuresPageSizeSelect?.addEventListener("change", () => {
+      const value = Number(assuresPageSizeSelect.value);
+      assuresPageSize = [20, 40, 60, -1].includes(value) ? value : 20;
+      assuresPage = 1;
+      renderAssuresPage();
+    });
+
 
     function clearToolbarCollectivite() {
       if (!toolbarCollectivite || !toolbarCollectiviteValue) return;
       toolbarCollectivite.hidden = true;
+      toolbarCollectivite.classList.add("hidden");
       toolbarCollectiviteValue.textContent = "-";
+      toolbarCollectiviteValue.title = "-";
       if (toolbarCollectiviteCulte) toolbarCollectiviteCulte.textContent = "";
     }
 
@@ -1592,6 +1769,7 @@
     function collectApplyListState() {
       toggleDetails(false);
       toggleList(true);
+      selectedData = null;
       clearToolbarCollectivite();
       setCollectLoading(false);
     }
